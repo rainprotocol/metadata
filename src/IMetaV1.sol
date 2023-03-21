@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: CAL
-pragma solidity ^0.8.16;
+pragma solidity ^0.8.17;
 
 /// Thrown when hashed metadata does NOT match the expected hash.
 /// @param expectedHash The hash expected by the `IMetaV1` contract.

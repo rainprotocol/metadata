@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: CAL
-pragma solidity ^0.8.16;
+pragma solidity ^0.8.17;
 
 import "./IMetaV1.sol";
 
