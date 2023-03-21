@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: CAL
-pragma solidity ^0.8.16;
+pragma solidity ^0.8.18;
 
 import "./IMetaV1.sol";
 
@@ -12,6 +12,7 @@ interface IMetaBoardV1 is IMetaV1 {
     /// cbor-seq. Metadata MUST match the metadata V1 specification for Rain
     /// metadata or tooling MAY drop it. `IMetaBoardV1` contracts MUST revert any
     /// metadata that does not start with the Rain metadata magic number.
-    /// @param meta Bytes to be emitted as metadata.
-    function emitMeta(bytes calldata meta) external;
+    /// @param subject As per `IMetaV1` event.
+    /// @param meta As per `IMetaV1` event.
+    function emitMeta(uint256 subject, bytes calldata meta) external;
 }
