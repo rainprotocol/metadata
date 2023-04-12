@@ -18,7 +18,7 @@ function createLocalhostConfig() {
 }
 
 const config: HardhatUserConfig = {
-  solidity: "0.8.16",
+  solidity: "0.8.18",
   typechain: {
     outDir: "typechain", // overrides upstream 'fix' for another issue which changed this to 'typechain-types'
   },
@@ -35,7 +35,7 @@ const config: HardhatUserConfig = {
     },
     localhost: createLocalhostConfig()
   },
-  defaultNetwork: "hardhat",
+  defaultNetwork: "localhost",
 };
 
 export default config;

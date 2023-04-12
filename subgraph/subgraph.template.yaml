@@ -19,6 +19,6 @@ dataSources:
         - name: MetaBoard
           file: ./abis/MetaBoard.json
       eventHandlers:
-        - event: MetaV1(address,bytes)
+        - event:  MetaV1(address,uint256,bytes)
           handler: handleMetaV1
       file: ./src/metaBoard.ts

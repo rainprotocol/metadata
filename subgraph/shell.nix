@@ -51,8 +51,8 @@ let
   '';
 
   ci-test = pkgs.writeShellScriptBin "ci-test" ''
-    codegen
     npx mustache config/localhost.json subgraph.template.yaml subgraph.yaml
+    codegen
     npm run test
   '';
 

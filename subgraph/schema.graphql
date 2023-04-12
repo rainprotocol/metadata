@@ -9,6 +9,7 @@ type MetaV1 @entity {
     id:ID!
     sender: Bytes!
     meta: Bytes!
+    subject: BigInt!
     metaBoard: MetaBoard!
     payload: String!
     magicNumber: BigInt!

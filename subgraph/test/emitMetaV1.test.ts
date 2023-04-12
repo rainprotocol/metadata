@@ -69,7 +69,7 @@ describe("MetaBoard MetaV1 event tests", () => {
       "application/json"
     );
 
-    let trx = await metaBoard.emitMeta(appendRainMetaDoc(encodedData));
+    let trx = await metaBoard.emitMeta(1, appendRainMetaDoc(encodedData));
     metaCount++;
     const { sender, meta } = (await getEventArgs(
       trx,
@@ -107,6 +107,7 @@ describe("MetaBoard MetaV1 event tests", () => {
             payload
             contentType
             magicNumber
+            subject
         }
       }`;
 
@@ -120,6 +121,7 @@ describe("MetaBoard MetaV1 event tests", () => {
     // assert.equal(metaData.payload, abiBytes);
     assert.equal(metaData.contentType, "application/json");
     assert.equal(metaData.magicNumber, MAGIC_NUMBERS.SOLIDITY_ABIV2);
+    assert.equal(metaData.subject, 1, "Wrong subject");
   });
 
   it("Should emit emitMeta event with diff signers", async () => {
@@ -145,7 +147,7 @@ describe("MetaBoard MetaV1 event tests", () => {
 
     const encodedMeta = appendRainMetaDoc(encodedData);
 
-    let trx = await metaBoard.connect(eventEmitter).emitMeta(encodedMeta);
+    let trx = await metaBoard.connect(eventEmitter).emitMeta(2, encodedMeta);
     metaCount++;
 
     await waitForSubgraphToBeSynced();
@@ -178,6 +180,7 @@ describe("MetaBoard MetaV1 event tests", () => {
             payload
             contentType
             magicNumber
+            subject
         }
       }`;
 
@@ -191,6 +194,8 @@ describe("MetaBoard MetaV1 event tests", () => {
     // assert.equal(metaData.payload, abiBytes);
     assert.equal(metaData.contentType, "application/json");
     assert.equal(metaData.magicNumber, MAGIC_NUMBERS.SOLIDITY_ABIV2);
+    assert.equal(metaData.subject, 2, "Wrong subject");
+
   });
 
   it("Should add 10 new notices", async () => {
@@ -201,7 +206,7 @@ describe("MetaBoard MetaV1 event tests", () => {
         "text",
       );
 
-      await metaBoard.emitMeta(appendRainMetaDoc(encodedData));
+      await metaBoard.emitMeta(i, appendRainMetaDoc(encodedData));
       metaCount++;
     }
 

@@ -20,6 +20,7 @@ export function handleMetaV1(event: MetaV1Event): void {
   metaV1.sender = event.params.sender;
   metaV1.meta = event.params.meta;
   metaV1.metaBoard = event.address;
+  metaV1.subject = event.params.subject;
 
   metaV1.payload = jsonData.mustGet("0").toString();
   metaV1.magicNumber = jsonData.mustGet("1").toBigInt();
