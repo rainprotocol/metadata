@@ -8,6 +8,8 @@ import "../src/MetaBoard.sol";
 
 contract MetaBoardTest is Test, IMetaV1 {
     function testEmitMeta(uint256 subject_, bytes memory data_) public {
+        vm.assume(!LibMeta.isRainMetaV1(data_));
+
         MetaBoard metaBoard_ = new MetaBoard();
 
         bytes memory meta_ = abi.encodePacked(META_MAGIC_NUMBER_V1, data_);

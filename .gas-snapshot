@@ -1,4 +1,4 @@
 LibMetaTest:testCheckMetaHashed(bytes) (runs: 1024, μ: 5797, ~: 5601)
 LibMetaTest:testCheckMetaUnhashedFuzz(bytes) (runs: 1024, μ: 5455, ~: 5269)
 LibMetaTest:testIsRainMetaV1Fuzz(bytes) (runs: 1024, μ: 1221, ~: 1173)
-MetaBoardTest:testEmitMeta(uint256,bytes) (runs: 1024, μ: 190553, ~: 190227)
+MetaBoardTest:testEmitMeta(uint256,bytes) (runs: 1024, μ: 190983, ~: 190657)
