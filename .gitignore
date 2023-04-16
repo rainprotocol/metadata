@@ -1,2 +1,14 @@
 out
 cache
+
+subgraph/abis
+subgraph/artifacts
+subgraph/build
+subgraph/cache
+subgraph/contracts
+subgraph/docker/data
+subgraph/generated
+subgraph/node_modules
+subgraph/typechain
+subgraph/subgraph.yaml
+.vscode/

@@ -1,0 +1,24 @@
+specVersion: 0.0.4
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum/contract
+    name: MetaBoard
+    network: localhost
+    source:
+      address: "0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0"
+      abi: MetaBoard
+      startBlock: 14
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - RainterpreterExpressionDeployer
+      abis:
+        - name: MetaBoard
+          file: ./abis/MetaBoard.json
+      eventHandlers:
+        - event:  MetaV1(address,uint256,bytes)
+          handler: handleMetaV1
+      file: ./src/metaBoard.ts
