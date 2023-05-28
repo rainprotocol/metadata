@@ -24,6 +24,8 @@ let
     rm -rf contracts
     rm -rf generated
     rm -rf typechain
+    rm -rf docker/data
+
   '';
 
   init = pkgs.writeShellScriptBin "init" ''
@@ -43,6 +45,7 @@ let
   '';
 
   docker-up = pkgs.writeShellScriptBin "docker-up" ''
+    rm -rf docker/data
     docker-compose -f docker/docker-compose.yml up --build -d
   '';
 
