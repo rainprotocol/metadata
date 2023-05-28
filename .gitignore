@@ -1,6 +1,7 @@
 out
 cache
 
+subgraph/.env
 subgraph/abis
 subgraph/artifacts
 subgraph/build
