@@ -21,11 +21,13 @@ pub struct Schema {
 #[derive(Clone, EnumString)]
 #[strum(serialize_all = "kebab_case")]
 pub enum KnownSchemas {
-    OpV1
+    InterpreterCallerV1,
+    OpV1,
 }
 
 pub async fn dispatch (schema: Schema) -> anyhow::Result<()> {
     let schema_json = match schema.schema {
+        KnownSchemas::InterpreterCallerV1 => schema_for!(crate::meta::interpreter_caller::v1::InterpreterCallerMeta),
         KnownSchemas::OpV1 => schema_for!(crate::meta::op::v1::OpMeta),
     };
 
