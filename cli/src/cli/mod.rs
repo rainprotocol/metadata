@@ -14,7 +14,6 @@ struct Cli {
 
 #[derive(Subcommand)]
 pub enum Meta {
-    #[command(subcommand)]
     Schema(Schema)
 }
 
