@@ -16,15 +16,18 @@ pub const MAX_BIT_INTEGER: usize = (std::mem::size_of::<Operand>() * 8) - 1;
 
 /// # BitInteger
 /// Counts or ranges bits in an operand. Ranges are 0 indexed.
-#[derive(JsonSchema, Debug, Serialize, Deserialize)]
-pub struct BitInteger(
+#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct BitInteger{
     #[validate(range(min = "MIN_BIT_INTEGER", max = "MAX_BIT_INTEGER"))]
-    pub u8
-);
+    pub value: u8
+}
 
 /// # BitIntegerRange
-#[derive(JsonSchema, Debug, Serialize, Deserialize)]
-pub struct BitIntegerRange(BitInteger, BitInteger);
+#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize)]
+pub struct BitIntegerRange{
+    pub value: (BitInteger, BitInteger),
+}
 
 /// # OpMeta.
 /// Opcodes metadata used by Rainlang.
@@ -32,14 +35,17 @@ pub struct BitIntegerRange(BitInteger, BitInteger);
 pub struct OpMeta {
     /// # Name
     /// Primary word used to identify the opcode.
+    #[validate]
     pub name: Name,
     /// # Description
     /// Brief description of the opcode.
     #[serde(default)]
+    #[validate]
     pub desc: Description,
     /// # Operand
     /// Data required to calculate and format the operand.
     #[serde(default)]
+    #[validate]
     pub operand: Vec<OperandArg>,
     /// # Inputs
     /// Data required to specify the inputs of the opcode. 0 for opcodes with no
@@ -49,6 +55,7 @@ pub struct OpMeta {
     /// this opcode has dynamic inputs and number of inputs will be derived from
     /// the operand bits with "computation" field applied if specified.
     #[serde(default)]
+    #[validate]
     pub inputs: Vec<Input>,
     /// # Outputs
     /// Data required to specify the outputs of the opcode. An integer specifies
@@ -56,27 +63,31 @@ pub struct OpMeta {
     /// for opcodes with dynamic outputs the "bits" field will determine the
     /// number of outputs with "computation" field applied if specified.
     #[serde(default)]
+    #[validate]
     pub outputs: Vec<Output>,
     /// # Aliases
     /// Other words used to reference the opcode.
     #[serde(default)]
+    #[validate]
     pub aliases: Vec<Name>,
 }
 
 /// # Input
 /// Data type of opcode's inputs that determines the number of inputs an opcode
 /// has and provide information about them.
-#[derive(JsonSchema, Debug, Serialize, Deserialize)]
+#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize)]
 pub struct Input {
     /// # Parameters
     /// List of InputParameters, may be empty.
     #[serde(default)]
+    #[validate]
     pub parameters: Vec<InputParameter>,
     /// # Inputs-Allocated Operand Bits
     /// Specifies bits of the operand allocated for number of inputs. Determines
     /// the number of inputs for a computed opcode inputs. Required only for
     /// computed (non-constant) inputs.
     #[serde(default)]
+    #[validate]
     pub bits: Option<BitIntegerRange>,
     /// # Inputs-Allocated Operand Bits Computation
     /// Specifies any arithmetical operation that will be applied to the value of
@@ -84,6 +95,7 @@ pub struct Input {
     /// the extracted value, example: "(bits + 1) * 2". Required only for
     /// computed (non-constant) inputs.
     #[serde(default)]
+    #[validate]
     pub computation: Option<Computation>,
 }
 
