@@ -3,6 +3,9 @@ use crate::meta::rain::v1::Operand;
 use crate::meta::rain::v1::Name;
 use crate::meta::rain::v1::Description;
 use crate::meta::rain::v1::RainString;
+use serde::Deserialize;
+use serde::Serialize;
+use validator::Validate;
 
 pub type Computation = RainString;
 
@@ -13,19 +16,19 @@ pub const MAX_BIT_INTEGER: usize = (std::mem::size_of::<Operand>() * 8) - 1;
 
 /// # BitInteger
 /// Counts or ranges bits in an operand. Ranges are 0 indexed.
-#[derive(JsonSchema, Debug)]
+#[derive(JsonSchema, Debug, Serialize, Deserialize)]
 pub struct BitInteger(
     #[validate(range(min = "MIN_BIT_INTEGER", max = "MAX_BIT_INTEGER"))]
     pub u8
 );
 
 /// # BitIntegerRange
-#[derive(JsonSchema, Debug)]
+#[derive(JsonSchema, Debug, Serialize, Deserialize)]
 pub struct BitIntegerRange(BitInteger, BitInteger);
 
 /// # OpMeta.
 /// Opcodes metadata used by Rainlang.
-#[derive(JsonSchema, Debug)]
+#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize)]
 pub struct OpMeta {
     /// # Name
     /// Primary word used to identify the opcode.
@@ -63,7 +66,7 @@ pub struct OpMeta {
 /// # Input
 /// Data type of opcode's inputs that determines the number of inputs an opcode
 /// has and provide information about them.
-#[derive(JsonSchema, Debug)]
+#[derive(JsonSchema, Debug, Serialize, Deserialize)]
 pub struct Input {
     /// # Parameters
     /// List of InputParameters, may be empty.
@@ -87,7 +90,7 @@ pub struct Input {
 /// # Input Parameter
 /// Data type for opcode's inputs parameters, the length determines the number of
 /// inputs for constant (non-computed) inputs.
-#[derive(JsonSchema, Debug)]
+#[derive(JsonSchema, Debug, Serialize, Deserialize)]
 pub struct InputParameter {
     /// # Input Parameter Name
     /// Name of the input parameter.
@@ -106,13 +109,13 @@ pub struct InputParameter {
 /// # Output
 /// Data type of opcode's outputs that determines the number of outputs an opcode
 /// has and provide information about them.
-#[derive(JsonSchema, Debug)]
+#[derive(JsonSchema, Debug, Serialize, Deserialize)]
 pub enum Output {
     Exact(Operand),
     Computed(BitIntegerRange, Computation)
 }
 
-#[derive(JsonSchema, Debug)]
+#[derive(JsonSchema, Debug, Serialize, Deserialize)]
 pub struct OperandArg {
     /// # Allocated Operand Bits
     /// Specifies the bits to allocate to this operand argument.
@@ -143,7 +146,7 @@ pub struct OperandArg {
     pub valid_range: Option<Vec<OperandArgRange>>,
 }
 
-#[derive(JsonSchema, Debug)]
+#[derive(JsonSchema, Debug, Serialize, Deserialize)]
 pub enum OperandArgRange {
     Exact(Operand),
     Range(Operand, Operand),
