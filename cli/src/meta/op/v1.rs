@@ -2,14 +2,9 @@ use schemars::JsonSchema;
 use crate::meta::rain::v1::Operand;
 use crate::meta::rain::v1::Name;
 use crate::meta::rain::v1::Description;
+use crate::meta::rain::v1::RainString;
 
-/// # Computation
-/// Computations must be a valid Rainlang string.
-#[derive(JsonSchema, Debug, Default)]
-pub struct Computation(
-    #[validate(regex = "crate::meta::rain::v1::REGEX_VALID_RAIN_STRING")]
-    pub String
-);
+pub type Computation = RainString;
 
 /// BitIntegers are zero indexed.
 pub const MIN_BIT_INTEGER: usize = 0;

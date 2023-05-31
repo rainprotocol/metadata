@@ -6,40 +6,56 @@ use once_cell::sync::Lazy;
 pub type Operand = u16;
 
 /// Valid symbols in Rainlang are alpha prefixed alphanumeric kebab case.
-pub const REGEX_VALID_SYMBOL: Lazy<Regex> = Lazy::new(|| {
+pub const REGEX_RAIN_SYMBOL: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r"^[a-z][0-9a-z-]*$").unwrap()
 });
 
-/// Solidity contracts are PascalCase by name.
-pub const REGEX_VALID_CONTRACT_NAME: Lazy<Regex> = Lazy::new(|| {
+/// Solidity contract names are PascalCase.
+pub const REGEX_PASCAL_SYMBOL: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r"^([A-Z][a-z0-9]*)+$").unwrap()
 });
 
+/// Solidity contract function names are camelCase.
+/// Identical to PascalCase regex with some leading lowercase alphanumerics.
+pub const REGEX_CAMEL_SYMBOL: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"^[a-z][a-z0-9]*([A-Z][a-z0-9]*)+$").unwrap()
+});
+
 /// Strings in Rain are limited to printable ASCII chars and whitespace.
-pub const REGEX_VALID_RAIN_STRING: Lazy<Regex> = Lazy::new(|| {
+pub const REGEX_RAIN_STRING: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r"^[\s!-~]*$").unwrap()
 });
 
-/// # Name
-/// Names must be a valid Rainlang symbol.
+/// Rain symbols are a subset of kebab case.
 #[derive(JsonSchema, Debug)]
-pub struct Name(
-    #[validate(regex = "REGEX_VALID_SYMBOL")]
+pub struct RainSymbol(
+    #[validate(regex = "REGEX_RAIN_SYMBOL")]
     pub String
 );
 
-/// # Contract Name
-/// Solidity contract names must be valid PascalCase.
+pub type Name = RainSymbol;
+
 #[derive(JsonSchema, Debug)]
-pub struct ContractName(
-    #[validate(regex = "REGEX_VALID_CONTRACT_NAME")]
+pub struct PascalSymbol(
+    #[validate(regex = "REGEX_PASCAL_SYMBOL")]
     pub String
 );
 
-/// # Description
-/// Descriptions must be a valid Rainlang string.
+pub type SolidityContractName = PascalSymbol;
+
+#[derive(JsonSchema, Debug)]
+pub struct CamelSymbol(
+    #[validate(regex = "REGEX_CAMEL_SYMBOL")]
+    pub String
+);
+
+pub type SolidityFunctionName = CamelSymbol;
+pub type SoliditySymbol = CamelSymbol;
+
 #[derive(JsonSchema, Debug, Default)]
-pub struct Description(
-    #[validate(regex = "REGEX_VALID_RAIN_STRING")]
+pub struct RainString(
+    #[validate(regex = "REGEX_RAIN_STRING")]
     pub String
 );
+
+pub type Description = RainString;
