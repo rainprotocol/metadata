@@ -7,7 +7,9 @@ use show::Show;
 
 #[derive(Subcommand)]
 pub enum Schema {
+    /// Print all known schemas.
     Ls,
+    /// Print a given known schema.
     Show(Show),
 }
 

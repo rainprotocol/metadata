@@ -1,10 +1,10 @@
 use anyhow::Result;
 use clap::command;
 use clap::{Parser, Subcommand};
-use crate::cli::schema::Schema;
 
 pub mod schema;
 pub mod validate;
+pub mod magic;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -16,14 +16,17 @@ struct Cli {
 #[derive(Subcommand)]
 pub enum Meta {
     #[command(subcommand)]
-    Schema(Schema),
+    Schema(schema::Schema),
     Validate(validate::Validate),
+    #[command(subcommand)]
+    Magic(magic::Magic),
 }
 
 pub fn dispatch(meta: Meta) -> Result<()> {
     match meta {
         Meta::Schema(schema) => schema::dispatch(schema),
         Meta::Validate(validate) => validate::validate(validate),
+        Meta::Magic(magic) => magic::dispatch(magic),
     }
 }
 
