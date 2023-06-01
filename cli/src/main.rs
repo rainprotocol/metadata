@@ -1,5 +1,5 @@
 mod cli;
-pub mod meta;
+pub(crate) mod meta;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

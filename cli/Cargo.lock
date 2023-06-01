@@ -514,8 +514,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "rain_metadata_cli"
-version = "0.1.0"
+name = "rain_cli_meta"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "clap",
