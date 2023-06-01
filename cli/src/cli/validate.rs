@@ -1,4 +1,4 @@
-use super::KnownSchema;
+use super::schema::KnownSchema;
 use clap::Parser;
 use std::path::PathBuf;
 use crate::meta::interpreter_caller::v1::InterpreterCallerMeta;

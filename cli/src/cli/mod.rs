@@ -3,7 +3,8 @@ use clap::command;
 use clap::{Parser, Subcommand};
 use crate::cli::schema::Schema;
 
-mod schema;
+pub mod schema;
+pub mod validate;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -15,18 +16,20 @@ struct Cli {
 #[derive(Subcommand)]
 pub enum Meta {
     #[command(subcommand)]
-    Schema(Schema)
+    Schema(Schema),
+    Validate(validate::Validate),
 }
 
-pub async fn dispatch(meta: Meta) -> Result<()> {
+pub fn dispatch(meta: Meta) -> Result<()> {
     match meta {
-        Meta::Schema(schema) => schema::dispatch(schema).await,
+        Meta::Schema(schema) => schema::dispatch(schema),
+        Meta::Validate(validate) => validate::validate(validate),
     }
 }
 
-pub async fn main() -> Result<()> {
+pub fn main() -> Result<()> {
     tracing::subscriber::set_global_default(tracing_subscriber::fmt::Subscriber::new())?;
 
     let cli = Cli::parse();
-    dispatch(cli.meta).await
+    dispatch(cli.meta)
 }
