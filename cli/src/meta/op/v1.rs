@@ -1,11 +1,13 @@
 use schemars::JsonSchema;
 use crate::meta::rain::v1::Operand;
-use crate::meta::rain::v1::Name;
+use crate::meta::rain::v1::RainSymbol;
 use crate::meta::rain::v1::Description;
 use crate::meta::rain::v1::RainString;
 use serde::Deserialize;
 use serde::Serialize;
 use validator::Validate;
+use validator::ValidationErrors;
+use validator::ValidationError;
 
 pub type Computation = RainString;
 
@@ -16,7 +18,7 @@ pub const MAX_BIT_INTEGER: usize = (std::mem::size_of::<Operand>() * 8) - 1;
 
 /// # BitInteger
 /// Counts or ranges bits in an operand. Ranges are 0 indexed.
-#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize)]
+#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize, PartialOrd, PartialEq)]
 #[serde(transparent)]
 pub struct BitInteger{
     #[validate(range(min = "MIN_BIT_INTEGER", max = "MAX_BIT_INTEGER"))]
@@ -24,9 +26,51 @@ pub struct BitInteger{
 }
 
 /// # BitIntegerRange
-#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize)]
-pub struct BitIntegerRange{
-    pub value: (BitInteger, BitInteger),
+#[derive(JsonSchema, Debug, Serialize, Deserialize)]
+pub struct BitIntegerRange(BitInteger, BitInteger);
+
+impl Validate for BitIntegerRange {
+    fn validate(&self) -> Result<(), ValidationErrors> {
+        ValidationErrors::merge_all(
+            if self.0 <= self.1 {
+                Ok(())
+            } else {
+                let mut errors = ValidationErrors::new();
+                errors.add("range", ValidationError::new("Bad bit integer range.\n"));
+                Err(errors)
+            },
+            "range",
+            vec![self.0.validate(), self.1.validate()]
+        )
+    }
+}
+
+#[derive(JsonSchema, Debug, Serialize, Deserialize)]
+pub enum OperandArgRange {
+    Exact(Operand),
+    Range(Operand, Operand),
+}
+
+impl Validate for OperandArgRange {
+    fn validate(&self) -> Result<(), ValidationErrors> {
+        ValidationErrors::merge_all(
+            match self {
+                OperandArgRange::Exact(_) => Ok(()),
+                OperandArgRange::Range(min, max) => if min <= max {
+                    Ok(())
+                } else {
+                    let mut errors = ValidationErrors::new();
+                    errors.add("range", ValidationError::new("Bad operand arg range.\n"));
+                    Err(errors)
+                }
+            },
+            "range",
+            match self {
+                OperandArgRange::Exact(exact) => vec![exact.validate()],
+                OperandArgRange::Range(min, max) => vec![min.validate(), max.validate()],
+            }
+        )
+    }
 }
 
 /// # OpMeta.
@@ -36,7 +80,7 @@ pub struct OpMeta {
     /// # Name
     /// Primary word used to identify the opcode.
     #[validate]
-    pub name: Name,
+    pub name: RainSymbol,
     /// # Description
     /// Brief description of the opcode.
     #[serde(default)]
@@ -69,7 +113,7 @@ pub struct OpMeta {
     /// Other words used to reference the opcode.
     #[serde(default)]
     #[validate]
-    pub aliases: Vec<Name>,
+    pub aliases: Vec<RainSymbol>,
 }
 
 /// # Input
@@ -102,14 +146,16 @@ pub struct Input {
 /// # Input Parameter
 /// Data type for opcode's inputs parameters, the length determines the number of
 /// inputs for constant (non-computed) inputs.
-#[derive(JsonSchema, Debug, Serialize, Deserialize)]
+#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize)]
 pub struct InputParameter {
     /// # Input Parameter Name
     /// Name of the input parameter.
-    pub name: Name,
+    #[validate]
+    pub name: RainSymbol,
     /// # Input Parameter Description
     /// Description of the input parameter.
     #[serde(default)]
+    #[validate]
     pub desc: Description,
     /// # Parameter Spread
     /// Specifies if an argument is dynamic in length, default is false, so only
@@ -127,20 +173,36 @@ pub enum Output {
     Computed(BitIntegerRange, Computation)
 }
 
-#[derive(JsonSchema, Debug, Serialize, Deserialize)]
+impl Validate for Output {
+    fn validate (&self) -> Result<(), ValidationErrors> {
+        ValidationErrors::merge_all(
+            Ok(()),
+            "output",
+            match self {
+                Output::Exact(operand) => vec![operand.validate()],
+                Output::Computed(range, computation) => vec![range.validate(), computation.validate()],
+            }
+        )
+    }
+}
+
+#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize)]
 pub struct OperandArg {
     /// # Allocated Operand Bits
     /// Specifies the bits to allocate to this operand argument.
-    pub bits: (BitInteger, BitInteger),
+    #[validate]
+    pub bits: BitIntegerRange,
     /// # Operand Argument Name
     /// Name of the operand argument. Argument with the name of "inputs" is
     /// reserved so that it wont be be typed inside <> and its value needed to
     /// construct the operand will be the number of items inside the opcode's
     /// parens (computation will apply to this value if provided).
-    pub name: Name,
+    #[validate]
+    pub name: RainSymbol,
     /// # Operand Argument Description
     /// Description of the operand argument.
     #[serde(default)]
+    #[validate]
     pub desc: Description,
     /// # Allocated Operand Bits Computation
     /// Specifies any arithmetical operation that needs to be applied to the
@@ -148,6 +210,7 @@ pub struct OperandArg {
     /// validated by the provided range. The "arg" keyword is reserved for
     /// accessing the value of this operand argument, example: "(arg + 1) * 2".
     #[serde(default)]
+    #[validate]
     pub computation: Option<Computation>,
     /// # Operand Argument Range
     /// Determines the valid range of the operand argument after computation
@@ -155,11 +218,7 @@ pub struct OperandArg {
     /// of 1 - 10: [[1, 10]] or an operand argument can only be certain exact
     /// values: [[2], [3], [9]], meaning it can only be 2 or 3 or 9.
     #[serde(default)]
+    #[validate]
     pub valid_range: Option<Vec<OperandArgRange>>,
 }
 
-#[derive(JsonSchema, Debug, Serialize, Deserialize)]
-pub enum OperandArgRange {
-    Exact(Operand),
-    Range(Operand, Operand),
-}

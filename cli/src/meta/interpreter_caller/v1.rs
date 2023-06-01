@@ -1,10 +1,9 @@
 use schemars::JsonSchema;
-use crate::meta::rain::v1::Name;
+use crate::meta::rain::v1::RainTitle;
+use crate::meta::rain::v1::RainSymbol;
 use crate::meta::rain::v1::Description;
-use crate::meta::rain::v1::SoliditySymbol;
 use crate::meta::rain::v1::RainString;
-use crate::meta::rain::v1::SolidityContractName;
-use crate::meta::rain::v1::SolidityFunctionName;
+use crate::meta::rain::v1::SolidityIdentifier;
 use serde::Deserialize;
 use serde::Serialize;
 use validator::Validate;
@@ -21,11 +20,11 @@ type AbiPath = RainString;
 pub struct InterpreterCallerMeta {
     /// # Name
     #[validate]
-    pub name: Name,
+    pub name: RainTitle,
     /// # Contract ABI name
     /// Name of the contract corresponding to `contractName` feild in the abi.
     #[validate]
-    pub abi_name: SolidityContractName,
+    pub abi_name: SolidityIdentifier,
     /// # Caller Description
     /// Name of the caller corresponding to `contractName` feild in the abi.
     #[serde(default)]
@@ -35,7 +34,7 @@ pub struct InterpreterCallerMeta {
     /// Alias of the caller used by Rainlang.
     #[serde(default)]
     #[validate]
-    pub alias: Option<Name>,
+    pub alias: Option<RainSymbol>,
     /// # Methods
     ///  Methods of the contract that receive at least one expression
     /// (EvaluableConfig) from arguments.
@@ -50,9 +49,9 @@ pub struct InterpreterCallerMeta {
 pub struct Method {
     /// # Method name
     #[validate]
-    pub name: Name,
+    pub name: RainTitle,
     #[validate]
-    pub abi_name: SolidityFunctionName,
+    pub abi_name: SolidityIdentifier,
     #[serde(default)]
     #[validate]
     pub desc: Description,
@@ -68,9 +67,9 @@ pub struct Method {
 #[serde(deny_unknown_fields)]
 pub struct MethodInput {
     #[validate]
-    pub name: Name,
+    pub name: RainTitle,
     #[validate]
-    pub abi_name: SoliditySymbol,
+    pub abi_name: SolidityIdentifier,
     #[serde(default)]
     #[validate]
     pub desc: Description,
@@ -83,9 +82,9 @@ pub struct MethodInput {
 #[serde(deny_unknown_fields)]
 pub struct Expression {
     #[validate]
-    pub name: Name,
+    pub name: RainTitle,
     #[validate]
-    pub abi_name: SoliditySymbol,
+    pub abi_name: SolidityIdentifier,
     #[serde(default)]
     #[validate]
     pub desc: Description,
@@ -105,13 +104,13 @@ pub struct Expression {
 #[serde(deny_unknown_fields)]
 pub struct ContextColumn {
     #[validate]
-    pub name: Name,
+    pub name: RainTitle,
     #[serde(default)]
     #[validate]
     pub desc: Description,
     #[serde(default)]
     #[validate]
-    pub alias: Option<Name>,
+    pub alias: Option<RainSymbol>,
     #[serde(default)]
     #[validate]
     pub cells: Vec<ContextCell>,
@@ -121,11 +120,11 @@ pub struct ContextColumn {
 #[serde(deny_unknown_fields)]
 pub struct ContextCell {
     #[validate]
-    pub name: Name,
+    pub name: RainTitle,
     #[serde(default)]
     #[validate]
     pub desc: Description,
     #[serde(default)]
     #[validate]
-    pub alias: Option<Name>
+    pub alias: Option<RainSymbol>
 }
