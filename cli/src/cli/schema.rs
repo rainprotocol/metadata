@@ -13,13 +13,6 @@ pub enum Schema {
     Show(Show),
 }
 
-#[derive(Clone, EnumString, EnumIter, strum::Display)]
-#[strum(serialize_all = "kebab_case")]
-pub enum KnownSchema {
-    InterpreterCallerV1,
-    OpV1,
-}
-
 pub fn dispatch (schema: Schema) -> anyhow::Result<()> {
     match schema {
         Schema::Ls => ls::ls(),

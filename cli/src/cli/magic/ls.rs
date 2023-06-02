@@ -1,6 +1,5 @@
-use super::KnownMagic;
+use crate::meta::magic::KnownMagic;
 use strum::IntoEnumIterator;
-
 
 pub fn ls() -> anyhow::Result<()> {
     for magic in KnownMagic::iter() {

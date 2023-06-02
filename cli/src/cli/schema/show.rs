@@ -1,5 +1,5 @@
 use std::path::PathBuf;
-use super::KnownSchema;
+use crate::meta::KnownMeta;
 use clap::Parser;
 use schemars::schema_for;
 
@@ -9,8 +9,8 @@ pub struct Show {
     /// of the validation performed on known metas. Additional validation beyond
     /// what can be expressed by JSON schema is performed when parsing and
     /// validating metadata.
-    #[arg(value_parser = clap::value_parser!(KnownSchema))]
-    schema: KnownSchema,
+    #[arg(value_parser = clap::value_parser!(KnownMeta))]
+    schema: KnownMeta,
     /// If provided the schema will be written to the given path instead of
     /// stdin.
     #[arg(short, long)]
@@ -22,8 +22,8 @@ pub struct Show {
 
 pub fn show(s: Show) -> anyhow::Result<()> {
     let schema_json = match s.schema {
-        KnownSchema::InterpreterCallerV1 => schema_for!(crate::meta::interpreter_caller::v1::InterpreterCallerMeta),
-        KnownSchema::OpV1 => schema_for!(crate::meta::op::v1::OpMeta),
+        KnownMeta::InterpreterCallerV1 => schema_for!(crate::meta::interpreter_caller::v1::InterpreterCallerMeta),
+        KnownMeta::OpV1 => schema_for!(crate::meta::op::v1::OpMeta),
     };
 
     let schema_string = if s.pretty_print {

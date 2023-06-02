@@ -1,4 +1,4 @@
-use super::schema::KnownSchema;
+use crate::meta::KnownMeta;
 use clap::Parser;
 use std::path::PathBuf;
 use crate::meta::interpreter_caller::v1::InterpreterCallerMeta;
@@ -6,12 +6,9 @@ use crate::meta::op::v1::OpMeta;
 
 #[derive(Parser)]
 pub struct Validate {
-    /// One of a set of known JSON schemas that can be produced to match a subset
-    /// of the validation performed on known metas. Additional validation beyond
-    /// what can be expressed by JSON schema is performed when parsing and
-    /// validating metadata.
+    /// The known meta to validate against.
     #[arg(short, long)]
-    schema: KnownSchema,
+    meta: KnownMeta,
     /// The input path to the json serialized metadata to validate against the
     /// known schema.
     #[arg(short, long)]
@@ -19,10 +16,8 @@ pub struct Validate {
 }
 
 pub fn validate(v: Validate) -> anyhow::Result<()> {
-    let data: String = std::fs::read_to_string(v.input_path)?;
-
-    Ok(match v.schema {
-        KnownSchema::InterpreterCallerV1 => validator::Validate::validate(&serde_json::from_str::<InterpreterCallerMeta>(&data)?)?,
-        KnownSchema::OpV1 => validator::Validate::validate(&serde_json::from_str::<OpMeta>(&data)?)?,
-    })
+    let data: Vec<u8> = std::fs::read(v.input_path)?;
+    // If we can normalize the input data then it is valid.
+    let _normalized = crate::meta::normalize::normalize(v.meta, &data)?;
+    Ok(())
 }

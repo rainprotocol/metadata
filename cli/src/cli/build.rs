@@ -1,6 +1,9 @@
 use super::magic::KnownMagic;
 use std::path::PathBuf;
 use clap::Parser;
+use anyhow::anyhow;
+use crate::meta::normalize::normalize;
+use crate::meta::KnownMeta;
 
 #[derive(Parser)]
 pub struct Build {
@@ -19,7 +22,14 @@ fn build_bytes(b: &Build) -> anyhow::Result<Vec<u8>> {
     bytess.push(b.global_magic.to_prefix_bytes().to_vec());
     for (m, i) in b.magic.iter().zip(b.input_path.iter()) {
         bytess.push(m.to_prefix_bytes().to_vec());
-        bytess.push(std::fs::read(i)?);
+
+        let data = std::fs::read(i)?;
+        let normalized = match m {
+            KnownMagic::OpMetaV1 => normalize(KnownMeta::OpV1, &data)?,
+            KnownMagic::InterpreterCallerMetaV1 => normalize(KnownMeta::InterpreterCallerV1, &data)?,
+            _ => return Err(anyhow!("Unsupported meta item {}", m)),
+        };
+        bytess.push(normalized);
     }
     Ok(bytess.into_iter().flatten().collect())
 }
