@@ -1,8 +1,9 @@
 use strum::EnumIter;
 use strum::EnumString;
 
-#[derive(Clone, Copy, EnumString, EnumIter, strum::Display)]
+#[derive(serde::Serialize, Clone, Copy, EnumString, EnumIter, strum::Display)]
 #[strum(serialize_all = "kebab_case")]
+#[serde(rename_all = "kebab-case")]
 #[repr(u64)]
 pub enum KnownMagic {
     RainMetaDocumentV1 = 0xff0a89c674ee7874,

@@ -1,7 +1,7 @@
 pub mod ls;
 pub mod show;
 
-use strum::{EnumString, EnumIter};
+
 use clap::Subcommand;
 use show::Show;
 
