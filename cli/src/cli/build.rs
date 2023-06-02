@@ -1,7 +1,7 @@
 use super::magic::KnownMagic;
 use std::path::PathBuf;
 use clap::Parser;
-use clap::Args;
+
 
 #[derive(Parser)]
 pub struct Build {

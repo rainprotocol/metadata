@@ -2,7 +2,7 @@ pub mod ls;
 
 use clap::Subcommand;
 use strum::{EnumString, EnumIter};
-use clap::Parser;
+
 
 #[derive(Subcommand)]
 pub enum Magic {
