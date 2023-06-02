@@ -32,10 +32,5 @@ pub fn show(s: Show) -> anyhow::Result<()> {
         serde_json::to_string(&schema_json)?
     };
 
-    if let Some(output_path) = s.output_path {
-        std::fs::write(output_path, schema_string)?;
-    } else {
-        println!("{}", schema_string);
-    }
-    Ok(())
+    crate::cli::output::output(s.output_path, schema_string.as_bytes())
 }

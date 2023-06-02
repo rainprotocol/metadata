@@ -2,9 +2,11 @@ use anyhow::Result;
 use clap::command;
 use clap::{Parser, Subcommand};
 
+pub mod build;
 pub mod schema;
 pub mod validate;
 pub mod magic;
+pub mod output;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -20,6 +22,7 @@ pub enum Meta {
     Validate(validate::Validate),
     #[command(subcommand)]
     Magic(magic::Magic),
+    Build(build::Build),
 }
 
 pub fn dispatch(meta: Meta) -> Result<()> {
@@ -27,6 +30,7 @@ pub fn dispatch(meta: Meta) -> Result<()> {
         Meta::Schema(schema) => schema::dispatch(schema),
         Meta::Validate(validate) => validate::validate(validate),
         Meta::Magic(magic) => magic::dispatch(magic),
+        Meta::Build(build) => build::build(build),
     }
 }
 
