@@ -63,14 +63,19 @@ fn build_bytes(build: &Build) -> anyhow::Result<Vec<u8>> {
         bytess.push(magic.to_prefix_bytes().to_vec());
 
         let data = std::fs::read(input_path)?;
-        let payload = match magic {
+        let normalized = match magic {
             KnownMagic::OpMetaV1 => normalize(KnownMeta::OpV1, &data)?,
             KnownMagic::InterpreterCallerMetaV1 => normalize(KnownMeta::InterpreterCallerV1, &data)?,
             _ => return Err(anyhow!("Unsupported magic {}", magic)),
         };
 
+        let encoded = match content_encoding {
+            ContentEncoding::Deflate => { deflate::deflate_bytes(&normalized) },
+            ContentEncoding::Identity | ContentEncoding::None => { normalized },
+        };
+
         let item = RainMetaDocumentV1Item {
-            payload: serde_bytes::ByteBuf::from(payload),
+            payload: serde_bytes::ByteBuf::from(encoded),
             magic: *magic,
             content_type: *content_type,
             content_encoding: *content_encoding,
