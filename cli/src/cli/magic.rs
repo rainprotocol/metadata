@@ -20,6 +20,13 @@ pub enum KnownMagic {
     InterpreterCallerMetaV1 = 0xffc21bbf86cc199b,
 }
 
+impl KnownMagic {
+    pub fn to_prefix_bytes(&self) -> [u8; 8] {
+        // Use big endian here as the magic numbers are for binary data prefixes.
+        (*self as u64).to_be_bytes()
+    }
+}
+
 pub fn dispatch (magic: Magic) -> anyhow::Result<()> {
     match magic {
         Magic::Ls => ls::ls(),
