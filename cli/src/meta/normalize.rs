@@ -10,7 +10,7 @@ fn normalize_json<'de, T: serde::Deserialize<'de> + serde::Serialize + validator
 
 pub fn normalize(meta: KnownMeta, data: &[u8]) -> anyhow::Result<Vec<u8>> {
     Ok(match meta {
-        KnownMeta::InterpreterCallerV1 => normalize_json::<InterpreterCallerMeta>(data)?,
+        KnownMeta::InterpreterCallerMetaV1 => normalize_json::<InterpreterCallerMeta>(data)?,
         KnownMeta::OpV1 => normalize_json::<OpMeta>(data)?,
     })
 }

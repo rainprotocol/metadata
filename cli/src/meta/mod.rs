@@ -12,7 +12,7 @@ use strum::EnumString;
 #[derive(Copy, Clone, EnumString, EnumIter, strum::Display)]
 #[strum(serialize_all = "kebab-case")]
 pub enum KnownMeta {
-    InterpreterCallerV1,
+    InterpreterCallerMetaV1,
     OpV1,
 }
 
