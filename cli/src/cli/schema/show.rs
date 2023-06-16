@@ -2,6 +2,7 @@ use std::path::PathBuf;
 use crate::meta::KnownMeta;
 use clap::Parser;
 use schemars::schema_for;
+use crate::cli::output::SupportedOutputEncoding;
 
 #[derive(Parser)]
 pub struct Show {
@@ -32,5 +33,5 @@ pub fn show(s: Show) -> anyhow::Result<()> {
         serde_json::to_string(&schema_json)?
     };
 
-    crate::cli::output::output(&s.output_path, schema_string.as_bytes())
+    crate::cli::output::output(&s.output_path, SupportedOutputEncoding::Binary, schema_string.as_bytes())
 }

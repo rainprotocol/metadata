@@ -9,11 +9,14 @@ use crate::meta::ContentType;
 use crate::meta::ContentEncoding;
 use crate::meta::ContentLanguage;
 use itertools::izip;
+use crate::cli::output::SupportedOutputEncoding;
 
 #[derive(Parser)]
 pub struct Build {
     #[arg(short, long)]
     output_path: Option<PathBuf>,
+    #[arg(short = 'E', long, default_value = "binary")]
+    output_encoding: SupportedOutputEncoding,
     #[arg(short = 'M', long, default_value = "rain-meta-document-v1")]
     global_magic: KnownMagic,
     #[arg(short, long, num_args = 1..)]
@@ -89,5 +92,5 @@ fn build_bytes(build: &Build) -> anyhow::Result<Vec<u8>> {
 }
 
 pub fn build(b: Build) -> anyhow::Result<()> {
-    crate::cli::output::output(&b.output_path, &build_bytes(&b)?)
+    crate::cli::output::output(&b.output_path, b.output_encoding, &build_bytes(&b)?)
 }

@@ -2,8 +2,6 @@ pub mod ls;
 
 use clap::Subcommand;
 
-
-
 #[derive(Subcommand)]
 pub enum Magic {
     /// Print all known magic numbers.
