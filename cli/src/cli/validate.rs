@@ -2,8 +2,6 @@ use crate::meta::KnownMeta;
 use clap::Parser;
 use std::path::PathBuf;
 
-
-
 #[derive(Parser)]
 pub struct Validate {
     /// The known meta to validate against.

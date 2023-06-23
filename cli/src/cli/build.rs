@@ -67,6 +67,7 @@ fn build_bytes(build: &Build) -> anyhow::Result<Vec<u8>> {
 
         let data = std::fs::read(input_path)?;
         let normalized = match magic {
+            KnownMagic::SolidityAbiV2 => normalize(KnownMeta::SolidityAbiV2, &data)?,
             KnownMagic::OpMetaV1 => normalize(KnownMeta::OpV1, &data)?,
             KnownMagic::InterpreterCallerMetaV1 => normalize(KnownMeta::InterpreterCallerMetaV1, &data)?,
             _ => return Err(anyhow!("Unsupported magic {}", magic)),

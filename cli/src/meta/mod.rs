@@ -1,3 +1,4 @@
+pub mod solidity_abi;
 pub mod op;
 pub mod interpreter_caller;
 pub mod rain;
@@ -12,6 +13,7 @@ use strum::EnumString;
 #[derive(Copy, Clone, EnumString, EnumIter, strum::Display)]
 #[strum(serialize_all = "kebab-case")]
 pub enum KnownMeta {
+    SolidityAbiV2,
     InterpreterCallerMetaV1,
     OpV1,
 }
