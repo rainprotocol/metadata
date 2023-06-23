@@ -6,6 +6,7 @@ use validator::ValidationErrors;
 use serde::Deserializer;
 use serde::de::Error;
 use serde::Serializer;
+use serde::ser::SerializeStruct;
 
 /// # SolidityABI
 /// JSON representation of a Solidity ABI interface.
@@ -23,47 +24,120 @@ impl Validate for SolidityAbi {
     }
 }
 
-#[derive(Serialize, Validate, JsonSchema, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Validate, JsonSchema, Debug)]
 pub struct SolidityAbiItemFn {
-    name: String,
     inputs: Vec<SolidityAbiFnIO>,
+    name: String,
     outputs: Vec<SolidityAbiFnIO>,
     state_mutability: SolidityAbiFnMutability,
 }
 
-#[derive(Serialize, Validate, JsonSchema, Debug)]
-#[serde(rename_all = "camelCase")]
+impl Serialize for SolidityAbiItemFn {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_struct("SolidityAbiItemFn", 5)?;
+        state.serialize_field("inputs", &self.inputs)?;
+        state.serialize_field("name", &self.name)?;
+        state.serialize_field("outputs", &self.outputs)?;
+        state.serialize_field("stateMutability", &self.state_mutability)?;
+        state.serialize_field("type", "function")?;
+        state.end()
+    }
+}
+
+#[derive(Validate, JsonSchema, Debug)]
 pub struct SolidityAbiItemConstructor {
     inputs: Vec<SolidityAbiFnIO>,
     state_mutability: SolidityAbiFnMutability,
 }
 
-#[derive(Serialize, Validate, JsonSchema, Debug)]
-#[serde(rename_all = "camelCase")]
+impl Serialize for SolidityAbiItemConstructor {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_struct("SolidityAbiItemConstructor", 3)?;
+        state.serialize_field("inputs", &self.inputs)?;
+        state.serialize_field("stateMutability", &self.state_mutability)?;
+        state.serialize_field("type", "constructor")?;
+        state.end()
+    }
+}
+
+#[derive(Validate, JsonSchema, Debug)]
 pub struct SolidityAbiItemReceive {
     state_mutability: SolidityAbiFnMutability,
 }
 
-#[derive(Serialize, Validate, JsonSchema, Debug)]
-#[serde(rename_all = "camelCase")]
+impl Serialize for SolidityAbiItemReceive {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_struct("SolidityAbiItemReceive", 2)?;
+        state.serialize_field("stateMutability", &self.state_mutability)?;
+        state.serialize_field("type", "receive")?;
+        state.end()
+    }
+}
+
+#[derive(Validate, JsonSchema, Debug)]
 pub struct SolidityAbiItemFallback {
     state_mutability: SolidityAbiFnMutability,
 }
 
-#[derive(Serialize, Validate, JsonSchema, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct SolidityAbiItemEvent {
-    name: String,
-    inputs: Vec<SolidityAbiEventInput>,
-    anonymous: bool,
+impl Serialize for SolidityAbiItemFallback {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_struct("SolidityAbiItemFallback", 2)?;
+        state.serialize_field("stateMutability", &self.state_mutability)?;
+        state.serialize_field("type", "fallback")?;
+        state.end()
+    }
 }
 
-#[derive(Serialize, Validate, JsonSchema, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct SolidityAbiItemError {
+#[derive(Validate, JsonSchema, Debug)]
+pub struct SolidityAbiItemEvent {
+    anonymous: bool,
+    inputs: Vec<SolidityAbiEventInput>,
     name: String,
+}
+
+impl Serialize for SolidityAbiItemEvent {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_struct("SolidityAbiItemEvent", 4)?;
+        state.serialize_field("anonymous", &self.anonymous)?;
+        state.serialize_field("inputs", &self.inputs)?;
+        state.serialize_field("name", &self.name)?;
+        state.serialize_field("type", "event")?;
+        state.end()
+    }
+}
+
+#[derive(Validate, JsonSchema, Debug)]
+pub struct SolidityAbiItemError {
     inputs: Vec<SolidityAbiErrorInput>,
+    name: String,
+}
+
+impl Serialize for SolidityAbiItemError {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_struct("SolidityAbiItemError", 3)?;
+        state.serialize_field("inputs", &self.inputs)?;
+        state.serialize_field("name", &self.name)?;
+        state.serialize_field("type", "error")?;
+        state.end()
+    }
 }
 
 #[derive(JsonSchema, Debug)]
@@ -105,14 +179,6 @@ impl Validate for SolidityAbiItem {
     }
 }
 
-#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize)]
-pub struct SolidityAbiFnIO {
-    name: String,
-    #[serde(rename = "type")]
-    typ: String,
-    components: Vec<SolidityAbiFnIO>,
-}
-
 #[derive(JsonSchema, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum SolidityAbiFnMutability {
@@ -123,28 +189,48 @@ pub enum SolidityAbiFnMutability {
 }
 
 #[derive(Validate, JsonSchema, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SolidityAbiFnIO {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    components: Option<Vec<SolidityAbiFnIO>>,
+    internal_type: String,
+    name: String,
+    #[serde(rename = "type")]
+    typ: String,
+}
+
+#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SolidityAbiErrorInput {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    components: Option<Vec<SolidityAbiErrorInput>>,
+    internal_type: String,
     name: String,
     #[serde(rename = "type")]
     typ: String,
-    components: Vec<SolidityAbiErrorInput>,
 }
 
 #[derive(Validate, JsonSchema, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SolidityAbiEventInput {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    components: Option<Vec<SolidityAbiEventInputComponent>>,
+    indexed: bool,
+    internal_type: String,
     name: String,
     #[serde(rename = "type")]
     typ: String,
-    components: Vec<SolidityAbiEventInputComponent>,
-    indexed: bool,
 }
 
 #[derive(Validate, JsonSchema, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SolidityAbiEventInputComponent {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    components: Option<Vec<SolidityAbiEventInputComponent>>,
+    internal_type: String,
     name: String,
     #[serde(rename = "type")]
     typ: String,
-    components: Vec<SolidityAbiEventInputComponent>,
 }
 
 impl<'de> Deserialize<'de> for SolidityAbiItem {
@@ -176,7 +262,9 @@ impl<'de> Deserialize<'de> for SolidityAbiItem {
         }
 
         #[derive(Debug, Deserialize)]
+        #[serde(rename_all = "camelCase")]
         struct IntermediateIO {
+            internal_type: String,
             name: String,
             #[serde(rename = "type")]
             typ: String,
@@ -186,37 +274,117 @@ impl<'de> Deserialize<'de> for SolidityAbiItem {
 
         let intermediate = Intermediate::deserialize(deserializer)?;
 
-        let map_item_fn_io;
-        map_item_fn_io = |intermediate_io: IntermediateIO| -> Result<SolidityAbiFnIO, D::Error> {
+        fn map_item_fn_io(intermediate_io: &IntermediateIO) -> Result<SolidityAbiFnIO, String>{
             if intermediate_io.indexed.is_some() {
-                return Err(D::Error::custom("indexed found on fn io"));
+                return Err("indexed found on fn io".into());
             }
 
-            let components: Option<Result<Vec<SolidityAbiFnIO>, D::Error>> = match intermediate_io.components.map(|cs| {
-                let cs.iter().map(map_item_fn_io).collect();
-            }) {
-                Some(Err(err))
-                None
-            }
+            let components: Option<Vec<SolidityAbiFnIO>> = match &intermediate_io.components {
+                Some(cs) => {
+                    let result: Result<Vec<SolidityAbiFnIO>, String> = cs.iter().map(map_item_fn_io).collect();
+                    Some(result?)
+                },
+                None => None,
+            };
             Ok(SolidityAbiFnIO {
-                name: intermediate_io.name,
-                typ: intermediate_io.typ,
-                components: components?,
+                name: intermediate_io.name.clone(),
+                typ: intermediate_io.typ.clone(),
+                internal_type: intermediate_io.internal_type.clone(),
+                components,
             })
-        };
+        }
+
+        fn map_item_event_input(intermediate_io: &IntermediateIO) -> Result<SolidityAbiEventInput, String> {
+            fn map_item_event_input_component(intermediate_io: &IntermediateIO) -> Result<SolidityAbiEventInputComponent, String> {
+                if intermediate_io.indexed.is_some() {
+                    return Err("indexed found on event component".into());
+                }
+
+                let components: Option<Vec<SolidityAbiEventInputComponent>> = match &intermediate_io.components {
+                    Some(cs) => {
+                        let result: Result<Vec<SolidityAbiEventInputComponent>, String> = cs.iter().map(map_item_event_input_component).collect();
+                        Some(result?)
+                    },
+                    None => None,
+                };
+                Ok(SolidityAbiEventInputComponent {
+                    components,
+                    internal_type: intermediate_io.internal_type.clone(),
+                    name: intermediate_io.name.clone(),
+                    typ: intermediate_io.typ.clone(),
+                })
+            }
+
+            let components: Option<Vec<SolidityAbiEventInputComponent>> = match &intermediate_io.components {
+                Some(cs) => {
+                    let result: Result<Vec<SolidityAbiEventInputComponent>, String> = cs.iter().map(map_item_event_input_component).collect();
+                    Some(result?)
+                },
+                None => None,
+            };
+
+            Ok(SolidityAbiEventInput {
+                components,
+                indexed: intermediate_io.indexed.ok_or::<String>("indexed missing on event input".into())?,
+                internal_type: intermediate_io.internal_type.clone(),
+                name: intermediate_io.name.clone(),
+                typ: intermediate_io.typ.clone(),
+            })
+        }
+
+        fn map_item_error_input(intermediate_io: &IntermediateIO) -> Result<SolidityAbiErrorInput, String> {
+            if intermediate_io.indexed.is_some() {
+                return Err("indexed found on fn io".into());
+            }
+
+            let components: Option<Vec<SolidityAbiErrorInput>> = match &intermediate_io.components {
+                Some(cs) => {
+                    let result: Result<Vec<SolidityAbiErrorInput>, String> = cs.iter().map(map_item_error_input).collect();
+                    Some(result?)
+                },
+                None => None,
+            };
+            Ok(SolidityAbiErrorInput {
+                components,
+                internal_type: intermediate_io.internal_type.clone(),
+                name: intermediate_io.name.clone(),
+                typ: intermediate_io.typ.clone(),
+            })
+        }
 
         match intermediate.typ {
             IntermediateType::Function => {
+                let inputs: Vec<SolidityAbiFnIO> = match intermediate.inputs {
+                    Some(is) => {
+                        let result: Result<Vec<SolidityAbiFnIO>, String> = is.iter().map(map_item_fn_io).collect();
+                        result.map_err(|e| D::Error::custom(e))?
+                    },
+                    None => vec![],
+                };
+                let outputs: Vec<SolidityAbiFnIO> = match intermediate.outputs {
+                    Some(os) => {
+                        let result: Result<Vec<SolidityAbiFnIO>, String> = os.iter().map(map_item_fn_io).collect();
+                        result.map_err(|e| D::Error::custom(e))?
+                    },
+                    None => vec![],
+                };
                 Ok(SolidityAbiItem::Function(SolidityAbiItemFn {
                     name: intermediate.name.ok_or(D::Error::custom("function missing name"))?,
-                    inputs: intermediate.inputs.iter().map(map_item_fn_io).collect(),
-                    outputs: intermediate.outputs.iter().map(map_item_fn_io).collect(),
+                    inputs,
+                    outputs,
                     state_mutability: intermediate.state_mutability.ok_or(D::Error::custom("function missing mutability"))?,
                 }))
             },
             IntermediateType::Constructor => {
+                let inputs: Vec<SolidityAbiFnIO> = match intermediate.inputs {
+                    Some(is) => {
+                        let result: Result<Vec<SolidityAbiFnIO>, String> = is.iter().map(map_item_fn_io).collect();
+                        result.map_err(|e| D::Error::custom(e))?
+                    },
+                    None => vec![],
+                };
                 Ok(SolidityAbiItem::Constructor(SolidityAbiItemConstructor {
-                    inputs: vec![],
+                    inputs,
                     state_mutability: intermediate.state_mutability.ok_or(D::Error::custom("constructor missing mutability"))?,
                 }))
             },
@@ -231,16 +399,30 @@ impl<'de> Deserialize<'de> for SolidityAbiItem {
                 }))
             },
             IntermediateType::Event => {
+                let inputs: Vec<SolidityAbiEventInput> = match intermediate.inputs {
+                    Some(is) => {
+                        let result: Result<Vec<SolidityAbiEventInput>, String> = is.iter().map(map_item_event_input).collect();
+                        result.map_err(|e| D::Error::custom(e))?
+                    },
+                    None => vec![],
+                };
                 Ok(SolidityAbiItem::Event(SolidityAbiItemEvent {
                     name: intermediate.name.ok_or(D::Error::custom("event missing name"))?,
-                    inputs: vec![],
+                    inputs,
                     anonymous: intermediate.anonymous.ok_or(D::Error::custom("event missing anonymous"))?,
                 }))
             },
             IntermediateType::Error => {
+                let inputs: Vec<SolidityAbiErrorInput> = match intermediate.inputs {
+                    Some(is) => {
+                        let result: Result<Vec<SolidityAbiErrorInput>, String> = is.iter().map(map_item_error_input).collect();
+                        result.map_err(|e| D::Error::custom(e))?
+                    },
+                    None => vec![],
+                };
                 Ok(SolidityAbiItem::Error(SolidityAbiItemError {
                     name: intermediate.name.ok_or(D::Error::custom("error missing name"))?,
-                    inputs: vec![],
+                    inputs,
                 }))
             }
         }
