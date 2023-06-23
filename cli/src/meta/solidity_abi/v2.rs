@@ -24,6 +24,7 @@ impl Validate for SolidityAbi {
 }
 
 #[derive(Serialize, Validate, JsonSchema, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct SolidityAbiItemFn {
     name: String,
     inputs: Vec<SolidityAbiFnIO>,
@@ -32,22 +33,26 @@ pub struct SolidityAbiItemFn {
 }
 
 #[derive(Serialize, Validate, JsonSchema, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct SolidityAbiItemConstructor {
     inputs: Vec<SolidityAbiFnIO>,
     state_mutability: SolidityAbiFnMutability,
 }
 
 #[derive(Serialize, Validate, JsonSchema, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct SolidityAbiItemReceive {
     state_mutability: SolidityAbiFnMutability,
 }
 
 #[derive(Serialize, Validate, JsonSchema, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct SolidityAbiItemFallback {
     state_mutability: SolidityAbiFnMutability,
 }
 
 #[derive(Serialize, Validate, JsonSchema, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct SolidityAbiItemEvent {
     name: String,
     inputs: Vec<SolidityAbiEventInput>,
@@ -55,6 +60,7 @@ pub struct SolidityAbiItemEvent {
 }
 
 #[derive(Serialize, Validate, JsonSchema, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct SolidityAbiItemError {
     name: String,
     inputs: Vec<SolidityAbiErrorInput>,
