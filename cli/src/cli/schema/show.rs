@@ -13,7 +13,7 @@ pub struct Show {
     #[arg(value_parser = clap::value_parser!(KnownMeta))]
     schema: KnownMeta,
     /// If provided the schema will be written to the given path instead of
-    /// stdin.
+    /// stdout.
     #[arg(short, long)]
     output_path: Option<PathBuf>,
     /// If true the schema will be pretty printed. Defaults to false.

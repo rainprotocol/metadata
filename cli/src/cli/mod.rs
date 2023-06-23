@@ -6,6 +6,7 @@ pub mod build;
 pub mod schema;
 pub mod validate;
 pub mod magic;
+pub mod solc;
 pub mod output;
 
 #[derive(Parser)]
@@ -23,6 +24,8 @@ pub enum Meta {
     #[command(subcommand)]
     Magic(magic::Magic),
     Build(build::Build),
+    #[command(subcommand)]
+    Solc(solc::Solc),
 }
 
 pub fn dispatch(meta: Meta) -> Result<()> {
@@ -31,6 +34,7 @@ pub fn dispatch(meta: Meta) -> Result<()> {
         Meta::Validate(validate) => validate::validate(validate),
         Meta::Magic(magic) => magic::dispatch(magic),
         Meta::Build(build) => build::build(build),
+        Meta::Solc(solc) => solc::dispatch(solc),
     }
 }
 
