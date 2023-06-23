@@ -13,21 +13,12 @@ pkgs.mkShell {
   # were you to to use nix-build not nix-shell and build whatever you were working on
   buildInputs = [
     pkgs.rustc
-    pkgs.rustfmt
     pkgs.cargo
-    pkgs.pkgconfig
-    pkgs.openssl
     pkgs.iconv
-    pkgs.graphql-client
     pkgs.gmp
-    pkgs.jq
   ] ++ (pkgs.lib.optionals pkgs.stdenv.isDarwin [
     pkgs.darwin.apple_sdk.frameworks.Security
     pkgs.darwin.apple_sdk.frameworks.CoreFoundation
     pkgs.darwin.apple_sdk.frameworks.CoreServices
   ]);
-
-  shellHook = ''
-    export PATH="$PATH:$HOME/.cargo/bin"
-  '';
 }
