@@ -1,6 +1,6 @@
 [package]
 name = "rain_cli_meta"
-version = "0.7.0"
+version = "0.8.0"
 edition = "2021"
 description = "Rain cli tooling for metadata validation and generation."
 license = "CAL-1.0"
