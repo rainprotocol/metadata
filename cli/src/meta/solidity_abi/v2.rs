@@ -188,10 +188,20 @@ impl<'de> Deserialize<'de> for SolidityAbiItem {
 
         let map_item_fn_io;
         map_item_fn_io = |intermediate_io: IntermediateIO| -> Result<SolidityAbiFnIO, D::Error> {
+            if intermediate_io.indexed.is_some() {
+                return Err(D::Error::custom("indexed found on fn io"));
+            }
+
+            let components: Option<Result<Vec<SolidityAbiFnIO>, D::Error>> = match intermediate_io.components.map(|cs| {
+                let cs.iter().map(map_item_fn_io).collect();
+            }) {
+                Some(Err(err))
+                None
+            }
             Ok(SolidityAbiFnIO {
                 name: intermediate_io.name,
                 typ: intermediate_io.typ,
-                components: intermediate_io.components.iter().map(map_item_fn_io).collect(),
+                components: components?,
             })
         };
 
