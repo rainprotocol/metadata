@@ -7,7 +7,7 @@ use strum::EnumString;
 #[repr(u64)]
 pub enum KnownMagic {
     RainMetaDocumentV1 = 0xff0a89c674ee7874,
-    SolidityABIV2 = 0xffe5ffb4a3ff2cde,
+    SolidityAbiV2 = 0xffe5ffb4a3ff2cde,
     OpMetaV1 = 0xffe5282f43e495b4,
     InterpreterCallerMetaV1 = 0xffc21bbf86cc199b,
 }
