@@ -186,12 +186,21 @@ impl<'de> Deserialize<'de> for SolidityAbiItem {
 
         let intermediate = Intermediate::deserialize(deserializer)?;
 
+        let map_item_fn_io;
+        map_item_fn_io = |intermediate_io: IntermediateIO| -> Result<SolidityAbiFnIO, D::Error> {
+            Ok(SolidityAbiFnIO {
+                name: intermediate_io.name,
+                typ: intermediate_io.typ,
+                components: intermediate_io.components.iter().map(map_item_fn_io).collect(),
+            })
+        };
+
         match intermediate.typ {
             IntermediateType::Function => {
                 Ok(SolidityAbiItem::Function(SolidityAbiItemFn {
                     name: intermediate.name.ok_or(D::Error::custom("function missing name"))?,
-                    inputs: vec![],
-                    outputs: vec![],
+                    inputs: intermediate.inputs.iter().map(map_item_fn_io).collect(),
+                    outputs: intermediate.outputs.iter().map(map_item_fn_io).collect(),
                     state_mutability: intermediate.state_mutability.ok_or(D::Error::custom("function missing mutability"))?,
                 }))
             },
