@@ -18,6 +18,18 @@ pub enum KnownMeta {
     OpV1,
 }
 
+impl TryFrom<KnownMagic> for KnownMeta {
+    type Error = anyhow::Error;
+    fn try_from(magic: KnownMagic) -> anyhow::Result<Self> {
+        match magic {
+            KnownMagic::SolidityAbiV2 => Ok(KnownMeta::SolidityAbiV2),
+            KnownMagic::InterpreterCallerMetaV1 => Ok(KnownMeta::InterpreterCallerMetaV1),
+            KnownMagic::OpMetaV1 => Ok(KnownMeta::OpV1),
+            _ => Err(anyhow::anyhow!("Unsupported magic {}", magic)),
+        }
+    }
+}
+
 #[derive(serde::Serialize, Copy, Clone, EnumString, EnumIter, strum::Display, Debug, PartialEq)]
 #[strum(serialize_all = "kebab-case")]
 pub enum ContentType {
@@ -33,6 +45,15 @@ pub enum ContentEncoding {
     None,
     Identity,
     Deflate,
+}
+
+impl ContentEncoding {
+    pub fn encode(&self, data: Vec<u8>) -> anyhow::Result<Vec<u8>> {
+        Ok(match self {
+            ContentEncoding::None | ContentEncoding::Identity => data,
+            ContentEncoding::Deflate => deflate::deflate_bytes(&data),
+        })
+    }
 }
 
 #[derive(serde::Serialize, Copy, Clone, EnumString, EnumIter, strum::Display, Debug, PartialEq)]

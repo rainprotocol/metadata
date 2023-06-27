@@ -16,6 +16,6 @@ pub struct Validate {
 pub fn validate(v: Validate) -> anyhow::Result<()> {
     let data: Vec<u8> = std::fs::read(v.input_path)?;
     // If we can normalize the input data then it is valid.
-    let _normalized = crate::meta::normalize::normalize(v.meta, &data)?;
+    let _normalized = v.meta.normalize(&data)?;
     Ok(())
 }
