@@ -1,15 +1,15 @@
+use crate::cli::output::SupportedOutputEncoding;
 use crate::meta::magic::KnownMagic;
-use std::path::PathBuf;
-use clap::Parser;
-use anyhow::anyhow;
 use crate::meta::normalize::normalize;
-use crate::meta::KnownMeta;
-use crate::meta::RainMetaDocumentV1Item;
-use crate::meta::ContentType;
 use crate::meta::ContentEncoding;
 use crate::meta::ContentLanguage;
+use crate::meta::ContentType;
+use crate::meta::KnownMeta;
+use crate::meta::RainMetaDocumentV1Item;
+use anyhow::anyhow;
+use clap::Parser;
 use itertools::izip;
-use crate::cli::output::SupportedOutputEncoding;
+use std::path::PathBuf;
 
 #[derive(Parser)]
 pub struct Build {
@@ -36,46 +36,59 @@ fn build_bytes(build: &Build) -> anyhow::Result<Vec<u8>> {
     bytess.push(build.global_magic.to_prefix_bytes().to_vec());
 
     if build.input_path.len() != build.magic.len() {
-        return Err(anyhow!("{} inputs does not match {} magic numbers.", build.input_path.len(), build.magic.len()));
+        return Err(anyhow!(
+            "{} inputs does not match {} magic numbers.",
+            build.input_path.len(),
+            build.magic.len()
+        ));
     }
 
     if build.input_path.len() != build.content_type.len() {
-        return Err(anyhow!("{} inputs does not match {} content types.", build.input_path.len(), build.content_type.len()));
+        return Err(anyhow!(
+            "{} inputs does not match {} content types.",
+            build.input_path.len(),
+            build.content_type.len()
+        ));
     }
 
     if build.input_path.len() != build.content_encoding.len() {
-        return Err(anyhow!("{} inputs does not match {} content encodings.", build.input_path.len(), build.content_encoding.len()));
+        return Err(anyhow!(
+            "{} inputs does not match {} content encodings.",
+            build.input_path.len(),
+            build.content_encoding.len()
+        ));
     }
 
     if build.input_path.len() != build.content_language.len() {
-        return Err(anyhow!("{} inputs does not match {} content languages.", build.input_path.len(), build.content_language.len()));
+        return Err(anyhow!(
+            "{} inputs does not match {} content languages.",
+            build.input_path.len(),
+            build.content_language.len()
+        ));
     }
 
-    for (
-        input_path,
-        magic,
-        content_type,
-        content_encoding,
-        content_language
-    ) in izip!(
+    for (input_path, magic, content_type, content_encoding, content_language) in izip!(
         build.input_path.iter(),
         build.magic.iter(),
         build.content_type.iter(),
         build.content_encoding.iter(),
-        build.content_language.iter()) {
+        build.content_language.iter()
+    ) {
         bytess.push(magic.to_prefix_bytes().to_vec());
 
         let data = std::fs::read(input_path)?;
         let normalized = match magic {
             KnownMagic::SolidityAbiV2 => normalize(KnownMeta::SolidityAbiV2, &data)?,
             KnownMagic::OpMetaV1 => normalize(KnownMeta::OpV1, &data)?,
-            KnownMagic::InterpreterCallerMetaV1 => normalize(KnownMeta::InterpreterCallerMetaV1, &data)?,
+            KnownMagic::InterpreterCallerMetaV1 => {
+                normalize(KnownMeta::InterpreterCallerMetaV1, &data)?
+            }
             _ => return Err(anyhow!("Unsupported magic {}", magic)),
         };
 
         let encoded = match content_encoding {
-            ContentEncoding::Deflate => { deflate::deflate_bytes(&normalized) },
-            ContentEncoding::Identity | ContentEncoding::None => { normalized },
+            ContentEncoding::Deflate => deflate::deflate_bytes(&normalized),
+            ContentEncoding::Identity | ContentEncoding::None => normalized,
         };
 
         let item = RainMetaDocumentV1Item {
@@ -94,4 +107,38 @@ fn build_bytes(build: &Build) -> anyhow::Result<Vec<u8>> {
 
 pub fn build(b: Build) -> anyhow::Result<()> {
     crate::cli::output::output(&b.output_path, b.output_encoding, &build_bytes(&b)?)
+}
+
+#[cfg(test)]
+mod tests {
+    use std::io::Cursor;
+    use ciborium::de::from_reader;
+
+    use crate::{cli::output::SupportedOutputEncoding, meta::{magic::{self, KnownMagic}, ContentType, ContentEncoding, ContentLanguage, RainMetaDocumentV1Item}};
+
+    use super::{Build, build_bytes};
+
+    #[test]
+    fn test_build() {
+        let build_struct: Build = Build {
+            output_path: None,
+            output_encoding: SupportedOutputEncoding::Hex,
+            global_magic: magic::KnownMagic::SolidityAbiV2,
+            input_path: vec!["test_abi.json".to_string().into()],
+            magic: vec![KnownMagic::SolidityAbiV2],
+            content_type: vec![ContentType::Json],
+            content_encoding: vec![ContentEncoding::Deflate],
+            content_language: vec![ContentLanguage::En],
+        };
+
+        let build_ = build_bytes(&build_struct).unwrap();
+        let build_ = hex::encode(build_);
+        let magic_number =  &build_[..16];
+        let expected_magic_number = hex::encode(KnownMagic::RainMetaDocumentV1.to_prefix_bytes());
+
+        let payload:&str = &build_[17..];
+        let reader = Cursor::new(payload);
+        // let decoded: RainMetaDocumentV1Item = from_reader(reader).expect("Fail to de-serialise");
+        assert_eq!(magic_number, expected_magic_number);
+    }
 }
