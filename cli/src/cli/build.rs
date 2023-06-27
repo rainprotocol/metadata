@@ -72,62 +72,64 @@ impl BuildItem {
     }
 }
 
-fn build_bytes(build: &Build) -> anyhow::Result<Vec<u8>> {
-    let mut bytes: Vec<u8> = Vec::new();
-    bytes.extend(build.global_magic.to_prefix_bytes().to_vec());
+fn build_bytes(magic: KnownMagic, items: Vec<BuildItem>) -> anyhow::Result<Vec<u8>> {
+    let mut bytes: Vec<u8> = magic.to_prefix_bytes().to_vec();
 
-    if build.input_path.len() != build.magic.len() {
-        return Err(anyhow!(
-            "{} inputs does not match {} magic numbers.",
-            build.input_path.len(),
-            build.magic.len()
-        ));
-    }
-
-    if build.input_path.len() != build.content_type.len() {
-        return Err(anyhow!(
-            "{} inputs does not match {} content types.",
-            build.input_path.len(),
-            build.content_type.len()
-        ));
-    }
-
-    if build.input_path.len() != build.content_encoding.len() {
-        return Err(anyhow!(
-            "{} inputs does not match {} content encodings.",
-            build.input_path.len(),
-            build.content_encoding.len()
-        ));
-    }
-
-    if build.input_path.len() != build.content_language.len() {
-        return Err(anyhow!(
-            "{} inputs does not match {} content languages.",
-            build.input_path.len(),
-            build.content_language.len()
-        ));
-    }
-
-    for (input_path, magic, content_type, content_encoding, content_language) in izip!(
-        build.input_path.iter(),
-        build.magic.iter(),
-        build.content_type.iter(),
-        build.content_encoding.iter(),
-        build.content_language.iter()
-    ) {
-        BuildItem {
-            data: std::fs::read(input_path)?,
-            magic: *magic,
-            content_type: *content_type,
-            content_encoding: *content_encoding,
-            content_language: *content_language,
-        }.write(&mut bytes)?;
+    for item in items {
+        item.write(&mut bytes)?;
     }
     Ok(bytes)
 }
 
 pub fn build(b: Build) -> anyhow::Result<()> {
-    crate::cli::output::output(&b.output_path, b.output_encoding, &build_bytes(&b)?)
+    if b.input_path.len() != b.magic.len() {
+        return Err(anyhow!(
+            "{} inputs does not match {} magic numbers.",
+            b.input_path.len(),
+            b.magic.len()
+        ));
+    }
+
+    if b.input_path.len() != b.content_type.len() {
+        return Err(anyhow!(
+            "{} inputs does not match {} content types.",
+            b.input_path.len(),
+            b.content_type.len()
+        ));
+    }
+
+    if b.input_path.len() != b.content_encoding.len() {
+        return Err(anyhow!(
+            "{} inputs does not match {} content encodings.",
+            b.input_path.len(),
+            b.content_encoding.len()
+        ));
+    }
+
+    if b.input_path.len() != b.content_language.len() {
+        return Err(anyhow!(
+            "{} inputs does not match {} content languages.",
+            b.input_path.len(),
+            b.content_language.len()
+        ));
+    }
+    let items: Vec<BuildItem> = vec![];
+    for(input_path, magic, content_type, content_encoding, content_language) in izip!(
+        b.input_path.iter(),
+        b.magic.iter(),
+        b.content_type.iter(),
+        b.content_encoding.iter(),
+        b.content_language.iter()
+    ) {
+        items.push(BuildItem {
+            data: std::fs::read(input_path)?,
+            magic: *magic,
+            content_type: *content_type,
+            content_encoding: *content_encoding,
+            content_language: *content_language,
+        });
+    }
+    crate::cli::output::output(&b.output_path, b.output_encoding, &build_bytes(b.global_magic, items)?)
 }
 
 #[cfg(test)]
