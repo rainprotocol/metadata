@@ -1,7 +1,7 @@
 use strum::EnumIter;
 use strum::EnumString;
 
-#[derive(serde::Serialize, Clone, Copy, EnumString, EnumIter, strum::Display)]
+#[derive(serde::Serialize, Clone, Copy, EnumString, EnumIter, strum::Display, Debug, PartialEq)]
 #[strum(serialize_all = "kebab_case")]
 #[serde(rename_all = "kebab-case")]
 #[repr(u64)]

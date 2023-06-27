@@ -10,7 +10,7 @@ use serde::ser::{Serialize, Serializer, SerializeMap};
 use strum::EnumIter;
 use strum::EnumString;
 
-#[derive(Copy, Clone, EnumString, EnumIter, strum::Display)]
+#[derive(Copy, Clone, EnumString, EnumIter, strum::Display, Debug, PartialEq)]
 #[strum(serialize_all = "kebab-case")]
 pub enum KnownMeta {
     SolidityAbiV2,
@@ -18,7 +18,7 @@ pub enum KnownMeta {
     OpV1,
 }
 
-#[derive(serde::Serialize, Copy, Clone, EnumString, EnumIter, strum::Display)]
+#[derive(serde::Serialize, Copy, Clone, EnumString, EnumIter, strum::Display, Debug, PartialEq)]
 #[strum(serialize_all = "kebab-case")]
 pub enum ContentType {
     None,
@@ -26,7 +26,7 @@ pub enum ContentType {
     Json
 }
 
-#[derive(serde::Serialize, Copy, Clone, EnumString, EnumIter, strum::Display)]
+#[derive(serde::Serialize, Copy, Clone, EnumString, EnumIter, strum::Display, Debug, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 #[strum(serialize_all = "kebab-case")]
 pub enum ContentEncoding {
@@ -35,7 +35,7 @@ pub enum ContentEncoding {
     Deflate,
 }
 
-#[derive(serde::Serialize, Copy, Clone, EnumString, EnumIter, strum::Display)]
+#[derive(serde::Serialize, Copy, Clone, EnumString, EnumIter, strum::Display, Debug, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 #[strum(serialize_all = "kebab-case")]
 pub enum ContentLanguage {
@@ -43,6 +43,7 @@ pub enum ContentLanguage {
     En,
 }
 
+#[derive(PartialEq, Debug)]
 pub struct RainMetaDocumentV1Item {
     pub payload: serde_bytes::ByteBuf,
     pub magic: KnownMagic,
