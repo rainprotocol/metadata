@@ -10,7 +10,7 @@ use serde::ser::{Serialize, Serializer, SerializeMap};
 use strum::EnumIter;
 use strum::EnumString;
 
-#[derive(Copy, Clone, EnumString, EnumIter, strum::Display)]
+#[derive(Copy, Clone, EnumString, EnumIter, strum::Display, Debug, PartialEq)]
 #[strum(serialize_all = "kebab-case")]
 pub enum KnownMeta {
     SolidityAbiV2,
@@ -18,7 +18,19 @@ pub enum KnownMeta {
     OpV1,
 }
 
-#[derive(serde::Serialize, Copy, Clone, EnumString, EnumIter, strum::Display)]
+impl TryFrom<KnownMagic> for KnownMeta {
+    type Error = anyhow::Error;
+    fn try_from(magic: KnownMagic) -> anyhow::Result<Self> {
+        match magic {
+            KnownMagic::SolidityAbiV2 => Ok(KnownMeta::SolidityAbiV2),
+            KnownMagic::InterpreterCallerMetaV1 => Ok(KnownMeta::InterpreterCallerMetaV1),
+            KnownMagic::OpMetaV1 => Ok(KnownMeta::OpV1),
+            _ => Err(anyhow::anyhow!("Unsupported magic {}", magic)),
+        }
+    }
+}
+
+#[derive(serde::Serialize, Copy, Clone, EnumString, EnumIter, strum::Display, Debug, PartialEq)]
 #[strum(serialize_all = "kebab-case")]
 pub enum ContentType {
     None,
@@ -26,7 +38,7 @@ pub enum ContentType {
     Json
 }
 
-#[derive(serde::Serialize, Copy, Clone, EnumString, EnumIter, strum::Display)]
+#[derive(serde::Serialize, Copy, Clone, EnumString, EnumIter, strum::Display, Debug, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 #[strum(serialize_all = "kebab-case")]
 pub enum ContentEncoding {
@@ -35,7 +47,16 @@ pub enum ContentEncoding {
     Deflate,
 }
 
-#[derive(serde::Serialize, Copy, Clone, EnumString, EnumIter, strum::Display)]
+impl ContentEncoding {
+    pub fn encode(&self, data: Vec<u8>) -> anyhow::Result<Vec<u8>> {
+        Ok(match self {
+            ContentEncoding::None | ContentEncoding::Identity => data,
+            ContentEncoding::Deflate => deflate::deflate_bytes(&data),
+        })
+    }
+}
+
+#[derive(serde::Serialize, Copy, Clone, EnumString, EnumIter, strum::Display, Debug, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 #[strum(serialize_all = "kebab-case")]
 pub enum ContentLanguage {
@@ -43,6 +64,7 @@ pub enum ContentLanguage {
     En,
 }
 
+#[derive(PartialEq, Debug)]
 pub struct RainMetaDocumentV1Item {
     pub payload: serde_bytes::ByteBuf,
     pub magic: KnownMagic,
