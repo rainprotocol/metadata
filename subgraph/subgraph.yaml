@@ -6,9 +6,9 @@ dataSources:
     name: MetaBoard
     network: localhost
     source:
-      address: "0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0"
+      address: "0x95401dc811bb5740090279Ba06cfA8fcF6113778"
       abi: MetaBoard
-      startBlock: 14
+      startBlock: 38
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
