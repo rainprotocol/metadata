@@ -2,7 +2,7 @@ name: MetaBoard Subgraph CI
 on: [push]
 
 jobs:
-  test:
+  subgraph-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -12,13 +12,15 @@ jobs:
       - name: Install latest nightly
         uses: actions-rs/toolchain@v1
         with:
-            toolchain: stable
+          profile: minimal
+          toolchain: stable
 
       - name: Start docker container
         run: docker-compose -f subgraph/docker/docker-compose.yml up -d
 
       - name: Run cargo check
         uses: actions-rs/cargo@v1
+        working-directory: metaboard-cli
         with:
           command: check
 
