@@ -6,9 +6,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Start docker container
-        run: docker-compose -f subgraph/docker/docker-compose.yml up -d
-
       - uses: actions/checkout@v2
         with:
           submodules: recursive
@@ -16,6 +13,9 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
             toolchain: stable
+
+      - name: Start docker container
+        run: docker-compose -f subgraph/docker/docker-compose.yml up -d
 
       - name: Run cargo check
         uses: actions-rs/cargo@v1
