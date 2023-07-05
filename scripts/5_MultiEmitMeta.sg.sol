@@ -7,7 +7,6 @@ import "../src/LibMeta.sol";
 import "../src/IMetaBoardV1.sol";
 
 contract EmitMetaScript is Script {
-    bytes meta;
     using stdJson for string;
 
     function run() public {
@@ -15,17 +14,25 @@ contract EmitMetaScript is Script {
         address deployer_address = address(uint160(deployer));
         vm.startBroadcast(deployer);
 
-        string memory config = vm.readFile("scripts/config.json");
-        address metaBoard_address = stdJson.readAddress(config, ".contract");
-        meta = stdJson.readBytes(config, ".meta");
+        string memory config = vm.readFile(
+            "broadcast/1_EmitMeta.sg.sol/31337/run-latest.json"
+        );
+        address metaBoardAddress = stdJson.readAddress(
+            config,
+            ".receipts[0].contractAddress"
+        );
 
-        IMetaBoardV1 metaBoard = IMetaBoardV1(metaBoard_address);
+        bytes memory meta = stdJson.readBytes(
+            config,
+            ".transactions[1].arguments[1]"
+        );
 
-        metaBoard.emitMeta(1, meta);
-        metaBoard.emitMeta(1, meta);
+        IMetaBoardV1 metaBoard = IMetaBoardV1(metaBoardAddress);
+
         metaBoard.emitMeta(1, meta);
         metaBoard.emitMeta(1, meta);
 
         vm.stopBroadcast();
+        console.log("Multiple events emmited");
     }
 }

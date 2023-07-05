@@ -5,7 +5,7 @@ import "forge-std/Script.sol";
 import "forge-std/Test.sol";
 import "forge-std/StdJson.sol";
 
-contract MetaV1EntityTest is Script, Test {
+contract MultiEmitTest is Script, Test {
     using stdJson for string;
 
     function run() public {
@@ -16,22 +16,32 @@ contract MetaV1EntityTest is Script, Test {
             config,
             ".receipts[0].contractAddress"
         );
-        bytes32 meta_id = stdJson.readBytes32(
-            config,
-            ".receipts[1].transactionHash"
+
+        string memory multiReceipts = vm.readFile(
+            "broadcast/5_MultiEmitMeta.sg.sol/31337/run-latest.json"
         );
         waitForSubgraphToSync();
         string memory response = string(getMetaBoard(address(metaBoard)));
 
-        assertEq(stdJson.readAddress(response, ".id"), address(metaBoard));
-        assertEq(stdJson.readAddress(response, ".address"), address(metaBoard));
-        assertEq(stdJson.readUint(response, ".meta_count"), 1);
-        assertEq(
-            stdJson.readString(response, ".metas[0]"),
-            vm.toString(meta_id)
-        );
-        require(!failed(), "MetaV1EntityTest failed");
-        console.log("MetaBoard entity test passed");
+        for (uint256 i = 0; i < 2; i++)
+            assertEq(
+                stdJson.readString(
+                    response,
+                    string(abi.encodePacked(".metas[", vm.toString(i + 1), "]"))
+                ),
+                stdJson.readString(
+                    multiReceipts,
+                    string(
+                        abi.encodePacked(
+                            ".transactions[",
+                            vm.toString(i),
+                            "].hash"
+                        )
+                    )
+                )
+            );
+        require(!failed(), "MultiEmitTest failed");
+        console.log("Multi event test passed");
     }
 
     function waitForSubgraphToSync() internal {

@@ -8,11 +8,20 @@ contract DeploySubgraphScript is Script {
     using stdJson for string;
 
     function run() public {
-        string memory config = vm.readFile("scripts/config.json");
-        address metaBoard = stdJson.readAddress(config, ".contract");
-        uint256 blockNumber = stdJson.readUint(config, ".block");
+        string memory config = vm.readFile(
+            "broadcast/1_EmitMeta.sg.sol/31337/run-latest.json"
+        );
+        address metaBoard = stdJson.readAddress(
+            config,
+            ".receipts[0].contractAddress"
+        );
+        uint256 blockNumber = stdJson.readUint(
+            config,
+            ".receipts[0].blockNumber"
+        );
 
         deploySubgraph(metaBoard, blockNumber);
+        console.log("Subgraph deployed");
     }
 
     function deploySubgraph(address metaBoard, uint256 block_number) public {

@@ -19,12 +19,6 @@ contract EmitMetaScript is Script {
         MetaBoard metaBoard = new MetaBoard();
         metaBoard.emitMeta(1, meta);
         vm.stopBroadcast();
-        string memory key = "MetaBoard";
-
-        vm.serializeAddress(key, "contract", address(metaBoard));
-        vm.serializeBytes(key, "meta", meta);
-        string memory finalJson = vm.serializeUint(key, "block", block.number);
-        vm.writeJson(finalJson, "scripts/config.json");
     }
 
     function getMetaData() internal returns (bytes memory) {
