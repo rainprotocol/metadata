@@ -7,32 +7,29 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-        with:
-          submodules: recursive
-      - name: Install latest nightly
+      - name: Install stable
         uses: actions-rs/toolchain@v1
         with:
-          profile: minimal
           toolchain: stable
-
-      - name: Start docker container
-        run: docker-compose -f subgraph/docker/docker-compose.yml up -d
-
-      - name: Run cargo check
-        uses: actions-rs/cargo@v1
-        working-directory: metaboard-cli
+          
+      - uses: cachix/install-nix-action@v13
         with:
-          command: check
-
-
+          nix_path: nixpkgs=channel:nixos-unstable
+      
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
           version: nightly
+
+      - name: Start docker container
+        run: docker-compose -f subgraph/docker/docker-compose.yml up -d
+
+      - name: install npm dependencies
+        working-directory: ./subgraph
+        run: nix-shell --run init
 
       - name: Run test
         run: cargo run --manifest-path metaboard-cli/Cargo.toml test
 
       - name: Stop docker container
         run: docker-compose -f subgraph/docker/docker-compose.yml down
-
