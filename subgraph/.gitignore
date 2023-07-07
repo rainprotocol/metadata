@@ -1,0 +1,9 @@
+artifacts
+build
+cache
+contracts
+docker/data
+generated
+node_modules
+typechain
+subgraph.yaml

@@ -43,7 +43,7 @@ pub async fn test(config: TestConfig) -> anyhow::Result<()> {
                     .args(&[
                         "-c",
                         &format!(
-                            "forge script scripts/{} -vv --ffi --broadcast --rpc-url {}",
+                            "forge script script/{} -vv --ffi --broadcast --rpc-url {}",
                             file, rpc_url
                         ),
                     ])

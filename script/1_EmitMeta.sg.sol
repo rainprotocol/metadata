@@ -34,7 +34,7 @@ contract EmitMetaScript is Script {
         command[8] = "-E";
         command[9] = "hex";
         command[10] = "-i";
-        command[11] = "scripts/abi.json";
+        command[11] = "script/abi.json";
         command[12] = "-m";
         command[13] = "solidity-abi-v2";
         command[14] = "-e";
