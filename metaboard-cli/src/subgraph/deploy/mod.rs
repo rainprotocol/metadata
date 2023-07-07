@@ -90,7 +90,7 @@ pub async fn deploy(config: Config) -> anyhow::Result<()> {
             .args(&[
                 "-c",
                 &format!(
-                    "npx graph auth --product hosted-service {}",
+                    "graph auth --product hosted-service {}",
                     graph_access_token
                 ),
             ])
@@ -126,7 +126,7 @@ pub async fn deploy(config: Config) -> anyhow::Result<()> {
 
     let output = Command::new("bash")
         .current_dir(&root_dir)
-        .args(&["-c", "npx graph codegen && npx graph build"])
+        .args(&["-c", "graph codegen && graph build"])
         .output()?;
 
     if output.status.success() {
@@ -142,7 +142,7 @@ pub async fn deploy(config: Config) -> anyhow::Result<()> {
             .current_dir(&root_dir)
             .args(&[
                 "-c",
-                &format!("npx graph deploy {} {}", end_point, subgraph_name),
+                &format!("graph deploy {} {}", end_point, subgraph_name),
             ])
             .output()
             .expect("Failed graph deploy command");
