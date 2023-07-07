@@ -2,7 +2,6 @@ out
 cache
 broadcast
 
-subgraph/abis
 subgraph/artifacts
 subgraph/build
 subgraph/cache

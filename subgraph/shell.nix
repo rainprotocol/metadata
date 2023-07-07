@@ -28,10 +28,6 @@ let
 
   init = pkgs.writeShellScriptBin "init" ''
     npm install
-    rm -rf docker/data
-    mkdir -p contracts && cp ../src/* contracts
-    compile
-    mkdir -p abis && cp artifacts/contracts/MetaBoard.sol/MetaBoard.json abis
   '';
 
   codegen = pkgs.writeShellScriptBin "codegen" ''
