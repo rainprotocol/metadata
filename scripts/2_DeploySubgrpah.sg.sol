@@ -42,7 +42,7 @@ contract DeploySubgraphScript is Script {
         command[13] = "subgraph/subgraph.yaml";
         command[14] = "-r";
         command[15] = "subgraph/";
-
+        
         vm.ffi(command);
     }
 }

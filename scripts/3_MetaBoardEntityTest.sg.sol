@@ -4,8 +4,9 @@ pragma solidity =0.8.18;
 import "forge-std/Script.sol";
 import "forge-std/Test.sol";
 import "forge-std/StdJson.sol";
+import "./Subgraph.sol";
 
-contract MetaV1EntityTest is Script, Test {
+contract MetaV1EntityTest is Script, Test, Subgraph {
     using stdJson for string;
 
     function run() public {
@@ -20,7 +21,7 @@ contract MetaV1EntityTest is Script, Test {
             config,
             ".receipts[1].transactionHash"
         );
-        waitForSubgraphToSync();
+        waitForSubgraphToSync(block.number);
         string memory response = string(getMetaBoard(address(metaBoard)));
 
         assertEq(stdJson.readAddress(response, ".id"), address(metaBoard));
@@ -32,18 +33,6 @@ contract MetaV1EntityTest is Script, Test {
         );
         require(!failed(), "MetaV1EntityTest failed");
         console.log("MetaBoard entity test passed");
-    }
-
-    function waitForSubgraphToSync() internal {
-        string[] memory command = new string[](6);
-        command[0] = "cargo";
-        command[1] = "run";
-        command[2] = "--quiet";
-        command[3] = "--manifest-path";
-        command[4] = "metaboard-cli/Cargo.toml";
-        command[5] = "wait";
-
-        vm.ffi(command);
     }
 
     function getMetaBoard(address metaBoard) internal returns (bytes memory) {

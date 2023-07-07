@@ -4,8 +4,9 @@ pragma solidity =0.8.18;
 import "forge-std/Script.sol";
 import "forge-std/Test.sol";
 import "forge-std/StdJson.sol";
+import "./Subgraph.sol";
 
-contract MultiEmitTest is Script, Test {
+contract MultiEmitTest is Script, Test, Subgraph {
     using stdJson for string;
 
     function run() public {
@@ -20,7 +21,7 @@ contract MultiEmitTest is Script, Test {
         string memory multiReceipts = vm.readFile(
             "broadcast/5_MultiEmitMeta.sg.sol/31337/run-latest.json"
         );
-        waitForSubgraphToSync();
+        waitForSubgraphToSync(block.number);
         string memory response = string(getMetaBoard(address(metaBoard)));
 
         for (uint256 i = 0; i < 2; i++)
@@ -42,18 +43,6 @@ contract MultiEmitTest is Script, Test {
             );
         require(!failed(), "MultiEmitTest failed");
         console.log("Multi event test passed");
-    }
-
-    function waitForSubgraphToSync() internal {
-        string[] memory command = new string[](6);
-        command[0] = "cargo";
-        command[1] = "run";
-        command[2] = "--quiet";
-        command[3] = "--manifest-path";
-        command[4] = "metaboard-cli/Cargo.toml";
-        command[5] = "wait";
-
-        vm.ffi(command);
     }
 
     function getMetaBoard(address metaBoard) internal returns (bytes memory) {

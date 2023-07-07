@@ -51,18 +51,6 @@ contract MetaBoardEntityTest is Script, Test {
         console.log("MetaV1 entity tests passed");
     }
 
-    function waitForSubgraphToSync() internal {
-        string[] memory command = new string[](6);
-        command[0] = "cargo";
-        command[1] = "run";
-        command[2] = "--quiet";
-        command[3] = "--manifest-path";
-        command[4] = "metaboard-cli/Cargo.toml";
-        command[5] = "wait";
-
-        vm.ffi(command);
-    }
-
     function getMetaV1(bytes32 transaction) internal returns (bytes memory) {
         string[] memory command = new string[](9);
         command[0] = "cargo";
@@ -78,6 +66,3 @@ contract MetaBoardEntityTest is Script, Test {
         return vm.ffi(command);
     }
 }
-
-//8d91c10e82300c86df65672e9ae8c177c083315e8c31454a32031dd93ae34278778b828006f1b6a6fffeff6b7bac94a6d2b3539be793d112e4fb50a2daa824303a152982a2293d15c820350fdbf5e92dd81ade81a658548745af436b8d557554292043a1305ed232c81d46e3f014ef980e5a231848538b6e80e3503ed83ea6133441335e5eeae56a3df0f2c9152fdc9b758a3fcc3eb634b3a3afe5dc90b88d99bac314ee798a778eeffc03100bcdf16b06e3b94592b663608c3d43a273cd419472cc12022439f67699a70b6b43e2f800
-//0xff0a89c674ee7874a50058d0
