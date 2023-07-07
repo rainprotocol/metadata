@@ -29,7 +29,7 @@ jobs:
         run: nix-shell --run init
 
       - name: Run test
-        run: cargo run --manifest-path metaboard-cli/Cargo.toml test
+        run: cargo run --manifest-path metaboard-cli/Cargo.toml test -s scripts/
 
       - name: Stop docker container
         run: docker-compose -f subgraph/docker/docker-compose.yml down
