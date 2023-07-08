@@ -1,7 +1,7 @@
 use anyhow::anyhow;
 use clap::Parser;
 use mustache::MapBuilder;
-use std::{fs, path::PathBuf, process::Command, str::FromStr};
+use std::{fs, path::PathBuf, process::Command};
 
 #[derive(Parser)]
 pub struct Config {
@@ -69,7 +69,7 @@ pub async fn deploy(config: Config) -> anyhow::Result<()> {
     let root_dir = config
         .root_dir
         .unwrap_or_else(|| Err(anyhow!("No root path provided")).unwrap());
-
+    
     let end_point = config
         .end_point
         .unwrap_or_else(|| Err(anyhow!("No end-point provided")).unwrap());
@@ -83,16 +83,14 @@ pub async fn deploy(config: Config) -> anyhow::Result<()> {
         .unwrap_or_else(|| Err(anyhow!("No version-lable provided provided")).unwrap());
 
     if network != "localhost" {
-        let graph_access_token = config.graph_access_token
-        .unwrap_or_else(|| Err(anyhow!("Graph Access Token is not proiveded.")).unwrap());
+        let graph_access_token = config
+            .graph_access_token
+            .unwrap_or_else(|| Err(anyhow!("Graph Access Token is not proiveded.")).unwrap());
 
         let output = Command::new("bash")
             .args(&[
                 "-c",
-                &format!(
-                    "graph auth --product hosted-service {}",
-                    graph_access_token
-                ),
+                &format!("graph auth --product hosted-service {}", graph_access_token),
             ])
             .output()
             .expect("Failed graph auth command");
@@ -127,7 +125,8 @@ pub async fn deploy(config: Config) -> anyhow::Result<()> {
     let output = Command::new("bash")
         .current_dir(&root_dir)
         .args(&["-c", "graph codegen && graph build"])
-        .output()?;
+        .output()
+        .expect("Failed graph codegen and graph build command");
 
     if output.status.success() {
         let stdout = String::from_utf8_lossy(&output.stdout);
@@ -137,7 +136,7 @@ pub async fn deploy(config: Config) -> anyhow::Result<()> {
         return Err(anyhow!("{}", stderr));
     }
 
-    if network.ne(&String::from_str("localhost").unwrap()) {
+    if network != "localhost" {
         let output = Command::new("bash")
             .current_dir(&root_dir)
             .args(&[
@@ -161,7 +160,7 @@ pub async fn deploy(config: Config) -> anyhow::Result<()> {
                 &format!("graph create --node {} {}", end_point, subgraph_name),
             ])
             .output()
-            .expect("Failed local deploy command");
+            .expect("Failed graph create command");
 
         let output = Command::new("bash")
             .current_dir(&root_dir)
