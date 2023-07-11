@@ -69,7 +69,7 @@ pub async fn deploy(config: Config) -> anyhow::Result<()> {
     let root_dir = config
         .root_dir
         .unwrap_or_else(|| Err(anyhow!("No root path provided")).unwrap());
-    
+
     let end_point = config
         .end_point
         .unwrap_or_else(|| Err(anyhow!("No end-point provided")).unwrap());
@@ -123,7 +123,11 @@ pub async fn deploy(config: Config) -> anyhow::Result<()> {
     let _write = fs::write(output_path, renderd)?;
 
     let output = Command::new("bash")
-        .current_dir(&root_dir)
+        .current_dir(format!(
+            "{}/{}",
+            std::env::current_dir().unwrap().display(),
+            root_dir.to_str().unwrap()
+        ))
         .args(&["-c", "graph codegen && graph build"])
         .output()
         .expect("Failed graph codegen and graph build command");
@@ -138,7 +142,11 @@ pub async fn deploy(config: Config) -> anyhow::Result<()> {
 
     if network != "localhost" {
         let output = Command::new("bash")
-            .current_dir(&root_dir)
+            .current_dir(format!(
+                "{}/{}",
+                std::env::current_dir().unwrap().display(),
+                root_dir.to_str().unwrap()
+            ))
             .args(&[
                 "-c",
                 &format!("graph deploy {} {}", end_point, subgraph_name),
@@ -163,7 +171,11 @@ pub async fn deploy(config: Config) -> anyhow::Result<()> {
             .expect("Failed graph create command");
 
         let output = Command::new("bash")
-            .current_dir(&root_dir)
+            .current_dir(format!(
+                "{}/{}",
+                std::env::current_dir().unwrap().display(),
+                root_dir.to_str().unwrap()
+            ))
             .args(&[
                 "-c",
                 &format!(
