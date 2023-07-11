@@ -13,22 +13,18 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-          
-      - uses: cachix/install-nix-action@v13
-        with:
-          nix_path: nixpkgs=channel:nixos-unstable
+
+      - name: Start docker container
+        run: docker-compose -f subgraph/docker/docker-compose.yml up -d
       
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
           version: nightly
 
-      - name: Start docker container
-        run: docker-compose -f subgraph/docker/docker-compose.yml up -d
-
       - name: install npm dependencies
         working-directory: ./subgraph
-        run: nix-shell --run init
+        run: npm init
 
       - name: Run test
         run: cargo run --manifest-path metaboard-cli/Cargo.toml test -s script/
