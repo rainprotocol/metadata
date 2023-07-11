@@ -24,7 +24,7 @@ jobs:
 
       - name: install npm dependencies
         working-directory: ./subgraph
-        run: npm init
+        run: npm install
 
       - name: Run test
         run: cargo run --manifest-path metaboard-cli/Cargo.toml test -s script/
