@@ -28,7 +28,7 @@ pub struct Config {
     #[arg(short = 'b', long = "block-number", default_value = "0")]
     block_number: Option<String>,
     // graph access token
-    #[arg(short = 'g', long = "graph-access-token")]
+    #[arg(short = 'g', long = "npx graph-access-token")]
     graph_access_token: Option<String>,
     // endpoint
     #[arg(
@@ -88,9 +88,14 @@ pub async fn deploy(config: Config) -> anyhow::Result<()> {
             .unwrap_or_else(|| Err(anyhow!("Graph Access Token is not proiveded.")).unwrap());
 
         let output = Command::new("bash")
+            .current_dir(format!(
+                "{}/{}",
+                std::env::current_dir().unwrap().display(),
+                root_dir.to_str().unwrap()
+            ))
             .args(&[
                 "-c",
-                &format!("graph auth --product hosted-service {}", graph_access_token),
+                &format!("npx graph auth --product hosted-service {}", graph_access_token),
             ])
             .output()
             .expect("Failed graph auth command");
@@ -128,7 +133,7 @@ pub async fn deploy(config: Config) -> anyhow::Result<()> {
             std::env::current_dir().unwrap().display(),
             root_dir.to_str().unwrap()
         ))
-        .args(&["-c", "graph codegen && graph build"])
+        .args(&["-c", "npx graph codegen && npx graph build"])
         .output()
         .expect("Failed graph codegen and graph build command");
 
@@ -149,7 +154,7 @@ pub async fn deploy(config: Config) -> anyhow::Result<()> {
             ))
             .args(&[
                 "-c",
-                &format!("graph deploy {} {}", end_point, subgraph_name),
+                &format!("npx graph deploy {} {}", end_point, subgraph_name),
             ])
             .output()
             .expect("Failed graph deploy command");
@@ -165,7 +170,7 @@ pub async fn deploy(config: Config) -> anyhow::Result<()> {
         let _output = Command::new("bash")
             .args(&[
                 "-c",
-                &format!("graph create --node {} {}", end_point, subgraph_name),
+                &format!("npx graph create --node {} {}", end_point, subgraph_name),
             ])
             .output()
             .expect("Failed graph create command");
@@ -179,7 +184,7 @@ pub async fn deploy(config: Config) -> anyhow::Result<()> {
             .args(&[
                 "-c",
                 &format!(
-                    "graph deploy --node {} --ipfs http://localhost:5001 {}  --version-label {}",
+                    "npx graph deploy --node {} --ipfs http://localhost:5001 {}  --version-label {}",
                     end_point, subgraph_name, version_lable
                 ),
             ])
