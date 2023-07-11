@@ -95,7 +95,10 @@ pub async fn deploy(config: Config) -> anyhow::Result<()> {
             ))
             .args(&[
                 "-c",
-                &format!("npx graph auth --product hosted-service {}", graph_access_token),
+                &format!(
+                    "npx graph auth --product hosted-service {}",
+                    graph_access_token
+                ),
             ])
             .output()
             .expect("Failed graph auth command");
@@ -168,6 +171,11 @@ pub async fn deploy(config: Config) -> anyhow::Result<()> {
         }
     } else {
         let _output = Command::new("bash")
+            .current_dir(format!(
+                "{}/{}",
+                std::env::current_dir().unwrap().display(),
+                root_dir.to_str().unwrap()
+            ))
             .args(&[
                 "-c",
                 &format!("npx graph create --node {} {}", end_point, subgraph_name),
