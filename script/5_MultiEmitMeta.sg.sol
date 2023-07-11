@@ -11,7 +11,6 @@ contract EmitMetaScript is Script {
 
     function run() public {
         uint256 deployer = 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
-        address deployer_address = address(uint160(deployer));
         vm.startBroadcast(deployer);
 
         string memory config = vm.readFile(

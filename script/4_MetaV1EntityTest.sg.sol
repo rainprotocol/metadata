@@ -9,7 +9,7 @@ contract MetaBoardEntityTest is Script, Test {
     using stdJson for string;
 
     function run() public {
-        uint256 deployer = vm.envUint("DEPLOYER_KEY");
+        uint256 deployer = 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
         address deployerAddress = vm.rememberKey(deployer);
         string memory config = vm.readFile(
             "broadcast/1_EmitMeta.sg.sol/31337/run-latest.json"
