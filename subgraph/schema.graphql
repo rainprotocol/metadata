@@ -14,5 +14,6 @@ type MetaV1 @entity {
     payload: String!
     magicNumber: BigInt!
     contentType: String!
+    blockNumber: BigInt!
 }
 
