@@ -1,0 +1,14 @@
+query MetaV1($trx_hash: String) {
+  metaV1(id: $trx_hash) {
+    id
+    meta
+    sender
+    metaBoard {
+      id
+    }
+    payload
+    contentType
+    magicNumber
+    subject
+  }
+}

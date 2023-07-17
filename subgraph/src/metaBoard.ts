@@ -25,6 +25,7 @@ export function handleMetaV1(event: MetaV1Event): void {
   metaV1.payload = jsonData.mustGet("0").toString();
   metaV1.magicNumber = jsonData.mustGet("1").toBigInt();
   metaV1.contentType = jsonData.mustGet("2").toString();
+  metaV1.blockNumber = event.block.number;
 
   metaV1.save();
 

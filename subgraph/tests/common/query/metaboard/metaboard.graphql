@@ -1,0 +1,10 @@
+query MetaBoard($metaboard: String) {
+  metaBoard(id: $metaboard) {
+    id
+    address
+    metaCount
+    metas(orderBy: blockNumber) {
+      id
+    }
+  }
+}
