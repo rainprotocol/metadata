@@ -45,10 +45,12 @@ pub async fn deploy_data(
 
 pub async fn deploy_contract(consumer : Consumer)  -> Result<()> {  
 
-    if consumer.deploy {
+    if consumer.deploy { 
+
+        // If deploy options is present then check if the private key was provided.
         let key = match consumer.private_key {
             Some(key) => key,
-            None => return Err(anyhow!("Private Key Not Provided")),
+            None => return Err(anyhow!("\n ❌ Private Key Not Provided.\n Please provide unprefixed private key to deploy contract")),
         };   
         
         let data = deploy_data(
@@ -67,7 +69,7 @@ pub async fn deploy_contract(consumer : Consumer)  -> Result<()> {
             consumer.transaction_hash
         ).await? ; 
 
-        let (url,chain_id) = match consumer.to_network.unwrap() {
+        let (url,chain_id) = match consumer.to_network {
             RainNetworks::Ethereum => {
                 (Ethereum::default().provider,Ethereum::default().chain_id)
             } ,
@@ -83,7 +85,7 @@ pub async fn deploy_contract(consumer : Consumer)  -> Result<()> {
         } ; 
             
         let provider = Provider::<Http>::try_from(url)
-        .expect("could not instantiate HTTP Provider"); 
+        .expect("\n❌Could not instantiate HTTP Provider"); 
 
         let wallet: LocalWallet = key.parse()?; 
         let client = SignerMiddleware::new_with_provider_chain(provider, wallet).await?;  

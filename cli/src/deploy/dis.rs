@@ -1,4 +1,4 @@
-use clap::{Parser};
+use clap::Parser;
 
 #[derive(Parser,Clone)]
 pub struct DISpair {
@@ -29,11 +29,13 @@ pub fn replace_dis_pair(
             ret_str = ret_str.replace(&from_dis.interpreter.as_ref().unwrap()[2..].to_lowercase(), &to_dis.interpreter.as_ref().unwrap()[2..].to_lowercase()) ; 
         }
    } 
+   // Both the counterparties should be provided
    if from_dis.store.is_some() && to_dis.store.is_some() {
         if tx_data.contains(&from_dis.store.as_ref().unwrap()[2..].to_lowercase()){
             ret_str = ret_str.replace(&from_dis.store.as_ref().unwrap()[2..].to_lowercase(), &to_dis.store.as_ref().unwrap()[2..].to_lowercase()) ; 
         }
    }
+   // Both the counterparties should be provided
    if from_dis.deployer.is_some() && to_dis.deployer.is_some() { 
         if tx_data.contains(&from_dis.deployer.as_ref().unwrap()[2..].to_lowercase()){
             ret_str = ret_str.replace(&from_dis.deployer.as_ref().unwrap()[2..].to_lowercase(), &to_dis.deployer.as_ref().unwrap()[2..].to_lowercase()) ; 

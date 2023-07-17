@@ -1,7 +1,7 @@
 use graphql_client::{GraphQLQuery, Response};
 use reqwest;
-use anyhow::{Result};
-use crate::deploy::registry::{RainNetworks, Ethereum, Polygon, Mumbai};
+use anyhow::{Result, Ok};
+use crate::deploy::registry::{RainNetworks, Ethereum, Polygon, Mumbai, Fuji};
 
 use anyhow::anyhow;
 
@@ -60,73 +60,73 @@ pub async fn get_transaction_hash(
             Ok(tx_hash) 
         } 
         None => { 
-            // Add Block scanner support
-            return Err(anyhow!("Contract not indexed. Please provide transaction hash.")) ;
+            let hash = get_scan_transaction_hash(network,contract_address).await? ; 
+            Ok(hash)
         }
-    }
-        
-
+    } 
     
-
 }  
+ 
 
+pub async fn get_scan_transaction_hash(
+    network : &RainNetworks ,
+    contract_address : &String
+) -> Result<String> {  
 
-// TODO
-// Add Block Scanner support
+    let ( scan_url,  api_key) = match network {
+        RainNetworks::Polygon => {
+            (
+                Polygon::default().block_scanner_api,
+                Polygon::default().block_scanner_key,
 
-// pub async fn get_scan_transaction_hash(
-//     network : &RainNetworks ,
-//     contract_address : &String
-// ) -> Result<String> {  
+            )
+        },  
+        RainNetworks::Ethereum => {
+            (
+                Ethereum::default().block_scanner_api,
+                Ethereum::default().block_scanner_key,
 
-//     println!("get_scan_transaction_hash : {:#?}", network);
+            )
+        }
+        RainNetworks::Mumbai => {
+            (
+                Mumbai::default().block_scanner_api,
+                Mumbai::default().block_scanner_key,
 
-//     let ( scan_url,  api_key) = match network {
-//         RainNetworks::Polygon => {
-//             (
-//                 Polygon::default().block_scanner_api,
-//                 Polygon::default().block_scanner_key,
+            )
+        },
+        RainNetworks::Fuji => {
+            (
+                Fuji::default().block_scanner_api,
+                Fuji::default().block_scanner_key,
 
-//             )
-//         },  
-//         RainNetworks::Ethereum => {
-//             (
-//                 Ethereum::default().block_scanner_api,
-//                 Ethereum::default().block_scanner_key,
+            )
+        }
+    } ;  
 
-//             )
-//         }
-//         RainNetworks::Mumbai => {
-//             (
-//                 Mumbai::default().block_scanner_api,
-//                 Mumbai::default().block_scanner_key,
+     let url = format!(
+        "{}{}{}{}{}",
+        scan_url,
+        String::from("api?module=contract&action=getcontractcreation&contractaddresses="),
+        contract_address,
+        String::from("&apikey=") ,
+        api_key
+     ); 
 
-//             )
-//         },
-//         RainNetworks::Fuji => {
-//             (
-//                 Fuji::default().block_scanner_api,
-//                 Fuji::default().block_scanner_key,
+     let res = reqwest::Client::new().get(url).send().await? ; 
+     let body = res.text().await?;   
 
-//             )
-//         }
-//     } ;  
+     let response_body: serde_json::Value = serde_json::from_str(&body).unwrap() ; 
 
-//      let url = format!(
-//         "{}{}{}{}{}",
-//         scan_url,
-//         String::from("api?module=contract&action=getcontractcreation&contractaddresses="),
-//         contract_address,
-//         String::from("&apikey=") ,
-//         api_key
-//      ); 
-//      println!("{:#?}", url);
+    let tx_hash = match response_body.get("result").unwrap() {
+        serde_json::Value::Array(val) => {
+            val[0].get("txHash").unwrap() 
+        } ,
+        _ => { 
+            return Err(anyhow!("\n❌ Contract not found.")) 
+        }
+    };  
 
+    Ok(serde_json::from_value::<String>(tx_hash.clone()).unwrap())
 
-//      let resp = reqwest::get(url)
-//         .await?
-//         .json::<HashMap<String, String>>()
-//         .await?;
-//      println!("{:#?}", resp);
-//     Ok(String::from("asbc"))
-// }
+}

@@ -19,7 +19,7 @@ pub struct Consumer{
 
     /// optional target network to dpeloy to
     #[arg(short, long = "to-network")]
-    pub to_network: Option<RainNetworks> ,
+    pub to_network: RainNetworks ,
 
     /// origin network interpreter
     #[arg(short ='i' , long = "from-interpreter")]
