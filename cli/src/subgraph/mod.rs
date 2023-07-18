@@ -2,7 +2,7 @@ use graphql_client::{GraphQLQuery, Response};
 use reqwest;
 use anyhow::{Result, Ok};
 use crate::deploy::registry::{RainNetworks, Ethereum, Polygon, Mumbai, Fuji};
-
+use serde::{Deserialize, Serialize};
 use anyhow::anyhow;
 
 
@@ -67,6 +67,20 @@ pub async fn get_transaction_hash(
     
 }  
  
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+ struct ContractData {
+    contract_address : String ,
+    contract_creator : String ,
+    tx_hash : String ,
+ }
+ #[derive(Serialize, Deserialize, Debug)]
+ #[serde(rename_all = "camelCase")]
+struct ContractCreation{
+    message : String , 
+    status : String,  
+    result : Vec<ContractData>
+}
 
 pub async fn get_scan_transaction_hash(
     network : &RainNetworks ,
@@ -111,22 +125,20 @@ pub async fn get_scan_transaction_hash(
         contract_address,
         String::from("&apikey=") ,
         api_key
-     ); 
+     );  
 
      let res = reqwest::Client::new().get(url).send().await? ; 
-     let body = res.text().await?;   
+     let body: String = res.text().await?;   
+     let response_body: std::result::Result<ContractCreation, serde_json::Error> = serde_json::from_str::<ContractCreation>(&body) ;  
+     
+    match response_body {
+         std::result::Result::Ok(val) => {
+            let hash = &val.result[0].tx_hash ;
+            return Ok(hash.to_string()) ;
+         } ,
+         Err(_) => {
+            return Err(anyhow!("\n❌ Contract not found.\n Try providing a transaction hash")) ;
+         } ,
+     };  
 
-     let response_body: serde_json::Value = serde_json::from_str(&body).unwrap() ; 
-
-    let tx_hash = match response_body.get("result").unwrap() {
-        serde_json::Value::Array(val) => {
-            val[0].get("txHash").unwrap() 
-        } ,
-        _ => { 
-            return Err(anyhow!("\n❌ Contract not found.")) 
-        }
-    };  
-
-    Ok(serde_json::from_value::<String>(tx_hash.clone()).unwrap())
-
-}
+} 

@@ -1,10 +1,10 @@
 
-use anyhow::{Result};
+use anyhow::Result;
 use crate::{subgraph::get_transaction_hash, cli::deploy::Consumer, deploy::registry::Fuji};
 use self::{registry::{RainNetworks, Ethereum, Mumbai, Polygon}, transaction::get_transaction_data, dis::{DISpair, replace_dis_pair}}; 
-use ethers::{providers::{Provider, Middleware, Http}} ; 
+use ethers::providers::{Provider, Middleware, Http} ; 
 use ethers::{signers::LocalWallet, types::{Eip1559TransactionRequest, U64}, prelude::SignerMiddleware};
-use std::{str::FromStr};
+use std::str::FromStr;
 pub mod registry; 
 use anyhow::anyhow; 
 

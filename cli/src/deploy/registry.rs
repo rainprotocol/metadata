@@ -1,4 +1,4 @@
-use clap::{ValueEnum};
+use clap::ValueEnum;
 
 #[derive(Debug)]
 pub struct Ethereum {

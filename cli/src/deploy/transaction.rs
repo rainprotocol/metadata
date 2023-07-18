@@ -1,8 +1,8 @@
 
 use ethers::providers::{Provider, Middleware, Http} ;
-use ethers::types::{ H256,};
+use ethers::types::H256;
 use std::str::FromStr;
-use anyhow::{Result};
+use anyhow::Result;
 
 use super::registry::{RainNetworks, Ethereum, Mumbai, Polygon, Fuji};
 
