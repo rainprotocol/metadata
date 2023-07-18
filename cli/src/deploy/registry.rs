@@ -92,7 +92,7 @@ impl Default for Fuji {
 }  
 
  #[derive(Debug)]
- #[derive(Clone,ValueEnum)]
+ #[derive(Copy,Clone,ValueEnum)]
 pub enum RainNetworks{
     Ethereum,
     Polygon,

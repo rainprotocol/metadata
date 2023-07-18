@@ -16,9 +16,9 @@ impl DISpair {
 // Replace all the origin network DISpair contracts instances by 
 // DISpair instances of target network 
 pub fn replace_dis_pair(
-    tx_data : &String ,
-    from_dis : &DISpair , 
-    to_dis : &DISpair
+    tx_data : String ,
+    from_dis : DISpair , 
+    to_dis : DISpair
 ) -> Option<String> { 
 
    let mut ret_str = tx_data.to_lowercase() ;  
@@ -59,7 +59,7 @@ mod test {
 
         let tx_hash = String::from("0xea76ed73832498c4293aa06aeca2899f2b5adca15d703b03690185ed829f3e71") ;  
         let network = RainNetworks::Mumbai ;  
-        let tx_data = get_transaction_data(&network, &tx_hash).await.unwrap() ; 
+        let tx_data = get_transaction_data(network, tx_hash).await.unwrap() ; 
 
         let from_dis = DISpair {
             interpreter : None ,
@@ -74,9 +74,9 @@ mod test {
         } ; 
 
         let replaced_data = replace_dis_pair(
-            &tx_data,
-            &from_dis,
-            &to_dis
+            tx_data.clone(),
+            from_dis,
+            to_dis
         ).unwrap() ;
 
         assert_eq!(tx_data, replaced_data);
@@ -87,7 +87,7 @@ mod test {
 
         let tx_hash = String::from("0xc215bf3dc7440687ca20e028158e58640eeaec72d6fe6738f6d07843835c2cde") ;  
         let network = RainNetworks::Mumbai ;  
-        let tx_data = get_transaction_data(&network, &tx_hash).await.unwrap() ; 
+        let tx_data = get_transaction_data(network, tx_hash).await.unwrap() ; 
 
         let from_dis = DISpair {
             interpreter : Some(String::from("0x5f02c2f831d3e0d430aa58c973b8b751f3d81b38")),
@@ -102,9 +102,9 @@ mod test {
         } ; 
 
         let replaced_data = replace_dis_pair(
-            &tx_data,
-            &from_dis,
-            &to_dis
+            tx_data.clone(),
+            from_dis,
+            to_dis
         ).unwrap() ;
 
         assert_eq!(tx_data, replaced_data);
@@ -115,7 +115,7 @@ mod test {
 
         let tx_hash = String::from("0xc215bf3dc7440687ca20e028158e58640eeaec72d6fe6738f6d07843835c2cde") ;  
         let network = RainNetworks::Mumbai ;  
-        let tx_data = get_transaction_data(&network, &tx_hash).await.unwrap() ; 
+        let tx_data = get_transaction_data(network, tx_hash).await.unwrap() ; 
 
         let from_dis = DISpair {
             interpreter : None ,
@@ -130,9 +130,9 @@ mod test {
         } ; 
 
         let replaced_data = replace_dis_pair(
-            &tx_data,
-            &from_dis,
-            &to_dis
+            tx_data.clone(),
+            from_dis,
+            to_dis
         ).unwrap() ;
 
         assert_eq!(tx_data, replaced_data);
@@ -144,11 +144,11 @@ mod test {
         let tx_hash = String::from("0xebacdb3971924c9bbd2257334d436b4590d3d98f54969f6f942d6bd7a68da80b") ;   
 
         let network = RainNetworks::Mumbai ;  
-        let tx_data = get_transaction_data(&network, &tx_hash).await.unwrap() ;  
+        let tx_data = get_transaction_data(network, tx_hash).await.unwrap() ;  
 
         let to_network = RainNetworks::Fuji ; 
         let expexted_tx_hash = String::from("0xb0ae6ff12e9b810530e1b0844a448865cf4781950a90c99ba36f7f343e596717") ;   
-        let expected_tx_data = get_transaction_data(&to_network, &expexted_tx_hash).await.unwrap() ;  
+        let expected_tx_data = get_transaction_data(to_network, expexted_tx_hash).await.unwrap() ;  
 
 
         let from_dis = DISpair {
@@ -164,9 +164,9 @@ mod test {
         } ; 
 
         let replaced_data = replace_dis_pair(
-            &tx_data,
-            &from_dis,
-            &to_dis
+            tx_data,
+            from_dis,
+            to_dis
         ).unwrap() ;
 
         assert_eq!(expected_tx_data, replaced_data);
@@ -178,11 +178,11 @@ mod test {
         let tx_hash = String::from("0xc215bf3dc7440687ca20e028158e58640eeaec72d6fe6738f6d07843835c2cde") ;   
 
         let network = RainNetworks::Mumbai ;  
-        let tx_data = get_transaction_data(&network, &tx_hash).await.unwrap() ;  
+        let tx_data = get_transaction_data(network, tx_hash).await.unwrap() ;  
 
         let to_network = RainNetworks::Fuji ; 
         let expexted_tx_hash = String::from("0x13b9895c7eb7311bbb22ef0a692b7b115c98c957514903e7c3a0e454e3389378") ;   
-        let expected_tx_data = get_transaction_data(&to_network, &expexted_tx_hash).await.unwrap() ;  
+        let expected_tx_data = get_transaction_data(to_network, expexted_tx_hash).await.unwrap() ;  
 
 
         let from_dis = DISpair {
@@ -198,9 +198,9 @@ mod test {
         } ; 
 
         let replaced_data = replace_dis_pair(
-            &tx_data,
-            &from_dis,
-            &to_dis
+            tx_data,
+            from_dis,
+            to_dis
         ).unwrap() ;
 
         assert_eq!(expected_tx_data, replaced_data);

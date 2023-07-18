@@ -22,19 +22,19 @@ pub async fn get_deploy_data(
     match tx_hash {
         Some(hash) => { 
             // Get tx data
-            let tx_data = get_transaction_data(&from_network, &hash).await? ;  
+            let tx_data = get_transaction_data(from_network, hash).await? ;  
             // Replace DIS instances 
-            let tx_data = replace_dis_pair(&tx_data,&from_dis,&to_dis).unwrap() ;  
+            let tx_data = replace_dis_pair(tx_data,from_dis,to_dis).unwrap() ;  
 
             Ok(tx_data)
         } ,
         None => {
             // Get tx hash
-            let tx_data = get_transaction_hash(&from_network, &contract_address).await? ;  
+            let tx_data = get_transaction_hash(from_network, contract_address).await? ;  
             // Get tx data
-            let tx_data = get_transaction_data(&from_network, &tx_data).await? ;  
+            let tx_data = get_transaction_data(from_network, tx_data).await? ;  
             // Replace DIS instances 
-            let tx_data = replace_dis_pair(&tx_data,&from_dis,&to_dis).unwrap() ;  
+            let tx_data = replace_dis_pair(tx_data,from_dis,to_dis).unwrap() ;  
 
             Ok(tx_data)
         }
@@ -177,7 +177,7 @@ mod test {
 
         let expected_tx_hash = String::from("0x13b9895c7eb7311bbb22ef0a692b7b115c98c957514903e7c3a0e454e3389378") ; 
         let expected_network = RainNetworks::Fuji ; 
-        let expected_data = get_transaction_data(&expected_network,&expected_tx_hash).await.unwrap() ; 
+        let expected_data = get_transaction_data(expected_network,expected_tx_hash).await.unwrap() ; 
 
         assert_eq!(tx_data,expected_data) ;
 
@@ -212,7 +212,7 @@ mod test {
 
         let expected_tx_hash = String::from("0x2bcd975588b90d0da605c829c434c9e0514b329ec956375c32a97c87a870c33f") ; 
         let expected_network = RainNetworks::Fuji ; 
-        let expected_data = get_transaction_data(&expected_network,&expected_tx_hash).await.unwrap() ; 
+        let expected_data = get_transaction_data(expected_network,expected_tx_hash).await.unwrap() ; 
 
         assert_eq!(tx_data,expected_data) ;
 
@@ -247,7 +247,7 @@ mod test {
 
         let expected_tx_hash = String::from("0x15f2f57f613a159d0e0a02aa2086ec031a2e56e0b9c803d0e89be78b4fa9b524") ; 
         let expected_network = RainNetworks::Fuji ; 
-        let expected_data = get_transaction_data(&expected_network,&expected_tx_hash).await.unwrap() ; 
+        let expected_data = get_transaction_data(expected_network,expected_tx_hash).await.unwrap() ; 
 
         assert_eq!(tx_data,expected_data) ;
 

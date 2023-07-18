@@ -7,7 +7,7 @@ use super::registry::{RainNetworks, Ethereum, Mumbai, Polygon, Fuji};
 use anyhow::anyhow;
 
 
-pub async fn get_transaction_data(from_network : &RainNetworks ,tx_hash : &String) -> Result<String> { 
+pub async fn get_transaction_data(from_network : RainNetworks ,tx_hash : String) -> Result<String> { 
 
     let url = match from_network {
         RainNetworks::Ethereum => {
@@ -60,7 +60,7 @@ mod test {
     async fn test_incorrect_hash()  {
         let from_network = RainNetworks::Mumbai ; 
         let tx_hash = String::from("0xea76ed73832498c4293aa06aeca2899f2b5adca15d703b03690185ed829f3e72") ;   
-        let tx_data =get_transaction_data(&from_network,&tx_hash).await ; 
+        let tx_data = get_transaction_data(from_network,tx_hash).await ; 
         assert!(tx_data.is_err()) ;
     } 
 
@@ -68,7 +68,7 @@ mod test {
     async fn test_transaction_hash()  {
         let from_network = RainNetworks::Mumbai ; 
         let tx_hash = String::from("0xea76ed73832498c4293aa06aeca2899f2b5adca15d703b03690185ed829f3e71") ;   
-        let tx_data =get_transaction_data(&from_network,&tx_hash).await ; 
+        let tx_data = get_transaction_data(from_network,tx_hash).await ; 
         assert!(tx_data.is_ok()) ;
     }
 
