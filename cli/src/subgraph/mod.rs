@@ -15,7 +15,6 @@ use anyhow::anyhow;
 pub struct ContractQuery;  
  
 
-
 pub async fn get_transaction_hash( 
     network : &RainNetworks ,
     contract_address : &String
@@ -141,4 +140,38 @@ pub async fn get_scan_transaction_hash(
          } ,
      };  
 
-} 
+}  
+
+#[cfg(test)] 
+mod test { 
+
+    use super::get_transaction_hash ;
+    use crate::deploy::registry::RainNetworks;
+
+    #[tokio::test]
+    async fn test_subgraph_contract_address()  {
+        let from_network = RainNetworks::Mumbai ; 
+        let contract_address = String::from("0x3cC6C6E888B4Ad891EEA635041A269C4BA1c4A63") ;   
+        let tx_hash = get_transaction_hash(&from_network,&contract_address).await.unwrap() ;  
+        let expected_hash = String::from("0xc215bf3dc7440687ca20e028158e58640eeaec72d6fe6738f6d07843835c2cde") ;
+        assert_eq!(tx_hash,expected_hash) ;
+    }  
+
+    #[tokio::test]
+    async fn test_scan_contract_address()  {
+        let from_network = RainNetworks::Mumbai ; 
+        let contract_address = String::from("0x2c9f3204590765aefa7bee01bccb540a7d06e967") ;   
+        let tx_hash = get_transaction_hash(&from_network,&contract_address).await.unwrap() ;  
+        let expected_hash = String::from("0xea76ed73832498c4293aa06aeca2899f2b5adca15d703b03690185ed829f3e71") ;
+        assert_eq!(tx_hash,expected_hash) ;
+    }  
+
+    #[tokio::test]
+    async fn test_get_hash_fail()  {
+        let from_network = RainNetworks::Mumbai ; 
+        let contract_address = String::from("0x00000000000000000000000") ;   
+        let tx_hash = get_transaction_hash(&from_network,&contract_address).await ;  
+        assert!(tx_hash.is_err()) ;
+    } 
+
+}
