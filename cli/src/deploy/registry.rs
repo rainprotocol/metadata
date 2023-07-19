@@ -1,5 +1,7 @@
 use clap::ValueEnum;
 
+/// # Ethereum
+/// Network details for Ethereum mainnet.
 #[derive(Debug)]
 pub struct Ethereum {
     pub url : String ,
@@ -23,6 +25,8 @@ impl Default for Ethereum {
     }
 }  
 
+/// # Polygon
+/// Network details for Polygon mainnet.
 #[derive(Debug)]
 pub struct Polygon {
     pub url : String ,
@@ -47,6 +51,8 @@ impl Default for Polygon {
     }
 }  
 
+/// # Mumbai
+/// Network details for Polygon testnet (Mumbai).
 #[derive(Debug)]
 pub struct Mumbai {
     pub url : String ,
@@ -70,6 +76,8 @@ impl Default for Mumbai {
     }
 }   
 
+/// # Fuji
+/// Network details for Avalanche testnet (Fuji).
 #[derive(Debug)]
 pub struct Fuji {
     pub provider : String ,
@@ -91,6 +99,8 @@ impl Default for Fuji {
     }
 }  
 
+/// # RainNetworks
+/// Enum representing supported networks for cross deploying contracts.
  #[derive(Debug)]
  #[derive(Copy,Clone,ValueEnum)]
 pub enum RainNetworks{

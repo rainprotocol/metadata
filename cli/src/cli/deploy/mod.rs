@@ -3,10 +3,10 @@ use clap::{Subcommand, Parser};
 use crate::deploy::{registry::RainNetworks, deploy_contract};    
 
 
-/// CLI utility to cross deploy Rain Contracts
+/// CLI utility to cross deploy Rain Contracts. 
 #[derive(Subcommand)]
 pub enum CrossDeploy{
-    /// Cross Deploy a Rain consumer contract 
+    /// Cross Deploy a Rain Contract 
     DeployConsumer(Consumer)
 }
 
@@ -17,31 +17,31 @@ pub struct Consumer{
     #[arg(short, long = "from-network")]
     pub origin_network: RainNetworks,  
 
-    /// optional target network to dpeloy to
+    /// target network to dpeloy contract
     #[arg(short, long = "to-network")]
     pub to_network: RainNetworks ,
 
-    /// origin network interpreter
+    /// origin network interpreter address
     #[arg(short ='i' , long = "from-interpreter")]
     pub from_interpreter: Option<String>,
 
-    /// origin network store
+    /// origin network store address
     #[arg(short ='s' , long = "from-store")]
     pub from_store: Option<String>,
 
-    /// origin network deployer
+    /// origin network expression deployer address
     #[arg(short ='d' , long = "from-deployer")]
     pub from_deployer: Option<String>, 
 
-    /// target network interpreter
+    /// target network interpreter address
     #[arg(short ='I' , long = "to-interpreter")]
     pub to_interpreter: Option<String>,
 
-    /// target network store
+    /// target network store address
     #[arg(short ='S' , long = "to-store")]
     pub to_store: Option<String>,
 
-    /// target network deployer
+    /// target network expression deployer address
     #[arg(short ='D' , long = "to-deployer")]
     pub to_deployer: Option<String>,
 
@@ -49,7 +49,7 @@ pub struct Consumer{
     #[arg(short ='c' , long = "contract-address")]
     pub contract_address: String ,
 
-    /// origin network contract address
+    /// origin network transaction hash to source data from
     #[arg(short ='H' , long = "transaction-hash")]
     pub transaction_hash: Option<String> ,
 
@@ -57,13 +57,13 @@ pub struct Consumer{
     #[arg(long)]
     pub deploy: bool, 
 
-    /// private key (unprefixed)
+    /// private key (unprefixed) provided when deploy is set to true
     #[arg(short ='k' , long = "priavte-key" )]
     pub private_key: Option<String>,
 } 
 
+/// CLI function handler
 pub async fn deploy(cross_deploy: CrossDeploy) -> anyhow::Result<()> {
-
      match cross_deploy {
         CrossDeploy::DeployConsumer(consumer) => {  
             deploy_contract(consumer).await?              

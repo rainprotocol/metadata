@@ -14,7 +14,24 @@ use anyhow::anyhow;
 )]
 pub struct ContractQuery;  
  
-
+/// Get the contract deployment transaction hash for the indexed Rain Contracts form the subgraph.
+/// Supporting [RainNetworks]. 
+/// If a contract is not indexed by the subgraph or the contract is a Non-Rain 
+/// contract then a call to [get_scan_transaction_hash] is made to fetch the contract
+/// deployment details from the scanner api.
+/// 
+/// # Example 
+/// ```rust 
+/// use rain_cli_meta::subgraph::get_transaction_hash; 
+/// use rain_cli_meta::deploy::registry::RainNetworks;
+/// 
+/// async fn get_hash(){
+///  let from_network = RainNetworks::Mumbai ; 
+///  let contract_address = String::from("0x3cC6C6E888B4Ad891EEA635041A269C4BA1c4A63") ;   
+///  let tx_hash = get_transaction_hash(from_network,contract_address).await.unwrap() ;
+/// }
+/// 
+/// ```
 pub async fn get_transaction_hash( 
     network : RainNetworks ,
     contract_address : String
@@ -65,7 +82,9 @@ pub async fn get_transaction_hash(
     } 
     
 }  
- 
+
+/// # ContractData
+/// Representing contract deployment data.
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
  struct ContractData {
@@ -73,6 +92,9 @@ pub async fn get_transaction_hash(
     contract_creator : String ,
     tx_hash : String ,
  }
+
+ /// # ContractCreation
+ /// Representing the scanner api response data.
  #[derive(Serialize, Deserialize, Debug)]
  #[serde(rename_all = "camelCase")]
 struct ContractCreation{
@@ -81,6 +103,21 @@ struct ContractCreation{
     result : Vec<ContractData>
 }
 
+/// Get the contract deployment transaction hash for a contract via blockscanner api.
+/// Supporting [RainNetworks]. 
+/// 
+/// # Example 
+/// ```rust 
+/// use rain_cli_meta::subgraph::get_scan_transaction_hash; 
+/// use rain_cli_meta::deploy::registry::RainNetworks;
+/// 
+/// async fn get_hash(){
+///  let from_network = RainNetworks::Mumbai ; 
+///  let contract_address = String::from("0x3cC6C6E888B4Ad891EEA635041A269C4BA1c4A63") ;   
+///  let tx_hash = get_scan_transaction_hash (from_network,contract_address).await.unwrap() ;
+/// }
+/// 
+/// ```
 pub async fn get_scan_transaction_hash(
     network : RainNetworks ,
     contract_address : String

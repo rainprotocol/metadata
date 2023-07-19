@@ -1,5 +1,10 @@
 use clap::Parser;
 
+/// # DISpair
+/// Interpreter, Store, Expression Deployer.
+/// Contracts required to deploy any Rain Contract.
+/// Any or all of these can be provided while cross deploying a contract.
+/// If a contract is a non-Rain Contract the value can be None. 
 #[derive(Parser,Clone)]
 pub struct DISpair {
     pub interpreter : Option<String> ,
@@ -13,8 +18,55 @@ impl DISpair {
     }
 }
  
-// Replace all the origin network DISpair contracts instances by 
-// DISpair instances of target network 
+/// Builds contract deployment transaction data by replacing the [DISpair] 
+/// contract instances in the transaction data of the origin network, with
+/// the [DISpair] instances of the target network. To replace any or all of the DIS contracts,
+/// both the counterparties on origin and target network must be provided. 
+/// 
+/// # Example   
+/// 
+/// Get
+/// 
+/// ```rust
+/// use rain_cli_meta::deploy::dis::replace_dis_pair;
+/// use rain_cli_meta::deploy::transaction::get_transaction_data;
+/// use rain_cli_meta::deploy::dis::DISpair; 
+/// use rain_cli_meta::deploy::registry::RainNetworks; 
+/// 
+/// async fn replace_dis() {    
+/// 
+/// // Origin network 
+/// let network = RainNetworks::Mumbai ; 
+/// 
+/// // Origin network transaction hash
+/// let tx_hash = String::from("0xc215bf3dc7440687ca20e028158e58640eeaec72d6fe6738f6d07843835c2cde") ; 
+/// 
+/// // Get origin network transaction data
+/// let tx_data = get_transaction_data(network, tx_hash).await.unwrap() ;  
+/// 
+/// // Initiate origin network DISpair instance
+/// let from_dis = DISpair {
+///     interpreter : Some(String::from("0x5f02c2f831d3e0d430aa58c973b8b751f3d81b38")) ,
+///     store : Some(String::from("0xa5d9c16ddfd05d398fd0f302edd9e9e16d328796")) , 
+///     deployer : Some(String::from("0xd3870063bcf25d5110ab9df9672a0d5c79c8b2d5"))
+/// } ; 
+///
+/// // Initiate target network DISpair instance
+/// let to_dis = DISpair {
+///    interpreter : Some(String::from("0xfd1da7eee4a9391f6fcabb28617f41894ba84cdc")),
+///    store : Some(String::from("0x9b8571bd2742ec628211111de3aa940f5984e82b")),  
+///    deployer : Some(String::from("0x3d7d894afc7dbfd45bf50867c9b051da8eee85e9")),
+/// } ; 
+///
+/// // Get contract deployment transaction data for the target network .
+///  let contract_deployment_data = replace_dis_pair(
+///     tx_data,
+///     from_dis,
+///     to_dis
+///  ).unwrap() ; 
+/// }
+/// ```  
+
 pub fn replace_dis_pair(
     tx_data : String ,
     from_dis : DISpair , 
@@ -176,7 +228,6 @@ mod test {
     async fn test_replace_dis() { 
 
         let tx_hash = String::from("0xc215bf3dc7440687ca20e028158e58640eeaec72d6fe6738f6d07843835c2cde") ;   
-
         let network = RainNetworks::Mumbai ;  
         let tx_data = get_transaction_data(network, tx_hash).await.unwrap() ;  
 

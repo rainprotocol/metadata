@@ -6,7 +6,23 @@ use anyhow::Result;
 use super::registry::{RainNetworks, Ethereum, Mumbai, Polygon, Fuji}; 
 use anyhow::anyhow;
 
-
+/// Returns transaction data for the provided transacion hash.
+/// Supported transaction for only [RainNetworks].
+/// # Example
+/// ```
+/// # use rain_cli_meta::deploy::transaction::get_transaction_data; 
+/// # use rain_cli_meta::deploy::registry::RainNetworks; 
+/// 
+/// async fn get_tx_data(){ 
+///    // Network to retrieve data from
+///    let from_network = RainNetworks::Mumbai ;
+///    
+///    // Transaction Hash 
+///    let tx_hash = String::from("0xea76ed73832498c4293aa06aeca2899f2b5adca15d703b03690185ed829f3e72") ;   
+///    
+///    // Get transaction data
+///    let tx_data = get_transaction_data(from_network,tx_hash).await ; 
+/// }
 pub async fn get_transaction_data(from_network : RainNetworks ,tx_hash : String) -> Result<String> { 
 
     let url = match from_network {

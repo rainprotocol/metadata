@@ -11,6 +11,53 @@ use anyhow::anyhow;
 pub mod transaction; 
 pub mod dis; 
 
+/// Builds and returns contract deployment data for the provided target network [DISpair].
+/// Optional transaction hash as an argument can be provided, which is recommended for Non-Rain contracts.
+/// Returns deployment data for any contract without a constructor argument. 
+/// For contracts which have constructor arguments the integrity of the returned data cannot be ensured.  
+/// Returned data can directly be submitted via a signer to the blockchain. 
+/// 
+/// # Example 
+/// ```rust
+///  use rain_cli_meta::deploy::dis::DISpair;
+///  use rain_cli_meta::deploy::get_deploy_data; 
+///  use rain_cli_meta::deploy::registry::RainNetworks; 
+///  
+/// async fn get_contract_data(){
+/// 
+///    // Origin network
+///    let from_network = RainNetworks::Mumbai ;    
+/// 
+///    // Origin network contract address
+///    let contract_address = String::from("0x3cc6c6e888b4ad891eea635041a269c4ba1c4a63") ;  
+/// 
+///    // Optional transaction hash can also be provided
+///    let tx_hash = Some(String::from("0xc215bf3dc7440687ca20e028158e58640eeaec72d6fe6738f6d07843835c2cde")) ; 
+///    
+///    // Origin network DISpair
+///    let from_dis = DISpair {
+///        interpreter : Some(String::from("0x5f02c2f831d3e0d430aa58c973b8b751f3d81b38")),
+///        store : Some(String::from("0xa5d9c16ddfd05d398fd0f302edd9e9e16d328796")),
+///        deployer : Some(String::from("0xd3870063bcf25d5110ab9df9672a0d5c79c8b2d5")),
+///   } ; 
+///    
+///    // Target Network DISpair
+///    let to_dis = DISpair {
+///        interpreter : Some(String::from("0xfd1da7eee4a9391f6fcabb28617f41894ba84cdc")),
+///        store : Some(String::from("0x9b8571bd2742ec628211111de3aa940f5984e82b")),
+///        deployer : Some(String::from("0x3d7d894afc7dbfd45bf50867c9b051da8eee85e9")),
+///    } ;   
+///     
+///    // Get contract deployment data. 
+///    let contract_deployment_data = get_deploy_data(
+///        from_network,
+///        contract_address,
+///        from_dis,
+///        to_dis,
+///        tx_hash
+///    ).await.unwrap() ;
+/// 
+/// }
 pub async fn get_deploy_data(
     from_network : RainNetworks ,
     contract_address : String ,
@@ -42,7 +89,8 @@ pub async fn get_deploy_data(
     
 }  
 
-
+/// Builds contract deployment data from [Consumer] when called via the cli. 
+/// Submits the transaction to the target network with the provided signer. 
 pub async fn deploy_contract(consumer : Consumer)  -> Result<()> {  
 
     if consumer.deploy { 
