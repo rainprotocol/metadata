@@ -1,6 +1,5 @@
 use clap::{Subcommand, Parser};
-
-use crate::deploy::{registry::RainNetworks, deploy_contract};    
+use crate::deploy::{registry::RainNetworkOptions, deploy_contract};    
 
 
 /// CLI utility to cross deploy Rain Contracts. 
@@ -15,11 +14,11 @@ pub struct Consumer{
 
     /// origin network to deploy contract from
     #[arg(short, long = "from-network")]
-    pub origin_network: RainNetworks,  
+    pub origin_network: RainNetworkOptions,  
 
     /// target network to dpeloy contract
     #[arg(short, long = "to-network")]
-    pub to_network: RainNetworks ,
+    pub to_network: RainNetworkOptions ,
 
     /// origin network interpreter address
     #[arg(short ='i' , long = "from-interpreter")]
@@ -59,7 +58,29 @@ pub struct Consumer{
 
     /// private key (unprefixed) provided when deploy is set to true
     #[arg(short ='k' , long = "priavte-key" )]
-    pub private_key: Option<String>,
+    pub private_key: Option<String>,  
+
+    #[arg(long,env)]
+    pub mumbai_rpc_url: Option<String> , 
+
+    #[arg(long,env)]
+    pub polygon_rpc_url: Option<String> , 
+
+    #[arg(long,env)]
+    pub polygonscan_api_key: Option<String> , 
+
+    #[arg(long,env)]
+    pub ethereum_rpc_url: Option<String> , 
+
+    #[arg(long,env)]
+    pub etherscan_api_key: Option<String> ,
+
+    #[arg(long,env)]
+    pub fuji_rpc_url: Option<String> , 
+
+    #[arg(long,env)]
+    pub snowtrace_api_key: Option<String> ,
+  
 } 
 
 /// CLI function handler

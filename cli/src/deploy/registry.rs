@@ -1,101 +1,115 @@
+
 use clap::ValueEnum;
 
 /// # Ethereum
 /// Network details for Ethereum mainnet.
-#[derive(Debug)]
-pub struct Ethereum {
-    pub url : String ,
-    pub provider : String ,
+#[derive(Debug,Clone)]
+pub struct Ethereum { 
+    pub rpc_url : String,
+    pub subgraph_url : String ,
     pub scan_base_uri : String ,
     pub chain_id : String ,  
     pub block_scanner_api : String, 
     pub block_scanner_key : String
 }  
 
-impl Default for Ethereum {
-    fn default() -> Ethereum {
-        Ethereum { 
-            url: String::from("https://api.thegraph.com/subgraphs/name/rainprotocol/interpreter-registry-ethereum") ,
-            provider : String::from("https://eth-mainnet.g.alchemy.com/v2/gqp-i6HKrlY8gShHDXkJw-iqudcviIyx") ,
+impl Ethereum {
+    pub fn new(rpc_url: String, block_scanner_key: String) -> Ethereum {
+        return Ethereum{
+            rpc_url : rpc_url ,
+            subgraph_url: String::from("https://api.thegraph.com/subgraphs/name/rainprotocol/interpreter-registry-ethereum") ,
             scan_base_uri : String::from("https://etherscan.io/") ,
             chain_id :  String::from("1") , 
             block_scanner_api : String::from("https://api.etherscan.io/") ,
-            block_scanner_key : String::from("2JHMSJCUGUJ86RAKM1EPD15JJ3VAY76464")
-        }
+            block_scanner_key : block_scanner_key
+        };
+    }
+    pub fn get_chain_id() -> String{
+        String::from("1")
     }
 }  
 
 /// # Polygon
 /// Network details for Polygon mainnet.
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub struct Polygon {
-    pub url : String ,
-    pub provider : String,
+    pub rpc_url : String,
+    pub subgraph_url : String ,
     pub scan_base_uri : String ,
     pub chain_id : String ,
     pub block_scanner_api : String, 
     pub block_scanner_key : String
 }  
 
-impl Default for Polygon {
-    fn default() -> Polygon {
-        Polygon { 
-            url: String::from("https://api.thegraph.com/subgraphs/name/rainprotocol/interpreter-registry-polygon") ,
-            provider : String::from("https://polygon-mainnet.g.alchemy.com/v2/WLWVvo6m4MXAZ3GkzmMI8ZnLIg_bBNaO") ,
+impl Polygon {
+    pub fn new(rpc_url: String, block_scanner_key: String) -> Polygon {
+        return Polygon{
+            rpc_url : rpc_url ,
+            subgraph_url: String::from("https://api.thegraph.com/subgraphs/name/rainprotocol/interpreter-registry-polygon") ,
             scan_base_uri : String::from("https://polygonscan.com/") ,
             chain_id :  String::from("137") ,
             block_scanner_api : String::from("https://api.polygonscan.com/") ,
-            block_scanner_key : String::from("MBFVU16WSKFB9Z5W17HC2DNTY3N6W9SMPX")
-
-        }
+            block_scanner_key : block_scanner_key
+        };
+    }
+    pub fn get_chain_id() -> String{
+        String::from("137")
     }
 }  
 
 /// # Mumbai
 /// Network details for Polygon testnet (Mumbai).
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub struct Mumbai {
-    pub url : String ,
-    pub provider : String,
+    pub rpc_url : String,
+    pub subgraph_url : String ,
     pub scan_base_uri : String ,
     pub chain_id : String ,
     pub block_scanner_api : String, 
     pub block_scanner_key : String
 }  
 
-impl Default for Mumbai {
-    fn default() -> Mumbai {
-        Mumbai { 
-            url: String::from("https://api.thegraph.com/subgraphs/name/rainprotocol/interpreter-registry") ,
-            provider : String::from("https://polygon-mumbai.g.alchemy.com/v2/yAwbpk-0UDo-G398kyr6iKrUVWL5fyVj") ,
+impl Mumbai {
+    pub fn new(rpc_url: String, block_scanner_key: String) -> Mumbai {
+        return Mumbai{
+            rpc_url : rpc_url ,
+            subgraph_url: String::from("https://api.thegraph.com/subgraphs/name/rainprotocol/interpreter-registry") ,
             scan_base_uri : String::from("https://mumbai.polygonscan.com/") ,
             chain_id :  String::from("80001") ,
             block_scanner_api : String::from("https://api-testnet.polygonscan.com/") ,
-            block_scanner_key : String::from("MBFVU16WSKFB9Z5W17HC2DNTY3N6W9SMPX")
-        }
+            block_scanner_key : block_scanner_key
+        };
+    }
+    pub fn get_chain_id() -> String{
+        String::from("80001")
     }
 }   
 
 /// # Fuji
 /// Network details for Avalanche testnet (Fuji).
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub struct Fuji {
-    pub provider : String ,
+    pub rpc_url : String,
+    pub subgraph_url : String ,
     pub scan_base_uri : String ,
     pub chain_id : String , 
     pub block_scanner_api : String, 
     pub block_scanner_key : String
 }  
 
-impl Default for Fuji {
-    fn default() -> Fuji {
-        Fuji { 
-            provider : String::from("https://api.avax-test.network/ext/bc/C/rpc") ,
+impl Fuji {
+    pub fn new(rpc_url: String, block_scanner_key: String) -> Fuji {
+        return Fuji{
+            rpc_url : rpc_url ,
+            subgraph_url: String::from("") ,
             scan_base_uri : String::from("https://testnet.snowtrace.io/") ,
             chain_id :  String::from("43113") , 
             block_scanner_api : String::from("https://api-testnet.snowtrace.io/api") ,
-            block_scanner_key : String::from("1ANEUH2DZN3C8YDHH9U4UKMYHY2JVFDUQZ")
-        }
+            block_scanner_key : block_scanner_key
+        };
+    }
+    pub fn get_chain_id() -> String{
+        String::from("43113")
     }
 }  
 
@@ -103,9 +117,19 @@ impl Default for Fuji {
 /// Enum representing supported networks for cross deploying contracts.
  #[derive(Debug)]
  #[derive(Copy,Clone,ValueEnum)]
-pub enum RainNetworks{
+pub enum RainNetworkOptions{
     Ethereum,
     Polygon,
     Mumbai,
     Fuji
 }  
+
+#[derive(Debug)]
+ #[derive(Clone)]
+pub enum RainNetworks{
+    Ethereum(Ethereum),
+    Polygon(Polygon),
+    Mumbai(Mumbai),
+    Fuji(Fuji)
+}
+
