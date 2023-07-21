@@ -1,16 +1,5 @@
 [
     {
-        "inputs": [
-            {
-                "internalType": "bytes",
-                "name": "unmeta",
-                "type": "bytes"
-            }
-        ],
-        "name": "NotRainMetaV1",
-        "type": "error"
-    },
-    {
         "anonymous": false,
         "inputs": [
             {

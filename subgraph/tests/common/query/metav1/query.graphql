@@ -8,6 +8,8 @@ query MetaV1($trx_hash: String) {
     }
     payload
     contentType
+    contentEncoding
+    contentLanguage
     magicNumber
     subject
   }

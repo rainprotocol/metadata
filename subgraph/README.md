@@ -1,9 +1,3 @@
-steps
-- nix-shell --run init
-- nix-shell --run docker-up
-- nix-shell --run local-test
-
 rust test 
-- nix-shell --run init
-- nix-shell --run docker-up
-- `cargo test` or `cargo test -- --nocapture` for console output
+- npm install
+- RUST_TEST_THREADS=1 cargo test -- --nocapture
