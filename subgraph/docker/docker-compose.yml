@@ -5,7 +5,7 @@ services:
     ports:
       - '8545:8545'
   graph-node:
-    image: graphprotocol/graph-node
+    image: graphprotocol/graph-node:97e0adc
     ports:
       - '8000:8000'
       - '8001:8001'

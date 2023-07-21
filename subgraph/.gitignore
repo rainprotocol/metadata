@@ -7,3 +7,4 @@ generated
 node_modules
 subgraph.yaml
 target
+data.json

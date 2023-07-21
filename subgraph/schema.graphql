@@ -6,14 +6,16 @@ type MetaBoard @entity {
 }
 
 type MetaV1 @entity {
-    id:ID!
+    id:Bytes!
     sender: Bytes!
     meta: Bytes!
     subject: BigInt!
     metaBoard: MetaBoard!
-    payload: String!
+    payload: Bytes!
     magicNumber: BigInt!
     contentType: String!
+    contentEncoding: String!
+    contentLanguage: String!
     blockNumber: BigInt!
 }
 
