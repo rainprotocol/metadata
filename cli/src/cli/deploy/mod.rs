@@ -1,17 +1,8 @@
-use clap::{Subcommand, Parser};
+use clap::Parser;
 use crate::deploy::{registry::RainNetworkOptions, deploy_contract};    
 
-
-/// CLI utility to cross deploy Rain Contracts. 
-#[derive(Subcommand)]
-pub enum CrossDeploy{
-    /// Cross Deploy a Rain Contract 
-    DeployConsumer(Consumer)
-}
-
 #[derive(Parser, Debug)]
-pub struct Consumer{
-
+pub struct CrossDeploy{
     /// origin network to deploy contract from
     #[arg(short, long = "from-network")]
     pub origin_network: RainNetworkOptions,  
@@ -60,24 +51,31 @@ pub struct Consumer{
     #[arg(short ='k' , long = "priavte-key" )]
     pub private_key: Option<String>,  
 
+    /// mumbai rpc url, default read from env varibales
     #[arg(long,env)]
     pub mumbai_rpc_url: Option<String> , 
 
+    /// polygon rpc url, default read from env varibales
     #[arg(long,env)]
-    pub polygon_rpc_url: Option<String> , 
+    pub polygon_rpc_url: Option<String> ,  
 
+    /// polygonscan api key, default read from env varibales
     #[arg(long,env)]
-    pub polygonscan_api_key: Option<String> , 
+    pub polygonscan_api_key: Option<String> ,  
 
+    /// ethereum rpc url, default read from env varibales
     #[arg(long,env)]
-    pub ethereum_rpc_url: Option<String> , 
+    pub ethereum_rpc_url: Option<String> ,  
 
+    /// etherscan api key, default read from env varibales
     #[arg(long,env)]
-    pub etherscan_api_key: Option<String> ,
+    pub etherscan_api_key: Option<String> , 
 
+    /// fuji rpc url, default read from env varibales
     #[arg(long,env)]
-    pub fuji_rpc_url: Option<String> , 
+    pub fuji_rpc_url: Option<String> ,  
 
+    /// snowtrace api key, default read from env varibales
     #[arg(long,env)]
     pub snowtrace_api_key: Option<String> ,
   
@@ -85,11 +83,7 @@ pub struct Consumer{
 
 /// CLI function handler
 pub async fn deploy(cross_deploy: CrossDeploy) -> anyhow::Result<()> {
-     match cross_deploy {
-        CrossDeploy::DeployConsumer(consumer) => {  
-            deploy_contract(consumer).await?              
-        }
-    } ;  
+    deploy_contract(cross_deploy).await? ;
     Ok(())
 
 }

@@ -24,11 +24,15 @@ pub struct ContractQuery;
 /// ```rust 
 /// use rain_cli_meta::subgraph::get_transaction_hash; 
 /// use rain_cli_meta::deploy::registry::RainNetworks;
+/// use rain_cli_meta::deploy::registry::Mumbai;
+/// use std::env ; 
 /// 
 /// async fn get_hash(){
-///  let from_network = RainNetworks::Mumbai ; 
+///  // Reading environment variables. CLI does this via ["env"] feature of clap crate.. 
+///  let mumbai_network = Mumbai::new(env::var("MUMBAI_RPC_URL").unwrap(), env::var("POLYGONSCAN_API_KEY").unwrap()) ; 
+///  let network: RainNetworks = RainNetworks::Mumbai(mumbai_network) ; 
 ///  let contract_address = String::from("0x3cC6C6E888B4Ad891EEA635041A269C4BA1c4A63") ;   
-///  let tx_hash = get_transaction_hash(from_network,contract_address).await.unwrap() ;
+///  let tx_hash = get_transaction_hash(network,contract_address).await.unwrap() ;
 /// }
 /// 
 /// ```
@@ -110,11 +114,16 @@ struct ContractCreation{
 /// ```rust 
 /// use rain_cli_meta::subgraph::get_scan_transaction_hash; 
 /// use rain_cli_meta::deploy::registry::RainNetworks;
+/// use rain_cli_meta::deploy::registry::Mumbai;
+/// 
+/// use std::env ; 
 /// 
 /// async fn get_hash(){
-///  let from_network = RainNetworks::Mumbai ; 
+///  // Reading environment variables. CLI does this via ["env"] feature of clap crate.
+///  let mumbai_network = Mumbai::new(env::var("MUMBAI_RPC_URL").unwrap(), env::var("POLYGONSCAN_API_KEY").unwrap()) ; 
+///  let network: RainNetworks = RainNetworks::Mumbai(mumbai_network) ; 
 ///  let contract_address = String::from("0x3cC6C6E888B4Ad891EEA635041A269C4BA1c4A63") ;   
-///  let tx_hash = get_scan_transaction_hash (from_network,contract_address).await.unwrap() ;
+///  let tx_hash = get_scan_transaction_hash (network,contract_address).await.unwrap() ;
 /// }
 /// 
 /// ```
@@ -122,7 +131,7 @@ pub async fn get_scan_transaction_hash(
     network : RainNetworks ,
     contract_address : String
 ) -> Result<String> {  
-
+ 
     let (scan_url,  api_key) = match network {
         RainNetworks::Ethereum(network) => {
             (network.block_scanner_api,network.block_scanner_key)
@@ -175,7 +184,6 @@ mod test {
 
         // Reading environment variables
         let mumbai_network = Mumbai::new(env::var("MUMBAI_RPC_URL").unwrap(), env::var("POLYGONSCAN_API_KEY").unwrap()) ; 
-        
         let network: RainNetworks = RainNetworks::Mumbai(mumbai_network) ; 
         let contract_address = String::from("0x3cC6C6E888B4Ad891EEA635041A269C4BA1c4A63") ;   
         let tx_hash = get_transaction_hash(network,contract_address).await.unwrap() ;  
@@ -183,21 +191,25 @@ mod test {
         assert_eq!(tx_hash,expected_hash) ;
     }  
  
-    // #[tokio::test]
-    // async fn test_scan_contract_address()  {
-    //     let from_network = RainNetworks::Mumbai ; 
-    //     let contract_address = String::from("0x2c9f3204590765aefa7bee01bccb540a7d06e967") ;   
-    //     let tx_hash = get_transaction_hash(from_network,contract_address).await.unwrap() ;  
-    //     let expected_hash = String::from("0xea76ed73832498c4293aa06aeca2899f2b5adca15d703b03690185ed829f3e71") ;
-    //     assert_eq!(tx_hash,expected_hash) ;
-    // }  
+    #[tokio::test]
+    async fn test_scan_contract_address()  {
+        // Reading environment variables
+        let mumbai_network = Mumbai::new(env::var("MUMBAI_RPC_URL").unwrap(), env::var("POLYGONSCAN_API_KEY").unwrap()) ; 
+        let network: RainNetworks = RainNetworks::Mumbai(mumbai_network) ; 
+        let contract_address = String::from("0x2c9f3204590765aefa7bee01bccb540a7d06e967") ;   
+        let tx_hash = get_transaction_hash(network,contract_address).await.unwrap() ;  
+        let expected_hash = String::from("0xea76ed73832498c4293aa06aeca2899f2b5adca15d703b03690185ed829f3e71") ;
+        assert_eq!(tx_hash,expected_hash) ;
+    }  
 
-    // #[tokio::test]
-    // async fn test_get_hash_fail()  {
-    //     let from_network = RainNetworks::Mumbai ; 
-    //     let contract_address = String::from("0x00000000000000000000000") ;   
-    //     let tx_hash = get_transaction_hash(from_network,contract_address).await ;  
-    //     assert!(tx_hash.is_err()) ;
-    // } 
+    #[tokio::test]
+    async fn test_get_hash_fail()  {
+        // Reading environment variables
+        let mumbai_network = Mumbai::new(env::var("MUMBAI_RPC_URL").unwrap(), env::var("POLYGONSCAN_API_KEY").unwrap()) ; 
+        let network: RainNetworks = RainNetworks::Mumbai(mumbai_network) ; 
+        let contract_address = String::from("0x00000000000000000000000") ;   
+        let tx_hash = get_transaction_hash(network,contract_address).await ;  
+        assert!(tx_hash.is_err()) ;
+    } 
 
 }

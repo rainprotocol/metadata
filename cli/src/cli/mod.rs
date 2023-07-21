@@ -27,7 +27,6 @@ pub enum Meta {
     Build(build::Build),
     #[command(subcommand)]
     Solc(solc::Solc), 
-    #[command(subcommand)]
     CrossDeploy(deploy::CrossDeploy)
 }
 
