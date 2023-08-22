@@ -26,6 +26,7 @@ pub fn show(s: Show) -> anyhow::Result<()> {
         KnownMeta::SolidityAbiV2 => schema_for!(crate::meta::solidity_abi::v2::SolidityAbi),
         KnownMeta::InterpreterCallerMetaV1 => schema_for!(crate::meta::interpreter_caller::v1::InterpreterCallerMeta),
         KnownMeta::OpV1 => schema_for!(crate::meta::op::v1::OpMeta),
+        _ => anyhow::bail!("Schema not supported for {}", s.schema),
     };
 
     let schema_string = if s.pretty_print {

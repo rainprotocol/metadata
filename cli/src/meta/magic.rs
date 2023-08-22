@@ -10,6 +10,7 @@ pub enum KnownMagic {
     SolidityAbiV2 = 0xffe5ffb4a3ff2cde,
     OpMetaV1 = 0xffe5282f43e495b4,
     InterpreterCallerMetaV1 = 0xffc21bbf86cc199b,
+    OptionalMeta = 0xff0c949e41995247
 }
 
 impl KnownMagic {

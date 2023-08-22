@@ -86,14 +86,14 @@ impl TryFrom<&BuildItem> for RainMetaDocumentV1Item {
 
 impl BuildItem {
     /// Write a BuildItem to a byte buffer as normalized, encoded cbor rain meta.
-    fn write<W: std::io::Write>(&self, writer: &mut W) -> anyhow::Result<()> {
+    pub fn write<W: std::io::Write>(&self, writer: &mut W) -> anyhow::Result<()> {
         Ok(ciborium::into_writer(&RainMetaDocumentV1Item::try_from(self)?, writer)?)
     }
 }
 
 /// Build a rain meta document from a sequence of BuildItems.
-fn build_bytes(magic: KnownMagic, items: Vec<BuildItem>) -> anyhow::Result<Vec<u8>> {
-    let mut bytes: Vec<u8> = magic.to_prefix_bytes().to_vec();
+pub fn build_bytes(magic: KnownMagic, items: Vec<BuildItem>) -> anyhow::Result<Vec<u8>> {
+    let mut bytes: Vec<u8> = magic.to_prefix_bytes().to_vec(); 
     for item in items {
         item.write(&mut bytes)?;
     }

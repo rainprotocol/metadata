@@ -16,6 +16,7 @@ pub enum KnownMeta {
     SolidityAbiV2,
     InterpreterCallerMetaV1,
     OpV1,
+    OptionalMeta
 }
 
 impl TryFrom<KnownMagic> for KnownMeta {
@@ -25,6 +26,7 @@ impl TryFrom<KnownMagic> for KnownMeta {
             KnownMagic::SolidityAbiV2 => Ok(KnownMeta::SolidityAbiV2),
             KnownMagic::InterpreterCallerMetaV1 => Ok(KnownMeta::InterpreterCallerMetaV1),
             KnownMagic::OpMetaV1 => Ok(KnownMeta::OpV1),
+            KnownMagic::OptionalMeta => Ok(KnownMeta::OptionalMeta),
             _ => Err(anyhow::anyhow!("Unsupported magic {}", magic)),
         }
     }
