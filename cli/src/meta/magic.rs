@@ -10,6 +10,7 @@ pub enum KnownMagic {
     SolidityAbiV2 = 0xffe5ffb4a3ff2cde,
     OpMetaV1 = 0xffe5282f43e495b4,
     InterpreterCallerMetaV1 = 0xffc21bbf86cc199b,
+    AuthoringMetaV1 = 0xffe9e3a02ca8e235
 }
 
 impl KnownMagic {
@@ -53,5 +54,13 @@ mod tests {
         let magic_number_after_prefix = magic_number.to_prefix_bytes();
 
         assert_eq!(hex::encode(magic_number_after_prefix), "ffc21bbf86cc199b");
+    }
+
+    #[test]
+    fn test_authoring_meta_v1() {
+        let magic_number = KnownMagic::AuthoringMetaV1;
+        let magic_number_after_prefix = magic_number.to_prefix_bytes();
+
+        assert_eq!(hex::encode(magic_number_after_prefix), "ffe9e3a02ca8e235");
     }
 }

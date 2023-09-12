@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use crate::meta::KnownMeta;
 use clap::Parser;
-use schemars::schema_for;
+use schemars::{schema_for, schema_for_value};
 use crate::cli::output::SupportedOutputEncoding;
 
 #[derive(Parser)]
@@ -22,17 +22,21 @@ pub struct Show {
 }
 
 pub fn show(s: Show) -> anyhow::Result<()> {
-    let schema_json = match s.schema {
-        KnownMeta::SolidityAbiV2 => schema_for!(crate::meta::solidity_abi::v2::SolidityAbi),
-        KnownMeta::InterpreterCallerMetaV1 => schema_for!(crate::meta::interpreter_caller::v1::InterpreterCallerMeta),
-        KnownMeta::OpV1 => schema_for!(crate::meta::op::v1::OpMeta),
-    };
-
-    let schema_string = if s.pretty_print {
-        serde_json::to_string_pretty(&schema_json)?
+    if s.schema == KnownMeta::AuthoringMetaV1 {
+        Err(anyhow::anyhow!("Unsupported for authoring meta"))
     } else {
-        serde_json::to_string(&schema_json)?
-    };
-
-    crate::cli::output::output(&s.output_path, SupportedOutputEncoding::Binary, schema_string.as_bytes())
+        let schema_json = match s.schema {
+            KnownMeta::SolidityAbiV2 => schema_for!(crate::meta::solidity_abi::v2::SolidityAbi),
+            KnownMeta::InterpreterCallerMetaV1 => schema_for!(crate::meta::interpreter_caller::v1::InterpreterCallerMeta),
+            KnownMeta::OpV1 => schema_for!(crate::meta::op::v1::OpMeta),
+            KnownMeta::AuthoringMetaV1 => schema_for_value!({}),
+        };
+        let schema_string = if s.pretty_print {
+            serde_json::to_string_pretty(&schema_json)?
+        } else {
+            serde_json::to_string(&schema_json)?
+        };
+    
+        crate::cli::output::output(&s.output_path, SupportedOutputEncoding::Binary, schema_string.as_bytes())
+    }
 }

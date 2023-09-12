@@ -159,9 +159,9 @@ pub fn build(b: Build) -> anyhow::Result<()> {
 #[cfg(test)]
 mod tests {
     use strum::IntoEnumIterator;
-    use crate::{meta::{magic::{self, KnownMagic}, ContentType, ContentEncoding, ContentLanguage, RainMetaDocumentV1Item}};
+    use crate::meta::{magic::{self, KnownMagic}, ContentType, ContentEncoding, ContentLanguage, RainMetaDocumentV1Item};
     use super::BuildItem;
-    use super::{build_bytes};
+    use super::build_bytes;
 
     /// Test that the magic number prefix is correct for all known magic numbers
     /// in isolation from all build items.
