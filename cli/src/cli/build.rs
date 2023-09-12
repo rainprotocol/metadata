@@ -253,4 +253,57 @@ mod tests {
 
         Ok(())
     }
+
+    #[test]
+    fn test_cbor_encoding_type() -> anyhow::Result<()> {
+        let build_item = BuildItem {
+            data: "[]".as_bytes().to_vec(),
+            magic: KnownMagic::AuthoringMetaV1,
+            content_type: ContentType::Cbor,
+            content_encoding: ContentEncoding::Identity,
+            content_language: ContentLanguage::En,
+        };
+
+        let bytes = super::build_bytes(KnownMagic::RainMetaDocumentV1, vec![build_item.clone()])?;
+
+        // https://github.com/rainprotocol/specs/blob/main/metadata-v1.md#example
+        // 8 byte magic number prefix
+        assert_eq!(&bytes[0..8], KnownMagic::RainMetaDocumentV1.to_prefix_bytes());
+        // cbor map with 5 keys
+        assert_eq!(bytes[8], 0xa5);
+        // key 0
+        assert_eq!(bytes[9], 0x00);
+        // major type 2 (bytes) length 2
+        assert_eq!(bytes[10], 0b010_00010);
+        // payload
+        assert_eq!(bytes[11..13], "[]".as_bytes()[..]);
+        // key 1
+        assert_eq!(bytes[13], 0x01);
+        // major type 0 (unsigned integer) value 27
+        assert_eq!(bytes[14], 0b000_11011);
+        // magic number
+        assert_eq!(&bytes[15..23], KnownMagic::AuthoringMetaV1.to_prefix_bytes());
+        // key 2
+        assert_eq!(bytes[23], 0x02);
+        // text string application/json length 16
+        assert_eq!(bytes[24], 0b011_10000);
+        // the string application/json
+        assert_eq!(&bytes[25..41], "application/cbor".as_bytes());
+        // key 3
+        assert_eq!(bytes[41], 0x03);
+        // text string identity length 8
+        assert_eq!(bytes[42], 0b011_01000);
+        // the string identity
+        assert_eq!(&bytes[43..51], "identity".as_bytes());
+        // key 4
+        assert_eq!(bytes[51], 0x04);
+        // text string en length 2
+        assert_eq!(bytes[52], 0b011_00010);
+        // the string en
+        assert_eq!(&bytes[53..55], "en".as_bytes());
+
+        assert_eq!(bytes.len(), 55);
+
+        Ok(())
+    }
 }
