@@ -287,7 +287,7 @@ mod tests {
         assert_eq!(bytes[23], 0x02);
         // text string application/json length 16
         assert_eq!(bytes[24], 0b011_10000);
-        // the string application/json
+        // the string application/cbor
         assert_eq!(&bytes[25..41], "application/cbor".as_bytes());
         // key 3
         assert_eq!(bytes[41], 0x03);
