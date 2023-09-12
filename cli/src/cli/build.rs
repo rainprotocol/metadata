@@ -285,7 +285,7 @@ mod tests {
         assert_eq!(&bytes[15..23], KnownMagic::AuthoringMetaV1.to_prefix_bytes());
         // key 2
         assert_eq!(bytes[23], 0x02);
-        // text string application/json length 16
+        // text string application/cbor length 16
         assert_eq!(bytes[24], 0b011_10000);
         // the string application/cbor
         assert_eq!(&bytes[25..41], "application/cbor".as_bytes());
