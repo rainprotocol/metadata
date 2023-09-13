@@ -15,6 +15,7 @@ impl KnownMeta {
             KnownMeta::SolidityAbiV2 => normalize_json::<SolidityAbi>(data)?,
             KnownMeta::InterpreterCallerMetaV1 => normalize_json::<InterpreterCallerMeta>(data)?,
             KnownMeta::OpV1 => normalize_json::<OpMeta>(data)?,
+            KnownMeta::AuthoringMetaV1 => data.to_vec(),
         })
     }
 }

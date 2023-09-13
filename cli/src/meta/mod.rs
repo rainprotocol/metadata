@@ -16,6 +16,7 @@ pub enum KnownMeta {
     SolidityAbiV2,
     InterpreterCallerMetaV1,
     OpV1,
+    AuthoringMetaV1
 }
 
 impl TryFrom<KnownMagic> for KnownMeta {
@@ -25,6 +26,7 @@ impl TryFrom<KnownMagic> for KnownMeta {
             KnownMagic::SolidityAbiV2 => Ok(KnownMeta::SolidityAbiV2),
             KnownMagic::InterpreterCallerMetaV1 => Ok(KnownMeta::InterpreterCallerMetaV1),
             KnownMagic::OpMetaV1 => Ok(KnownMeta::OpV1),
+            KnownMagic::AuthoringMetaV1 => Ok(KnownMeta::AuthoringMetaV1),
             _ => Err(anyhow::anyhow!("Unsupported magic {}", magic)),
         }
     }
@@ -35,7 +37,9 @@ impl TryFrom<KnownMagic> for KnownMeta {
 pub enum ContentType {
     None,
     #[serde(rename = "application/json")]
-    Json
+    Json,
+    #[serde(rename = "application/cbor")]
+    Cbor
 }
 
 #[derive(serde::Serialize, Copy, Clone, EnumString, EnumIter, strum::Display, Debug, PartialEq)]
