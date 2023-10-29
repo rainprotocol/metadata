@@ -8,6 +8,7 @@ pub mod validate;
 pub mod magic;
 pub mod solc;
 pub mod output;
+pub mod subgraph;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -26,6 +27,8 @@ pub enum Meta {
     Build(build::Build),
     #[command(subcommand)]
     Solc(solc::Solc),
+    #[command(subcommand)]
+    Subgraph(subgraph::Sg)
 }
 
 pub fn dispatch(meta: Meta) -> Result<()> {
@@ -35,6 +38,7 @@ pub fn dispatch(meta: Meta) -> Result<()> {
         Meta::Magic(magic) => magic::dispatch(magic),
         Meta::Build(build) => build::build(build),
         Meta::Solc(solc) => solc::dispatch(solc),
+        Meta::Subgraph(sg) => subgraph::dispatch(sg),
     }
 }
 

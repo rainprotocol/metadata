@@ -4,7 +4,7 @@ use crate::meta::ContentEncoding;
 use crate::meta::ContentLanguage;
 use crate::meta::ContentType;
 use crate::meta::KnownMeta;
-use crate::meta::RainMetaDocumentV1Item;
+use crate::meta::RainMeta;
 use anyhow::anyhow;
 use clap::Parser;
 use itertools::izip;
@@ -69,12 +69,12 @@ pub struct BuildItem {
 
 /// Moving from a BuildItem to a RainMetaDocumentV1Item requires normalization
 /// according to the magic number and encoding from the build options.
-impl TryFrom<&BuildItem> for RainMetaDocumentV1Item {
+impl TryFrom<&BuildItem> for RainMeta {
     type Error = anyhow::Error;
     fn try_from(item: &BuildItem) -> anyhow::Result<Self> {
         let normalized = TryInto::<KnownMeta>::try_into(item.magic)?.normalize(&item.data)?;
         let encoded = item.content_encoding.encode(normalized)?;
-        Ok(RainMetaDocumentV1Item {
+        Ok(RainMeta {
             payload: serde_bytes::ByteBuf::from(encoded),
             magic: item.magic,
             content_type: item.content_type,
@@ -84,20 +84,20 @@ impl TryFrom<&BuildItem> for RainMetaDocumentV1Item {
     }
 }
 
-impl BuildItem {
-    /// Write a BuildItem to a byte buffer as normalized, encoded cbor rain meta.
-    fn write<W: std::io::Write>(&self, writer: &mut W) -> anyhow::Result<()> {
-        Ok(ciborium::into_writer(&RainMetaDocumentV1Item::try_from(self)?, writer)?)
-    }
-}
+// impl BuildItem {
+//     /// Write a BuildItem to a byte buffer as normalized, encoded cbor rain meta.
+//     pub fn write<W: std::io::Write>(&self, writer: &mut W) -> anyhow::Result<()> {
+//         Ok(serde_cbor::to_writer(writer, &MetaContent::try_from(self)?)?)
+//     }
+// }
 
 /// Build a rain meta document from a sequence of BuildItems.
-fn build_bytes(magic: KnownMagic, items: Vec<BuildItem>) -> anyhow::Result<Vec<u8>> {
-    let mut bytes: Vec<u8> = magic.to_prefix_bytes().to_vec();
+pub fn build_bytes(magic: KnownMagic, items: Vec<BuildItem>) -> anyhow::Result<Vec<u8>> {
+    let mut metas: Vec<RainMeta> = vec![];
     for item in items {
-        item.write(&mut bytes)?;
+        metas.push(RainMeta::try_from(&item)?);
     }
-    Ok(bytes)
+    RainMeta::build_seq(&metas, magic)
 }
 
 /// Build a rain meta document from command line options.
@@ -159,7 +159,7 @@ pub fn build(b: Build) -> anyhow::Result<()> {
 #[cfg(test)]
 mod tests {
     use strum::IntoEnumIterator;
-    use crate::meta::{magic::{self, KnownMagic}, ContentType, ContentEncoding, ContentLanguage, RainMetaDocumentV1Item};
+    use crate::meta::{magic::{self, KnownMagic}, ContentType, ContentEncoding, ContentLanguage, RainMeta};
     use super::BuildItem;
     use super::build_bytes;
 
@@ -187,8 +187,8 @@ mod tests {
             content_language: ContentLanguage::En,
         };
 
-        let meta_document = RainMetaDocumentV1Item::try_from(&build_item)?;
-        let expected_meta_document = RainMetaDocumentV1Item {
+        let meta_document = RainMeta::try_from(&build_item)?;
+        let expected_meta_document = RainMeta {
             payload: serde_bytes::ByteBuf::from("[]".as_bytes().to_vec()),
             magic: KnownMagic::SolidityAbiV2,
             content_type: ContentType::Json,

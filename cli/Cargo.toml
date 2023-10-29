@@ -1,8 +1,8 @@
 [package]
-name = "rain_cli_meta"
+name = "rain_meta"
 version = "0.10.0"
 edition = "2021"
-description = "Rain cli tooling for metadata validation and generation."
+description = "Tooling and utilities for RainProtocol metadata."
 license = "CAL-1.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -21,12 +21,16 @@ regex = "1.8.3"
 strum = { version = "0.24", features = ["derive"] }
 serde = "1.0.163"
 validator = { version = "0.16", features = ["derive"] }
-ciborium = "0.2.1"
 itertools = "0.10.5"
 serde_bytes = "0.11.9"
 deflate = "1.0.0"
 hex = "0.4.3"
+inflate = "0.4.5"
+serde_cbor = "0.11.2"
 
 [[bin]]
 name = "rain-meta"
 path = "src/main.rs"
+
+[lib]
+path = "src/lib.rs"
