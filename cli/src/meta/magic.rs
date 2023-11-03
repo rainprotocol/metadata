@@ -1,6 +1,8 @@
 use strum::EnumIter;
 use strum::EnumString;
 
+/// # Rain Magic Numbers
+/// all known magic numbers
 #[derive(serde::Serialize, Clone, Copy, EnumString, EnumIter, strum::Display, Debug, PartialEq, serde::Deserialize)]
 #[strum(serialize_all = "kebab_case")]
 #[serde(rename_all = "kebab-case")]
@@ -36,8 +38,11 @@ impl KnownMagic {
         // Use big endian here as the magic numbers are for binary data prefixes.
         (*self as u64).to_be_bytes()
     }
+}
 
-    pub fn from_u64(value: u64) -> anyhow::Result<KnownMagic> {
+impl TryFrom<u64> for KnownMagic {
+    type Error = anyhow::Error;
+    fn try_from(value: u64) -> Result<Self, Self::Error> {
         match value {
             v if v == KnownMagic::AuthoringMetaV1 as u64 => Ok(KnownMagic::AuthoringMetaV1),
             v if v == KnownMagic::DotrainV1 as u64 => Ok(KnownMagic::DotrainV1),
@@ -48,22 +53,6 @@ impl KnownMagic {
             v if v == KnownMagic::RainlangV1 as u64 => Ok(KnownMagic::RainlangV1),
             v if v == KnownMagic::SolidityAbiV2 as u64 => Ok(KnownMagic::SolidityAbiV2),
             _ => Err(anyhow::anyhow!("unknown magic number"))
-        }
-    }
-}
-
-impl Into<KnownMagic> for u64 {
-    fn into(self) -> KnownMagic {
-        match self {
-            v if v == KnownMagic::AuthoringMetaV1 as u64 => KnownMagic::AuthoringMetaV1,
-            v if v == KnownMagic::DotrainV1 as u64 => KnownMagic::DotrainV1,
-            v if v == KnownMagic::ExpressionDeployerV2BytecodeV1 as u64 => KnownMagic::ExpressionDeployerV2BytecodeV1,
-            v if v == KnownMagic::InterpreterCallerMetaV1 as u64 => KnownMagic::InterpreterCallerMetaV1,
-            v if v == KnownMagic::OpMetaV1 as u64 => KnownMagic::OpMetaV1,
-            v if v == KnownMagic::RainMetaDocumentV1 as u64 => KnownMagic::RainMetaDocumentV1,
-            v if v == KnownMagic::RainlangV1 as u64 => KnownMagic::RainlangV1,
-            v if v == KnownMagic::SolidityAbiV2 as u64 => KnownMagic::SolidityAbiV2,
-            _ => panic!("unknown magic number")
         }
     }
 }

@@ -36,6 +36,11 @@ pub const REGEX_RAIN_TITLE: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r"^[!-~]([ -~]*[!-~]|[!-~]*)$").unwrap()
 });
 
+/// keccak256 hash pattern
+pub const HASH_PATTERN: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"^0x[a-fA-F0-9]{64}$").unwrap()
+});
+
 /// Rain symbols are a subset of kebab case.
 #[derive(Validate, JsonSchema, Debug, Serialize, Deserialize)]
 #[serde(transparent)]

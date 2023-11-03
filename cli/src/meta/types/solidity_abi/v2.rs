@@ -9,18 +9,45 @@ use serde::Serializer;
 use serde::ser::SerializeStruct;
 
 /// # SolidityABI
-/// JSON representation of a Solidity ABI interface.
+/// JSON representation of a Solidity ABI interface. can be switched to ethers ABI struct using TryFrom trait
 /// https://docs.soliditylang.org/en/latest/abi-spec.html#json
 #[derive(JsonSchema, Debug, Serialize, Deserialize)]
-pub struct SolidityAbi(Vec<SolidityAbiItem>);
+pub struct SolidityAbiMeta(Vec<SolidityAbiItem>);
 
-impl Validate for SolidityAbi {
+impl Validate for SolidityAbiMeta {
     fn validate(&self) -> Result<(), ValidationErrors> {
         ValidationErrors::merge_all(
             Ok(()),
             "root",
             self.0.iter().map(|item| item.validate()).collect()
         )
+    }
+}
+
+impl TryFrom<Vec<u8>> for SolidityAbiMeta {
+    type Error = anyhow::Error;
+    fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
+        match serde_json::from_slice::<Self>(&value).map_err(anyhow::Error::from) {
+            Ok(t) => match t.validate().map_err(anyhow::Error::from) {
+                Ok(()) => Ok(t),
+                Err(e) => Err(e),
+            },
+            Err(e) => Err(e)
+        }
+    }
+}
+
+impl TryFrom<SolidityAbiMeta> for ethers::abi::Abi {
+    type Error = anyhow::Error;
+    fn try_from(value: SolidityAbiMeta) -> Result<Self, Self::Error> {
+        Ok(serde_json::from_str::<Self>(serde_json::to_string(&value)?.as_str())?)
+    }
+}
+
+impl TryFrom<ethers::abi::Abi> for SolidityAbiMeta {
+    type Error = anyhow::Error;
+    fn try_from(value: ethers::abi::Abi) -> Result<Self, Self::Error> {
+        Ok(serde_json::from_str::<Self>(serde_json::to_string(&value)?.as_str())?)
     }
 }
 

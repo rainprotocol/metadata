@@ -1,6 +1,6 @@
 [package]
 name = "rain_meta"
-version = "0.10.0"
+version = "1.0.0"
 edition = "2021"
 description = "Tooling and utilities for RainProtocol metadata."
 license = "CAL-1.0"
@@ -27,6 +27,9 @@ deflate = "1.0.0"
 hex = "0.4.3"
 inflate = "0.4.5"
 serde_cbor = "0.11.2"
+ethers = "2.0.10"
+reqwest = { version = "0.11.22", features = ["json"] }
+futures = "0.3.29"
 
 [[bin]]
 name = "rain-meta"

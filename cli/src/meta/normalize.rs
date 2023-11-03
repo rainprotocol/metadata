@@ -1,7 +1,9 @@
 use super::KnownMeta;
-use super::interpreter_caller::v1::InterpreterCallerMeta;
-use super::op::v1::OpMeta;
-use super::solidity_abi::v2::SolidityAbi;
+use super::types::op::v1::OpMeta;
+use super::types::authoring::v1::AuthoringMeta;
+use super::types::solidity_abi::v2::SolidityAbiMeta;
+use super::types::interpreter_caller::v1::InterpreterCallerMeta;
+
 
 fn normalize_json<'de, T: serde::Deserialize<'de> + serde::Serialize + validator::Validate>(data: &'de [u8]) -> anyhow::Result<Vec<u8>> {
     let parsed = serde_json::from_str::<T>(std::str::from_utf8(data)?)?;
@@ -10,11 +12,18 @@ fn normalize_json<'de, T: serde::Deserialize<'de> + serde::Serialize + validator
 }
 
 impl KnownMeta {
+    /// normalizes meta types and also performs validation on those that need validation
     pub fn normalize(&self, data: &[u8]) -> anyhow::Result<Vec<u8>> {
         Ok(match self {
-            KnownMeta::SolidityAbiV2 => normalize_json::<SolidityAbi>(data)?,
+            KnownMeta::SolidityAbiV2 => normalize_json::<SolidityAbiMeta>(data)?,
             KnownMeta::InterpreterCallerMetaV1 => normalize_json::<InterpreterCallerMeta>(data)?,
             KnownMeta::OpV1 => normalize_json::<OpMeta>(data)?,
+            KnownMeta::AuthoringMetaV1 => {
+                match AuthoringMeta::abi_decode(&data.to_vec()) {
+                    Ok(am) => am.abi_encode()?,
+                    Err(_e) => AuthoringMeta::abi_encode(&serde_json::from_str::<AuthoringMeta>(std::str::from_utf8(data)?)?)?
+                }
+            },
             _ => data.to_vec()
         })
     }

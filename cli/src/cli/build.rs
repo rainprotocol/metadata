@@ -4,7 +4,7 @@ use crate::meta::ContentEncoding;
 use crate::meta::ContentLanguage;
 use crate::meta::ContentType;
 use crate::meta::KnownMeta;
-use crate::meta::RainMeta;
+use crate::meta::MetaMap;
 use anyhow::anyhow;
 use clap::Parser;
 use itertools::izip;
@@ -69,12 +69,12 @@ pub struct BuildItem {
 
 /// Moving from a BuildItem to a RainMetaDocumentV1Item requires normalization
 /// according to the magic number and encoding from the build options.
-impl TryFrom<&BuildItem> for RainMeta {
+impl TryFrom<&BuildItem> for MetaMap {
     type Error = anyhow::Error;
     fn try_from(item: &BuildItem) -> anyhow::Result<Self> {
         let normalized = TryInto::<KnownMeta>::try_into(item.magic)?.normalize(&item.data)?;
-        let encoded = item.content_encoding.encode(normalized)?;
-        Ok(RainMeta {
+        let encoded = item.content_encoding.encode(&normalized)?;
+        Ok(MetaMap {
             payload: serde_bytes::ByteBuf::from(encoded),
             magic: item.magic,
             content_type: item.content_type,
@@ -93,11 +93,11 @@ impl TryFrom<&BuildItem> for RainMeta {
 
 /// Build a rain meta document from a sequence of BuildItems.
 pub fn build_bytes(magic: KnownMagic, items: Vec<BuildItem>) -> anyhow::Result<Vec<u8>> {
-    let mut metas: Vec<RainMeta> = vec![];
+    let mut metas: Vec<MetaMap> = vec![];
     for item in items {
-        metas.push(RainMeta::try_from(&item)?);
+        metas.push(MetaMap::try_from(&item)?);
     }
-    RainMeta::build_seq(&metas, magic)
+    MetaMap::cbor_encode_seq(&metas, magic)
 }
 
 /// Build a rain meta document from command line options.
@@ -159,7 +159,7 @@ pub fn build(b: Build) -> anyhow::Result<()> {
 #[cfg(test)]
 mod tests {
     use strum::IntoEnumIterator;
-    use crate::meta::{magic::{self, KnownMagic}, ContentType, ContentEncoding, ContentLanguage, RainMeta};
+    use crate::meta::{magic::{self, KnownMagic}, ContentType, ContentEncoding, ContentLanguage, MetaMap};
     use super::BuildItem;
     use super::build_bytes;
 
@@ -187,8 +187,8 @@ mod tests {
             content_language: ContentLanguage::En,
         };
 
-        let meta_document = RainMeta::try_from(&build_item)?;
-        let expected_meta_document = RainMeta {
+        let meta_document = MetaMap::try_from(&build_item)?;
+        let expected_meta_document = MetaMap {
             payload: serde_bytes::ByteBuf::from("[]".as_bytes().to_vec()),
             magic: KnownMagic::SolidityAbiV2,
             content_type: ContentType::Json,

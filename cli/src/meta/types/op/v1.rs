@@ -1,8 +1,8 @@
 use schemars::JsonSchema;
-use crate::meta::rain::v1::Operand;
-use crate::meta::rain::v1::RainSymbol;
-use crate::meta::rain::v1::Description;
-use crate::meta::rain::v1::RainString;
+use super::super::common::v1::Operand;
+use super::super::common::v1::RainSymbol;
+use super::super::common::v1::Description;
+use super::super::common::v1::RainString;
 use serde::Deserialize;
 use serde::Serialize;
 use validator::Validate;
@@ -114,6 +114,19 @@ pub struct OpMeta {
     #[serde(default)]
     #[validate]
     pub aliases: Vec<RainSymbol>,
+}
+
+impl TryFrom<Vec<u8>> for OpMeta {
+    type Error = anyhow::Error;
+    fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
+        match serde_json::from_slice::<Self>(&value).map_err(anyhow::Error::from) {
+            Ok(t) => match t.validate().map_err(anyhow::Error::from) {
+                Ok(()) => Ok(t),
+                Err(e) => Err(e),
+            },
+            Err(e) => Err(e)
+        }
+    }
 }
 
 /// # Input
