@@ -21,7 +21,11 @@ impl KnownMeta {
             KnownMeta::AuthoringMetaV1 => {
                 match AuthoringMeta::abi_decode(&data.to_vec()) {
                     Ok(am) => am.abi_encode()?,
-                    Err(_e) => AuthoringMeta::abi_encode(&serde_json::from_str::<AuthoringMeta>(std::str::from_utf8(data)?)?)?
+                    _ => AuthoringMeta::abi_encode(
+                        &serde_json::from_str::<AuthoringMeta>(
+                            std::str::from_utf8(data).or(Err(anyhow::anyhow!("deserialization attempts failed with both abi decoding and json deserialization")))?
+                        ).or(Err(anyhow::anyhow!("deserialization attempts failed with both abi decoding and json deserialization")))?
+                    )?
                 }
             },
             _ => data.to_vec()

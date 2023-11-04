@@ -5,9 +5,11 @@ use schemars::JsonSchema;
 use validator::ValidationErrors;
 use ethers::{abi, utils, abi::Token, types::U256};
 
+use super::super::super::MetaMap;
 use super::super::common::v1::RainSymbol;
-use crate::meta::types::common::v1::RainString;
-use crate::meta::types::common::v1::Description;
+use super::super::super::types::common::v1::RainString;
+use super::super::super::types::common::v1::Description;
+
 
 /// authoring meta struct
 pub const AUTHORING_META_STRUCT: &str = "(bytes32, uint8, string)[]";
@@ -119,7 +121,16 @@ impl TryFrom<Vec<u8>> for AuthoringMeta {
     fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
         match AuthoringMeta::abi_decode(&value.to_vec()) {
             Ok(am) => Ok(am),
-            Err(_e) => serde_json::from_str::<AuthoringMeta>(std::str::from_utf8(&value)?).map_err(anyhow::Error::from)
+            Err(_e) => serde_json::from_str::<AuthoringMeta>(
+                std::str::from_utf8(&value).or(Err(anyhow::anyhow!("deserialization attempts failed with both abi decoding and json deserialization")))?
+            ).or(Err(anyhow::anyhow!("deserialization attempts failed with both abi decoding and json deserialization")))
         }
+    }
+}
+
+impl TryFrom<MetaMap> for AuthoringMeta {
+    type Error = anyhow::Error;
+    fn try_from(value: MetaMap) -> Result<Self, Self::Error> {
+        AuthoringMeta::abi_decode(&value.unpack()?)
     }
 }

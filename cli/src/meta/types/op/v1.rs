@@ -1,13 +1,16 @@
+use serde::Serialize;
+use serde::Deserialize;
+use validator::Validate;
 use schemars::JsonSchema;
+use validator::ValidationErrors;
+use validator::ValidationError;
+
+use super::super::super::MetaMap;
 use super::super::common::v1::Operand;
 use super::super::common::v1::RainSymbol;
 use super::super::common::v1::Description;
 use super::super::common::v1::RainString;
-use serde::Deserialize;
-use serde::Serialize;
-use validator::Validate;
-use validator::ValidationErrors;
-use validator::ValidationError;
+
 
 pub type Computation = RainString;
 
@@ -126,6 +129,13 @@ impl TryFrom<Vec<u8>> for OpMeta {
             },
             Err(e) => Err(e)
         }
+    }
+}
+
+impl TryFrom<MetaMap> for OpMeta {
+    type Error = anyhow::Error;
+    fn try_from(value: MetaMap) -> Result<Self, Self::Error> {
+        Self::try_from(value.unpack()?)
     }
 }
 

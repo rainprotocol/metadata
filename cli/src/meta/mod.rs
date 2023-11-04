@@ -111,6 +111,23 @@ pub struct MetaMap {
     pub content_language: ContentLanguage,
 }
 
+
+// this implementation is mainly used by Rainlang and Dotrain metas as they are aliased type for String
+impl TryFrom<MetaMap> for String {
+    type Error = anyhow::Error;
+    fn try_from(value: MetaMap) -> Result<Self, Self::Error> {
+        String::from_utf8(value.unpack()?).map_err(anyhow::Error::from)
+    }
+}
+
+// this implementation is mainly used by ExpressionDeployerV2Bytecode metas as it is aliased type for Vec<u8>
+impl TryFrom<MetaMap> for Vec<u8> {
+    type Error = anyhow::Error;
+    fn try_from(value: MetaMap) -> Result<Self, Self::Error> {
+        value.unpack()
+    }
+}
+
 impl MetaMap {
     fn len(&self) -> usize {
         let mut l = 2;
@@ -203,8 +220,8 @@ impl MetaMap {
     }
 
     // unpacks the payload to given meta type based on configuration
-    pub fn unpack_into<T: TryFrom<Vec<u8>, Error = anyhow::Error>>(&self) -> anyhow::Result<T> {
-        let data = self.unpack()?;
+    pub fn unpack_into<T: TryFrom<Self, Error = anyhow::Error>>(&self) -> anyhow::Result<T> {
+        // let data = self.unpack()?;
         match self.magic {
             KnownMagic::OpMetaV1 |
             KnownMagic::DotrainV1 |
@@ -212,7 +229,7 @@ impl MetaMap {
             KnownMagic::SolidityAbiV2 |
             KnownMagic::AuthoringMetaV1 |
             KnownMagic::InterpreterCallerMetaV1 |
-            KnownMagic::ExpressionDeployerV2BytecodeV1 => T::try_from(data).map_err(anyhow::Error::from),
+            KnownMagic::ExpressionDeployerV2BytecodeV1 => T::try_from(self.clone()).map_err(anyhow::Error::from),
             _ => Err(anyhow::anyhow!("unsupproted magic number"))
         }
     }

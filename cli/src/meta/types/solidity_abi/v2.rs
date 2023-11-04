@@ -8,6 +8,8 @@ use serde::de::Error;
 use serde::Serializer;
 use serde::ser::SerializeStruct;
 
+use super::super::super::MetaMap;
+
 /// # SolidityABI
 /// JSON representation of a Solidity ABI interface. can be switched to ethers ABI struct using TryFrom trait
 /// https://docs.soliditylang.org/en/latest/abi-spec.html#json
@@ -34,6 +36,13 @@ impl TryFrom<Vec<u8>> for SolidityAbiMeta {
             },
             Err(e) => Err(e)
         }
+    }
+}
+
+impl TryFrom<MetaMap> for SolidityAbiMeta {
+    type Error = anyhow::Error;
+    fn try_from(value: MetaMap) -> Result<Self, Self::Error> {
+        Self::try_from(value.unpack()?)
     }
 }
 

@@ -1,4 +1,6 @@
 use schemars::JsonSchema;
+
+use super::super::super::MetaMap;
 use super::super::common::v1::RainTitle;
 use super::super::common::v1::RainSymbol;
 use super::super::common::v1::Description;
@@ -53,6 +55,13 @@ impl TryFrom<Vec<u8>> for InterpreterCallerMeta {
             },
             Err(e) => Err(e)
         }
+    }
+}
+
+impl TryFrom<MetaMap> for InterpreterCallerMeta {
+    type Error = anyhow::Error;
+    fn try_from(value: MetaMap) -> Result<Self, Self::Error> {
+        Self::try_from(value.unpack()?)
     }
 }
 
