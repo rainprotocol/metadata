@@ -369,7 +369,7 @@ pub async fn search_deployer(hash: &str, subgraphs: &Vec<String>, timeout: u32) 
 }
 
 
-/// # Meta Store
+/// # Meta Store (CAS)
 /// 
 /// Reads, stores and simply manages k/v pairs of meta hash and meta bytes and provides the functionalities 
 /// to easliy utilize them. Hashes must be 32 bytes (in hex string format) and will be stored as lower case.
