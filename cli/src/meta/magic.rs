@@ -8,28 +8,28 @@ use strum::EnumString;
 #[serde(rename_all = "kebab-case")]
 #[repr(u64)]
 pub enum KnownMagic {
-    /// Prefixes every rain meta document "18377652714897045620"
+    /// Prefixes every rain meta document
     RainMetaDocumentV1 = 0xff0a89c674ee7874,
 
-    /// Solidity ABI meta v2 "18439425400648969438"
+    /// Solidity ABI meta v2
     SolidityAbiV2 = 0xffe5ffb4a3ff2cde,
 
-    /// Ops meta v1 "18439188432805991860"
+    /// Ops meta v1
     OpMetaV1 = 0xffe5282f43e495b4,
 
-    /// InterpreterCaller meta v1 "18429323134567717275"
+    /// InterpreterCaller meta v1
     InterpreterCallerMetaV1 = 0xffc21bbf86cc199b,
 
-    /// Authroing meta v1 "18440520426328744501"
+    /// Authroing meta v1
     AuthoringMetaV1 = 0xffe9e3a02ca8e235,
 
-    /// Dotrain meta v1 "18436262373317404820"
+    /// Dotrain meta v1
     DotrainV1 = 0xffdac2f2f37be894,
 
-    /// Rainlang meta v1 "18382595872068946087"
+    /// Rainlang meta v1
     RainlangV1 = 0xff1c198cec3b48a7,
 
-    /// ExpressionDeployer deployed bytecode meta v1 "18436497220406627634"
+    /// ExpressionDeployer deployed bytecode meta v1
     ExpressionDeployerV2BytecodeV1 = 0xffdb988a8cd04d32,
 }
 

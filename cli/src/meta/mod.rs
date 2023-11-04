@@ -464,7 +464,7 @@ impl Store {
         }
     }
 
-    /// creats new instance of Store with given initial values
+    /// creates new instance of Store with given initial values
     /// it checks the validity of each item of the provided values and only stores those that are valid
     pub fn create(
         subgraphs: &Vec<String>, 
