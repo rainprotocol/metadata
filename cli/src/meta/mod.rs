@@ -388,10 +388,12 @@ pub async fn search_deployer(hash: &str, subgraphs: &Vec<String>, timeout: u32) 
 /// use std::collections::HashMap;
 /// 
 /// // to instantiate with including default subgraphs
-/// // pass 'false' to not include default rain subgraph endpoints
-/// let mut store = Store::new(true);
+/// let mut store = Store::new();
 /// 
-/// // or to instantiate with initial arguments
+/// // to instatiate with default rain subgraphs included
+/// let mut store = Store::default();
+/// 
+/// // or to instantiate with initial values
 /// let mut store = Store::create(
 ///     &vec!["sg-url-1".to_string()], 
 ///     &HashMap::new(), 
@@ -451,16 +453,12 @@ impl Store {
 
     /// lazily creates a new instance
     /// it is recommended to use create() instead with initial values
-    pub fn new(include_rain_subgraphs: bool) -> Store { 
-        if include_rain_subgraphs {
-            Store::default()
-        } else {
-            Store { 
-                subgraphs: vec![],
-                cache: HashMap::new(), 
-                dotrain_cache: HashMap::new(), 
-                authoring_cache: HashMap::new()
-            }
+    pub fn new() -> Store { 
+        Store { 
+            subgraphs: vec![],
+            cache: HashMap::new(), 
+            dotrain_cache: HashMap::new(), 
+            authoring_cache: HashMap::new()
         }
     }
 
@@ -473,7 +471,12 @@ impl Store {
         dotrain_cache: &HashMap<String, String>,
         include_rain_subgraphs: bool
     ) -> Store {
-        let mut store = Store::new(include_rain_subgraphs);
+        let mut store;
+        if include_rain_subgraphs {
+            store = Store::default();
+        } else {
+            store = Store::new();
+        }
         store.add_subgraphs(&subgraphs);
         for (hash, bytes) in cache { store.update_with(hash, bytes); }
         for (hash, bytes) in authoring_cache { 
@@ -680,5 +683,175 @@ impl Store {
             }
         }
         self.authoring_cache.get(&h)
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::{
+        MetaMap, 
+        ContentType, 
+        ContentEncoding, 
+        ContentLanguage, 
+        magic::KnownMagic, 
+        types::{
+            dotrain::v1::DotrainMeta,
+            common::v1::{RainSymbol, Description}, 
+            authoring::v1::{AuthoringMetaItem, AuthoringMeta}
+        }
+    };
+
+    /// Roundtrip test for an authoring meta
+    /// original content -> pack -> MetaMap -> cbor encode -> cbor decode -> MetaMap -> unpack -> original content,
+    #[test]
+    fn authoring_meta_roundtrip() -> anyhow::Result<()> {
+        let authoring_meta_content = r#"[
+            {
+                "word": "stack",
+                "description": "Copies an existing value from the stack.",
+                "operandParserOffset": 16
+            },
+            {
+                "word": "constant",
+                "description": "Copies a constant value onto the stack.",
+                "operandParserOffset": 16
+            }
+        ]"#;
+
+        // check the serialization
+        let authoring_meta: AuthoringMeta = serde_json::from_str(authoring_meta_content)?;
+
+        assert_eq!(
+            authoring_meta, 
+            AuthoringMeta(vec![
+                AuthoringMetaItem{
+                    word: RainSymbol{ value: "stack".to_string() }, 
+                    operand_parser_offset: 16u8, 
+                    description: Description{ value: "Copies an existing value from the stack.".to_string() }
+                }, 
+                AuthoringMetaItem{
+                    word: RainSymbol{ value: "constant".to_string() }, 
+                    operand_parser_offset: 16u8, 
+                    description: Description{ value: "Copies a constant value onto the stack.".to_string() }
+                }
+            ])
+        );
+
+        // abi encode the authoring meta with performin validation
+        let authoring_meta_abi_encoded = authoring_meta.abi_encode_validate()?;
+        let expected_abi_encoded_data = hex::decode(
+            "0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000100737461636b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000028436f7069657320616e206578697374696e672076616c75652066726f6d2074686520737461636b2e000000000000000000000000000000000000000000000000636f6e7374616e74000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000027436f70696573206120636f6e7374616e742076616c7565206f6e746f2074686520737461636b2e00000000000000000000000000000000000000000000000000"
+        )?;
+
+        // check the encoded bytes agaiinst the expected
+        assert_eq!(authoring_meta_abi_encoded, expected_abi_encoded_data);
+
+        let meta_map = MetaMap{
+            payload: serde_bytes::ByteBuf::from(authoring_meta_abi_encoded.clone()),
+            magic: KnownMagic::AuthoringMetaV1,
+            content_type: ContentType::Cbor,
+            content_encoding: ContentEncoding::None,
+            content_language: ContentLanguage::None
+        };
+        let cbor_encoded = meta_map.cbor_encode()?;
+
+        // cbor map with 3 keys
+        assert_eq!(cbor_encoded[0], 0xa3);
+        // key 0
+        assert_eq!(cbor_encoded[1], 0x00);
+        // major type 2 (bytes) length 512
+        assert_eq!(cbor_encoded[2], 0b010_11001);
+        assert_eq!(cbor_encoded[3], 0b000_00010);
+        assert_eq!(cbor_encoded[4], 0b000_00000);
+        // payload
+        assert_eq!(cbor_encoded[5..517], authoring_meta_abi_encoded);
+        // key 1
+        assert_eq!(cbor_encoded[517], 0x01);
+        // major type 0 (unsigned integer) value 27
+        assert_eq!(cbor_encoded[518], 0b000_11011);
+        // magic number
+        assert_eq!(&cbor_encoded[519..527], KnownMagic::AuthoringMetaV1.to_prefix_bytes());
+        // key 2
+        assert_eq!(cbor_encoded[527], 0x02);
+        // text string application/cbor length 16
+        assert_eq!(cbor_encoded[528], 0b011_10000);
+        // the string application/json, must be the end of data
+        assert_eq!(&cbor_encoded[529..], "application/cbor".as_bytes());
+
+        // decode the data back to MetaMap
+        let cbor_decoded = MetaMap::cbor_decode(&cbor_encoded)?;
+        // the length of decoded maps must be 1 as we only had 1 encoded item
+        assert_eq!(cbor_decoded.len(), 1usize);
+        // decoded item must be equal to the meta_map
+        assert_eq!(cbor_decoded[0], meta_map);
+
+        // unpack the payload into AuthoringMeta
+        let unpacked_payload: AuthoringMeta = cbor_decoded[0].unpack_into()?;
+        // must be equal to original
+        assert_eq!(unpacked_payload, authoring_meta);
+        
+        Ok(())
+    }
+
+    /// Roundtrip test for a dotrain meta
+    /// original content -> pack -> MetaMap -> cbor encode -> cbor decode -> MetaMap -> unpack -> original content,
+    #[test]
+    fn dotrain_meta_roundtrip() -> anyhow::Result<()> {
+        let dotrain_content = "#main _ _: int-add(1 2) int-add(2 3)";
+        let dotrain_content_bytes = dotrain_content.as_bytes().to_vec();
+        println!("{:?}", dotrain_content_bytes);
+        let meta_map = MetaMap{
+            payload: serde_bytes::ByteBuf::from(dotrain_content),
+            magic: KnownMagic::DotrainV1,
+            content_type: ContentType::OctetStream,
+            content_encoding: ContentEncoding::None,
+            content_language: ContentLanguage::En
+        };
+        let cbor_encoded = meta_map.cbor_encode()?;
+        println!("{:?}", cbor_encoded);
+        // cbor map with 4 keys
+        assert_eq!(cbor_encoded[0], 0xa4);
+        // key 0
+        assert_eq!(cbor_encoded[1], 0x00);
+        // major type 2 (bytes) length 36
+        assert_eq!(cbor_encoded[2], 0b010_11000);
+        assert_eq!(cbor_encoded[3], 0b001_00100);
+        // assert_eq!(cbor_encoded[4], 0b000_00000);
+        // payload
+        assert_eq!(cbor_encoded[4..40], dotrain_content_bytes);
+        // key 1
+        assert_eq!(cbor_encoded[40], 0x01);
+        // major type 0 (unsigned integer) value 27
+        assert_eq!(cbor_encoded[41], 0b000_11011);
+        // magic number
+        assert_eq!(&cbor_encoded[42..50], KnownMagic::DotrainV1.to_prefix_bytes());
+        // key 2
+        assert_eq!(cbor_encoded[50], 0x02);
+        // text string application/octet-stream length 24
+        assert_eq!(cbor_encoded[51], 0b011_11000);
+        assert_eq!(cbor_encoded[52], 0b000_11000);
+        // the string application/json
+        assert_eq!(&cbor_encoded[53..77], "application/octet-stream".as_bytes());
+        // no key 3, skip to key 4
+        assert_eq!(cbor_encoded[77], 0x04);
+        // text string en length 2
+        assert_eq!(cbor_encoded[78], 0b011_00010);
+        // the string identity, must be the end of data
+        assert_eq!(&cbor_encoded[79..], "en".as_bytes());
+
+        // decode the data back to MetaMap
+        let cbor_decoded = MetaMap::cbor_decode(&cbor_encoded)?;
+        // the length of decoded maps must be 1 as we only had 1 encoded item
+        assert_eq!(cbor_decoded.len(), 1usize);
+        // decoded item must be equal to the meta_map
+        assert_eq!(cbor_decoded[0], meta_map);
+
+        // unpack the payload into AuthoringMeta
+        let unpacked_payload: DotrainMeta = cbor_decoded[0].unpack_into()?;
+        // must be equal to original
+        assert_eq!(unpacked_payload, dotrain_content);
+        
+        Ok(())
     }
 }

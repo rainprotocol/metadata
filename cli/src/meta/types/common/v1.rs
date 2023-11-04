@@ -42,7 +42,7 @@ pub const HASH_PATTERN: Lazy<Regex> = Lazy::new(|| {
 });
 
 /// Rain symbols are a subset of kebab case.
-#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize, Clone)]
+#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize, Clone, PartialEq)]
 #[serde(transparent)]
 #[repr(transparent)]
 pub struct RainSymbol{
@@ -50,7 +50,7 @@ pub struct RainSymbol{
     pub value: String,
 }
 
-#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize, Clone)]
+#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize, Clone, PartialEq)]
 #[serde(transparent)]
 #[repr(transparent)]
 pub struct RainTitle {
@@ -58,7 +58,7 @@ pub struct RainTitle {
     pub value: String,
 }
 
-#[derive(Validate, JsonSchema, Debug, Default, Serialize, Deserialize, Clone)]
+#[derive(Validate, JsonSchema, Debug, Default, Serialize, Deserialize, Clone, PartialEq)]
 #[serde(transparent)]
 #[repr(transparent)]
 pub struct RainString {
@@ -68,7 +68,7 @@ pub struct RainString {
 
 pub type Description = RainString;
 
-#[derive(Validate, JsonSchema, Debug, Default, Serialize, Deserialize, Clone)]
+#[derive(Validate, JsonSchema, Debug, Default, Serialize, Deserialize, Clone, PartialEq)]
 #[serde(transparent)]
 #[repr(transparent)]
 pub struct SolidityIdentifier {

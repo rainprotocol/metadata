@@ -19,6 +19,9 @@ impl KnownMeta {
             KnownMeta::InterpreterCallerMetaV1 => normalize_json::<InterpreterCallerMeta>(data)?,
             KnownMeta::OpV1 => normalize_json::<OpMeta>(data)?,
             KnownMeta::AuthoringMetaV1 => {
+                // for AuthoringMeta since it can be a json or abi encoded bytes, we try to abi
+                // decode first and then json deserialize if that fails, if either succeeds 
+                // then the result of that will be abi encoded with validation
                 match AuthoringMeta::abi_decode(&data.to_vec()) {
                     Ok(am) => am.abi_encode_validate()?,
                     _ => AuthoringMeta::abi_encode_validate(
