@@ -793,12 +793,12 @@ mod tests {
         let cbor_decoded = MetaMap::cbor_decode(&cbor_encoded)?;
         // the length of decoded maps must be 1 as we only had 1 encoded item
         assert_eq!(cbor_decoded.len(), 1usize);
-        // decoded item must be equal to the meta_map
+        // decoded item must be equal to the original meta_map
         assert_eq!(cbor_decoded[0], meta_map);
 
         // unpack the payload into AuthoringMeta
         let unpacked_payload: AuthoringMeta = cbor_decoded[0].unpack_into()?;
-        // must be equal to original
+        // must be equal to original meta
         assert_eq!(unpacked_payload, authoring_meta);
         
         Ok(())
@@ -863,12 +863,12 @@ mod tests {
         let cbor_decoded = MetaMap::cbor_decode(&cbor_encoded)?;
         // the length of decoded maps must be 1 as we only had 1 encoded item
         assert_eq!(cbor_decoded.len(), 1usize);
-        // decoded item must be equal to the meta_map
+        // decoded item must be equal to the original meta_map
         assert_eq!(cbor_decoded[0], meta_map);
 
         // unpack the payload into DotrainMeta, should handle inflation of the payload internally
         let unpacked_payload: DotrainMeta = cbor_decoded[0].unpack_into()?;
-        // must be equal to original
+        // must be equal to the original dotrain content
         assert_eq!(unpacked_payload, dotrain_content);
         
         Ok(())
