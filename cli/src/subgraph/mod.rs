@@ -1,9 +1,9 @@
 /// # Rain Subgraphs
 /// all known subgraph endpoints
 #[derive(Debug, Clone)]
-pub struct Subgraph;
+pub struct KnownSubgraphs;
 
-impl Subgraph {
+impl KnownSubgraphs {
     /// Rain known subgraphs on ethereum mainnet
     pub const ETHEREUM: [&'static str; 2] = [
         "https://api.thegraph.com/subgraphs/name/rainprotocol/interpreter-registry-ethereum",
@@ -52,7 +52,7 @@ impl Subgraph {
             1 => Ok(Self::ETHEREUM),
             137 => Ok(Self::POLYGON),
             80001 => Ok(Self::MUMBAI),
-            _ => Err(anyhow::anyhow!("no rain subgraph is implemented for this network"))
+            _ => Err(anyhow::anyhow!("no rain subgraph is deployed for this network"))
         }
     }
 }

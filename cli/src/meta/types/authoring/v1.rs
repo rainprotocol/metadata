@@ -37,8 +37,23 @@ pub struct AuthoringMetaItem {
 }
 
 impl AuthoringMeta {
-    /// abi encodes array of AuthoringMeta items after validating each
+    /// abi encodes array of AuthoringMeta items
     pub fn abi_encode(&self) -> anyhow::Result<Vec<u8>> {
+        let mut tokens: Vec<Token> = vec![];
+        for item in &self.0 {
+            tokens.push(Token::Tuple(
+                vec![
+                    Token::FixedBytes(utils::format_bytes32_string(item.word.value.as_str())?.to_vec()), 
+                    Token::Uint(U256::from(item.operand_parser_offset)), 
+                    Token::String(item.description.value.clone())
+                ]
+            ));
+        }
+        Ok(abi::encode(&[Token::Array(tokens)]))
+    }
+
+    /// abi encodes array of AuthoringMeta items after validating each
+    pub fn abi_encode_validate(&self) -> anyhow::Result<Vec<u8>> {
         let mut tokens: Vec<Token> = vec![];
         for item in &self.0 {
             item.validate()?;
@@ -53,7 +68,7 @@ impl AuthoringMeta {
         Ok(abi::encode(&[Token::Array(tokens)]))
     }
 
-    /// abi decodes some data into array of AuthoringMeta and validates each decoded item
+    /// abi decodes some data into array of AuthoringMeta
     pub fn abi_decode(data: &Vec<u8>) -> anyhow::Result<AuthoringMeta> {
         let params = abi::HumanReadableParser::parse_type("(bytes32, uint8, string)[]")?;
         let tokens = abi::decode(&[params], data)?;
@@ -93,7 +108,7 @@ impl AuthoringMeta {
                                 operand_parser_offset, 
                                 description: RainString { value: description } 
                             };
-                            am.validate()?;
+                            // am.validate()?;
                             ama.push(am)
                         },
                         other => Err(anyhow::anyhow!("unexpected token type at index {index}, expected Tuple, got {}", other.to_string()))?
@@ -103,6 +118,13 @@ impl AuthoringMeta {
             },
             _ => Err(anyhow::anyhow!("invalid type"))?
         }
+    }
+
+    /// abi decodes some data into array of AuthoringMeta and validates each decoded item
+    pub fn abi_decode_validate(data: &Vec<u8>) -> anyhow::Result<AuthoringMeta> {
+        let am = Self::abi_decode(data)?;
+        am.abi_encode_validate()?;
+        Ok(am)
     }
 }
 

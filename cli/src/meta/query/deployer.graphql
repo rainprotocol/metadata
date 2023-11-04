@@ -4,10 +4,3 @@ query DeployerQuery($hash: String) {
     constructorMeta 
   }
 }
-
-# query DeployerQuery($hash: String) { 
-#   meta( id: $hash ) { 
-#     __typename
-#     rawBytes 
-#   }
-# }

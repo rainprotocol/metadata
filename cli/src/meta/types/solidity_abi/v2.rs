@@ -46,6 +46,20 @@ impl TryFrom<MetaMap> for SolidityAbiMeta {
     }
 }
 
+impl TryFrom<MetaMap> for ethers::abi::Abi {
+    type Error = anyhow::Error;
+    fn try_from(value: MetaMap) -> Result<Self, Self::Error> {
+        Ok(serde_json::from_slice(value.unpack()?.as_slice())?)
+    }
+}
+
+impl TryFrom<MetaMap> for ethers::solc::artifacts::LosslessAbi {
+    type Error = anyhow::Error;
+    fn try_from(value: MetaMap) -> Result<Self, Self::Error> {
+        Ok(serde_json::from_slice(value.unpack()?.as_slice())?)
+    }
+}
+
 impl TryFrom<SolidityAbiMeta> for ethers::abi::Abi {
     type Error = anyhow::Error;
     fn try_from(value: SolidityAbiMeta) -> Result<Self, Self::Error> {
@@ -53,10 +67,17 @@ impl TryFrom<SolidityAbiMeta> for ethers::abi::Abi {
     }
 }
 
-impl TryFrom<ethers::abi::Abi> for SolidityAbiMeta {
+impl TryFrom<SolidityAbiMeta> for ethers::solc::artifacts::LosslessAbi {
     type Error = anyhow::Error;
-    fn try_from(value: ethers::abi::Abi) -> Result<Self, Self::Error> {
+    fn try_from(value: SolidityAbiMeta) -> Result<Self, Self::Error> {
         Ok(serde_json::from_str::<Self>(serde_json::to_string(&value)?.as_str())?)
+    }
+}
+
+impl TryFrom<ethers::solc::artifacts::LosslessAbi> for SolidityAbiMeta {
+    type Error = anyhow::Error;
+    fn try_from(value: ethers::solc::artifacts::LosslessAbi) -> Result<Self, Self::Error> {
+        Ok(serde_json::from_value(value.abi_value)?)
     }
 }
 

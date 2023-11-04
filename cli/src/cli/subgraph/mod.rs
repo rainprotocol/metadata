@@ -1,5 +1,5 @@
 use clap::{Subcommand, Parser};
-use crate::subgraph::Subgraph;
+use crate::subgraph::KnownSubgraphs;
 
 #[derive(Subcommand, strum::Display)]
 pub enum Sg {
@@ -22,22 +22,22 @@ pub struct Chain {
 pub fn dispatch(sg: Sg) -> anyhow::Result<()> {
     match sg {
         Sg::All => {
-            for url in Subgraph::ALL.iter() {
+            for url in KnownSubgraphs::ALL.iter() {
                 println!("{url}")
             }
         },
         Sg::NativeParser => {
-            for url in Subgraph::NP.iter() {
+            for url in KnownSubgraphs::NP.iter() {
                 println!("{url}")
             }
         },
         Sg::Legacy => {
-            for url in Subgraph::LEGACY.iter() {
+            for url in KnownSubgraphs::LEGACY.iter() {
                 println!("{url}")
             }
         },
         Sg::Chain(chain_id) => {
-            for url in Subgraph::of_chain(chain_id.id)?.iter() {
+            for url in KnownSubgraphs::of_chain(chain_id.id)?.iter() {
                 println!("{url}")
             }
         },

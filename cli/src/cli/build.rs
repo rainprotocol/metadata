@@ -258,7 +258,7 @@ mod tests {
     fn test_cbor_encoding_type() -> anyhow::Result<()> {
         let build_item = BuildItem {
             data: "[]".as_bytes().to_vec(),
-            magic: KnownMagic::AuthoringMetaV1,
+            magic: KnownMagic::DotrainV1,
             content_type: ContentType::Cbor,
             content_encoding: ContentEncoding::Identity,
             content_language: ContentLanguage::En,
@@ -282,7 +282,7 @@ mod tests {
         // major type 0 (unsigned integer) value 27
         assert_eq!(bytes[14], 0b000_11011);
         // magic number
-        assert_eq!(&bytes[15..23], KnownMagic::AuthoringMetaV1.to_prefix_bytes());
+        assert_eq!(&bytes[15..23], KnownMagic::DotrainV1.to_prefix_bytes());
         // key 2
         assert_eq!(bytes[23], 0x02);
         // text string application/cbor length 16

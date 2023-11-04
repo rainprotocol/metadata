@@ -19,6 +19,8 @@ use graphql_client::GraphQLQuery;
 use serde::de::{Deserialize, Deserializer, Visitor};
 use serde::ser::{Serialize, Serializer, SerializeMap};
 
+pub use super::subgraph::KnownSubgraphs;
+
 
 /// # Known Meta
 /// all known meta identifiers
@@ -379,38 +381,52 @@ pub async fn search_deployer(hash: &str, subgraphs: &Vec<String>, timeout: u32) 
 /// it regenrates the hash from the corresponding bytes to check the validity of the given k/v pair and ignores
 /// those that fail the check
 /// 
-/// ### example
+/// ## Examples
+/// 
 /// ```rust
+/// use rain_meta::meta::Store;
+/// use std::collections::HashMap;
+/// 
 /// // to instantiate with including default subgraphs
 /// // pass 'false' to not include default rain subgraph endpoints
 /// let mut store = Store::new(true);
 /// 
 /// // or to instantiate with initial arguments
-/// let mut store = Store::create(subgraphs, cache, authoring_cache, dotrain_cache, true);
+/// let mut store = Store::create(
+///     &vec!["sg-url-1".to_string()], 
+///     &HashMap::new(), 
+///     &HashMap::new(), 
+///     &HashMap::new(), 
+///     true
+/// );
 /// 
 /// // add a new subgraph endpoint url to the subgraph list
-/// store.add_subgraphs(["sg-url-1", "sg-url-2", ...]);
+/// store.add_subgraphs(&vec!["sg-url-2".to_string()]);
 /// 
 /// // update the store with another Store (merges the stores)
-/// store.merge(another_store);
+/// store.merge(&Store::default());
 /// 
 /// // updates the meta store with a new meta by searching through subgraphs
-/// store.update(hash).await
+/// store.update(&"some-hash".to_string());
 /// 
 /// // updates the meta store with a new meta hash and bytes
-/// store.update_with(hash, bytes)
+/// store.update_with(&"some-hash".to_string(), &vec![0u8, 1u8]);
 /// 
 /// // to get a record from store
-/// let meta = store.get_meta(hash);
+/// let meta = store.get_meta(&"some-hash".to_string());
 /// 
 /// // to get a authoring meta record from store
-/// let am = store.get_authoring_meta(hash);
+/// let am = store.get_authoring_meta(&"some-hash".to_string());
 /// 
 /// // updates the dotrain cache for a dotrain text and uri
-/// let (new_hash, old_hash) = store.set_dotrain(dotrain_text, dotrain_uri, keep_old_meta).unwrap();
+/// let (new_hash, old_hash) = store.set_dotrain(
+///     &"some .rain text".to_string(), 
+///     &".rain document uri".to_string(), 
+///     false
+/// ).unwrap();
 /// 
 /// // to get dotrain meta bytes given a uri
-/// let dotrain_meta_bytes = store.get_dotrain_meta(dotrain_uri);
+/// let dotrain_meta_bytes = store.get_dotrain_meta(&".rain document uri".to_string());
 /// ```
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct Store {
@@ -426,7 +442,7 @@ impl Default for Store {
             cache: HashMap::new(), 
             dotrain_cache: HashMap::new(), 
             authoring_cache: HashMap::new(), 
-            subgraphs: crate::subgraph::Subgraph::NP.map(|url| url.to_string()).to_vec() 
+            subgraphs: KnownSubgraphs::NP.map(|url| url.to_string()).to_vec() 
         }
     }
 }
@@ -440,10 +456,10 @@ impl Store {
             Store::default()
         } else {
             Store { 
+                subgraphs: vec![],
                 cache: HashMap::new(), 
                 dotrain_cache: HashMap::new(), 
-                authoring_cache: HashMap::new(), 
-                subgraphs: vec![]
+                authoring_cache: HashMap::new()
             }
         }
     }

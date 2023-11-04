@@ -20,8 +20,8 @@ impl KnownMeta {
             KnownMeta::OpV1 => normalize_json::<OpMeta>(data)?,
             KnownMeta::AuthoringMetaV1 => {
                 match AuthoringMeta::abi_decode(&data.to_vec()) {
-                    Ok(am) => am.abi_encode()?,
-                    _ => AuthoringMeta::abi_encode(
+                    Ok(am) => am.abi_encode_validate()?,
+                    _ => AuthoringMeta::abi_encode_validate(
                         &serde_json::from_str::<AuthoringMeta>(
                             std::str::from_utf8(data).or(Err(anyhow::anyhow!("deserialization attempts failed with both abi decoding and json deserialization")))?
                         ).or(Err(anyhow::anyhow!("deserialization attempts failed with both abi decoding and json deserialization")))?
