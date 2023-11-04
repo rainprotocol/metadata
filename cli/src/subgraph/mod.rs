@@ -16,7 +16,7 @@ impl KnownSubgraphs {
         "https://api.thegraph.com/subgraphs/name/rainprotocol/interpreter-registry-np-matic"
     ];
 
-    /// Rain known subgraphs on mumbai mainnet
+    /// Rain known subgraphs on mumbai (polygon testnet)
     pub const MUMBAI: [&'static str; 2] = [
         "https://api.thegraph.com/subgraphs/name/rainprotocol/interpreter-registry",
         "https://api.thegraph.com/subgraphs/name/rainprotocol/interpreter-registry-np"
