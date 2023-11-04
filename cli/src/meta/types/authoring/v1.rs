@@ -16,11 +16,11 @@ pub const AUTHORING_META_STRUCT: &str = "(bytes32, uint8, string)[]";
 
 /// # Authoring Meta
 /// array of native parser opcode metadata
-#[derive(JsonSchema, Debug, Serialize, Deserialize)]
+#[derive(JsonSchema, Debug, Serialize, Deserialize, Clone)]
 pub struct AuthoringMeta(Vec<AuthoringMetaItem>);
 
 /// AuthoringMeta single item
-#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize)]
+#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct AuthoringMetaItem {
     /// # Word

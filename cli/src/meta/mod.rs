@@ -412,7 +412,7 @@ pub async fn search_deployer(hash: &str, subgraphs: &Vec<String>, timeout: u32) 
 /// // to get dotrain meta bytes given a uri
 /// let dotrain_meta_bytes = store.get_dotrain_meta(dotrain_uri);
 /// ```
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct Store {
     subgraphs: Vec<String>,
     cache: HashMap<String, Vec<u8>>,
