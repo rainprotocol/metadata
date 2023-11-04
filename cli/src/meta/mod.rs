@@ -369,14 +369,15 @@ pub async fn search_deployer(hash: &str, subgraphs: &Vec<String>, timeout: u32) 
 }
 
 
-/// # Meta Store (CAS)
+/// # Meta Store(CAS)
 /// 
 /// Reads, stores and simply manages k/v pairs of meta hash and meta bytes and provides the functionalities 
 /// to easliy utilize them. Hashes must be 32 bytes (in hex string format) and will be stored as lower case.
 /// Meta items are stored as cbor encoded raw bytes.
 /// 
-/// Given a k/v pair of meta hash and meta bytes either at instantiation or when using `update_with()`,
-/// it regenrates the hash from the meta to check the validity of the given k/v pair
+/// Given a k/v pair of meta hash and meta bytes when using `update_with()` or `create()`,
+/// it regenrates the hash from the corresponding bytes to check the validity of the given k/v pair and ignores
+/// those that fail the check
 /// 
 /// ### example
 /// ```rust
