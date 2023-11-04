@@ -372,13 +372,11 @@ pub async fn search_deployer(hash: &str, subgraphs: &Vec<String>, timeout: u32) 
 /// # Meta Store
 /// 
 /// Reads, stores and simply manages k/v pairs of meta hash and meta bytes and provides the functionalities 
-/// to easliy utilize them. Hashes must 32 bytes (in hex string format) and will 
-/// be stored as lower case.
-/// Meta bytes must be valid cbor encoded.
+/// to easliy utilize them. Hashes must be 32 bytes (in hex string format) and will be stored as lower case.
+/// Meta items are stored as cbor encoded raw bytes.
 /// 
 /// Given a k/v pair of meta hash and meta bytes either at instantiation or when using `update_with()`,
-/// it regenrates the hash from the meta to check the validity of the k/v pair and if the check
-/// fails it tries to read the meta from subgraphs and store the result if it finds any.
+/// it regenrates the hash from the meta to check the validity of the given k/v pair
 /// 
 /// @example
 /// ```rust
@@ -607,9 +605,9 @@ impl Store {
         am_bytes
     }
 
-    /// Stores (or updates in case the URI already exists) dotrain text as meta into the store cache 
-    /// and map it to the provided path, it should be noted that reading the content of the dotrain is not in 
-    /// the scope of Store and handling and passing on a correct URI (path) for the text must be handled 
+    /// stores (or updates in case the URI already exists) the given dotrain text as meta into the store cache 
+    /// and maps it to the given uri (path), it should be noted that reading the content of the dotrain is not in 
+    /// the scope of Store and handling and passing on a correct URI (path) for the given text must be handled 
     /// externally by the implementer
     pub fn set_dotrain(&mut self, text: &String, uri: &String, keep_old: bool) -> anyhow::Result<(String, String)> {
         let bytes = MetaMap {
