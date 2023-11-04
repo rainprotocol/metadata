@@ -701,6 +701,7 @@ mod tests {
             authoring::v1::{AuthoringMetaItem, AuthoringMeta}
         }
     };
+    use ethers::{abi::{self, Token}, utils, types::U256};
 
     /// Roundtrip test for an authoring meta
     /// original content -> pack -> MetaMap -> cbor encode -> cbor decode -> MetaMap -> unpack -> original content,
@@ -719,7 +720,7 @@ mod tests {
             }
         ]"#;
 
-        // check the serialization
+        // check the deserialization
         let authoring_meta: AuthoringMeta = serde_json::from_str(authoring_meta_content)?;
 
         assert_eq!(
@@ -738,11 +739,20 @@ mod tests {
             ])
         );
 
-        // abi encode the authoring meta with performin validation
+        // abi encode the authoring meta with performing validation
         let authoring_meta_abi_encoded = authoring_meta.abi_encode_validate()?;
-        let expected_abi_encoded_data = hex::decode(
-            "0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000100737461636b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000028436f7069657320616e206578697374696e672076616c75652066726f6d2074686520737461636b2e000000000000000000000000000000000000000000000000636f6e7374616e74000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000027436f70696573206120636f6e7374616e742076616c7565206f6e746f2074686520737461636b2e00000000000000000000000000000000000000000000000000"
-        )?;
+        let expected_abi_encoded_data = abi::encode(&[Token::Array(vec![
+            Token::Tuple(vec![
+                Token::FixedBytes(utils::format_bytes32_string("stack")?.to_vec()), 
+                Token::Uint(U256::from(16u8)), 
+                Token::String("Copies an existing value from the stack.".to_string())
+            ]),
+            Token::Tuple(vec![
+                Token::FixedBytes(utils::format_bytes32_string("constant")?.to_vec()), 
+                Token::Uint(U256::from(16u8)), 
+                Token::String("Copies a constant value onto the stack.".to_string())
+            ])
+        ])]);
 
         // check the encoded bytes agaiinst the expected
         assert_eq!(authoring_meta_abi_encoded, expected_abi_encoded_data);
