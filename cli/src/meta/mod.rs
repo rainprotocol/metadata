@@ -873,4 +873,135 @@ mod tests {
         
         Ok(())
     }
+
+    /// Roundtrip test for a meta sequence
+    /// original content -> pack -> MetaMap -> cbor encode -> cbor decode -> MetaMap -> unpack -> original content,
+    #[test]
+    fn meta_seq_roundtrip() -> anyhow::Result<()> {
+        let authoring_meta_content = r#"[
+            {
+                "word": "stack",
+                "description": "Copies an existing value from the stack.",
+                "operandParserOffset": 16
+            },
+            {
+                "word": "constant",
+                "description": "Copies a constant value onto the stack.",
+                "operandParserOffset": 16
+            }
+        ]"#;
+        let authoring_meta: AuthoringMeta = serde_json::from_str(authoring_meta_content)?;
+        let authoring_meta_abi_encoded = authoring_meta.abi_encode_validate()?;
+        let meta_map_1 = MetaMap{
+            payload: serde_bytes::ByteBuf::from(authoring_meta_abi_encoded.clone()),
+            magic: KnownMagic::AuthoringMetaV1,
+            content_type: ContentType::Cbor,
+            content_encoding: ContentEncoding::None,
+            content_language: ContentLanguage::None
+        };
+
+        let dotrain_content = "#main _ _: int-add(1 2) int-add(2 3)";
+        let dotrain_content_bytes = dotrain_content.as_bytes().to_vec();
+        let content_encoding = ContentEncoding::Deflate;
+        let deflated_payload = content_encoding.encode(&dotrain_content_bytes)?;
+        let meta_map_2 = MetaMap{
+            payload: serde_bytes::ByteBuf::from(deflated_payload.clone()),
+            magic: KnownMagic::DotrainV1,
+            content_type: ContentType::OctetStream,
+            content_encoding,
+            content_language: ContentLanguage::En
+        };
+
+        // cbor encode as RainMetaDocument sequence
+        let cbor_encoded = MetaMap::cbor_encode_seq(
+            &vec![meta_map_1.clone(), meta_map_2.clone()], 
+            KnownMagic::RainMetaDocumentV1
+        )?;
+
+        // 8 byte magic number prefix
+        assert_eq!(&cbor_encoded[0..8], KnownMagic::RainMetaDocumentV1.to_prefix_bytes());
+
+        // first item in the encoded bytes
+        // cbor map with 3 keys
+        assert_eq!(cbor_encoded[8], 0xa3);
+        // key 0
+        assert_eq!(cbor_encoded[9], 0x00);
+        // major type 2 (bytes) length 512
+        assert_eq!(cbor_encoded[10], 0b010_11001);
+        assert_eq!(cbor_encoded[11], 0b000_00010);
+        assert_eq!(cbor_encoded[12], 0b000_00000);
+        // payload
+        assert_eq!(cbor_encoded[13..525], authoring_meta_abi_encoded);
+        // key 1
+        assert_eq!(cbor_encoded[525], 0x01);
+        // major type 0 (unsigned integer) value 27
+        assert_eq!(cbor_encoded[526], 0b000_11011);
+        // magic number
+        assert_eq!(&cbor_encoded[527..535], KnownMagic::AuthoringMetaV1.to_prefix_bytes());
+        // key 2
+        assert_eq!(cbor_encoded[535], 0x02);
+        // text string application/cbor length 16
+        assert_eq!(cbor_encoded[536], 0b011_10000);
+        // the string application/cbor, must be the end of data
+        assert_eq!(&cbor_encoded[537..553], "application/cbor".as_bytes());
+
+        // second item in the encoded bytes
+        // cbor map with 5 keys
+        assert_eq!(cbor_encoded[553], 0xa5);
+        // key 0
+        assert_eq!(cbor_encoded[554], 0x00);
+        // major type 2 (bytes) length 36
+        assert_eq!(cbor_encoded[555], 0b010_11000);
+        assert_eq!(cbor_encoded[556], 0b001_00100);
+        // assert_eq!(cbor_encoded[4], 0b000_00000);
+        // payload
+        assert_eq!(cbor_encoded[557..593], deflated_payload);
+        // key 1
+        assert_eq!(cbor_encoded[593], 0x01);
+        // major type 0 (unsigned integer) value 27
+        assert_eq!(cbor_encoded[594], 0b000_11011);
+        // magic number
+        assert_eq!(&cbor_encoded[595..603], KnownMagic::DotrainV1.to_prefix_bytes());
+        // key 2
+        assert_eq!(cbor_encoded[603], 0x02);
+        // text string application/octet-stream length 24
+        assert_eq!(cbor_encoded[604], 0b011_11000);
+        assert_eq!(cbor_encoded[605], 0b000_11000);
+        // the string application/octet-stream
+        assert_eq!(&cbor_encoded[606..630], "application/octet-stream".as_bytes());
+        // key 3
+        assert_eq!(cbor_encoded[630], 0x03);
+        // text string deflate length 7
+        assert_eq!(cbor_encoded[631], 0b011_00111);
+        // the string deflate
+        assert_eq!(&cbor_encoded[632..639], "deflate".as_bytes());
+        // key 4
+        assert_eq!(cbor_encoded[639], 0x04);
+        // text string en length 2
+        assert_eq!(cbor_encoded[640], 0b011_00010);
+        // the string identity, must be the end of data
+        assert_eq!(&cbor_encoded[641..], "en".as_bytes());
+
+        // decode the data back to MetaMap
+        let cbor_decoded = MetaMap::cbor_decode(&cbor_encoded)?;
+        // the length of decoded maps must be 2 as we had 2 encoded item
+        assert_eq!(cbor_decoded.len(), 2usize);
+
+        // decoded item 1 must be equal to the original meta_map_1
+        assert_eq!(cbor_decoded[0], meta_map_1);
+        // decoded item 2 must be equal to the original meta_map_2
+        assert_eq!(cbor_decoded[1], meta_map_2);
+
+        // unpack the payload of first decoded map into AuthoringMeta
+        let unpacked_payload_1: AuthoringMeta = cbor_decoded[0].unpack_into()?;
+        // must be equal to original meta
+        assert_eq!(unpacked_payload_1, authoring_meta);
+
+        // unpack the payload of the second decoded map into DotrainMeta, should handle inflation of the payload internally
+        let unpacked_payload_2: DotrainMeta = cbor_decoded[1].unpack_into()?;
+        // must be equal to the original dotrain content
+        assert_eq!(unpacked_payload_2, dotrain_content);
+
+        Ok(())
+    }
 }
