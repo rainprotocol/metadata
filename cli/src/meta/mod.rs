@@ -786,7 +786,7 @@ mod tests {
         assert_eq!(cbor_encoded[527], 0x02);
         // text string application/cbor length 16
         assert_eq!(cbor_encoded[528], 0b011_10000);
-        // the string application/json, must be the end of data
+        // the string application/cbor, must be the end of data
         assert_eq!(&cbor_encoded[529..], "application/cbor".as_bytes());
 
         // decode the data back to MetaMap
@@ -810,17 +810,21 @@ mod tests {
     fn dotrain_meta_roundtrip() -> anyhow::Result<()> {
         let dotrain_content = "#main _ _: int-add(1 2) int-add(2 3)";
         let dotrain_content_bytes = dotrain_content.as_bytes().to_vec();
+
+        let content_encoding = ContentEncoding::Deflate;
+        let deflated_payload = content_encoding.encode(&dotrain_content_bytes)?;
+
         let meta_map = MetaMap{
-            payload: serde_bytes::ByteBuf::from(dotrain_content),
+            payload: serde_bytes::ByteBuf::from(deflated_payload.clone()),
             magic: KnownMagic::DotrainV1,
             content_type: ContentType::OctetStream,
-            content_encoding: ContentEncoding::None,
+            content_encoding,
             content_language: ContentLanguage::En
         };
         let cbor_encoded = meta_map.cbor_encode()?;
 
-        // cbor map with 4 keys
-        assert_eq!(cbor_encoded[0], 0xa4);
+        // cbor map with 5 keys
+        assert_eq!(cbor_encoded[0], 0xa5);
         // key 0
         assert_eq!(cbor_encoded[1], 0x00);
         // major type 2 (bytes) length 36
@@ -828,7 +832,7 @@ mod tests {
         assert_eq!(cbor_encoded[3], 0b001_00100);
         // assert_eq!(cbor_encoded[4], 0b000_00000);
         // payload
-        assert_eq!(cbor_encoded[4..40], dotrain_content_bytes);
+        assert_eq!(cbor_encoded[4..40], deflated_payload);
         // key 1
         assert_eq!(cbor_encoded[40], 0x01);
         // major type 0 (unsigned integer) value 27
@@ -840,14 +844,20 @@ mod tests {
         // text string application/octet-stream length 24
         assert_eq!(cbor_encoded[51], 0b011_11000);
         assert_eq!(cbor_encoded[52], 0b000_11000);
-        // the string application/json
+        // the string application/octet-stream
         assert_eq!(&cbor_encoded[53..77], "application/octet-stream".as_bytes());
-        // key 4, skip key 3 as it is not present
-        assert_eq!(cbor_encoded[77], 0x04);
+        // key 3
+        assert_eq!(cbor_encoded[77], 0x03);
+        // text string deflate length 7
+        assert_eq!(cbor_encoded[78], 0b011_00111);
+        // the string deflate
+        assert_eq!(&cbor_encoded[79..86], "deflate".as_bytes());
+        // key 4
+        assert_eq!(cbor_encoded[86], 0x04);
         // text string en length 2
-        assert_eq!(cbor_encoded[78], 0b011_00010);
+        assert_eq!(cbor_encoded[87], 0b011_00010);
         // the string identity, must be the end of data
-        assert_eq!(&cbor_encoded[79..], "en".as_bytes());
+        assert_eq!(&cbor_encoded[88..], "en".as_bytes());
 
         // decode the data back to MetaMap
         let cbor_decoded = MetaMap::cbor_decode(&cbor_encoded)?;
@@ -856,7 +866,7 @@ mod tests {
         // decoded item must be equal to the meta_map
         assert_eq!(cbor_decoded[0], meta_map);
 
-        // unpack the payload into AuthoringMeta
+        // unpack the payload into DotrainMeta, should handle inflation of the payload internally
         let unpacked_payload: DotrainMeta = cbor_decoded[0].unpack_into()?;
         // must be equal to original
         assert_eq!(unpacked_payload, dotrain_content);
