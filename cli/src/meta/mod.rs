@@ -800,7 +800,6 @@ mod tests {
     fn dotrain_meta_roundtrip() -> anyhow::Result<()> {
         let dotrain_content = "#main _ _: int-add(1 2) int-add(2 3)";
         let dotrain_content_bytes = dotrain_content.as_bytes().to_vec();
-        println!("{:?}", dotrain_content_bytes);
         let meta_map = MetaMap{
             payload: serde_bytes::ByteBuf::from(dotrain_content),
             magic: KnownMagic::DotrainV1,
@@ -809,7 +808,7 @@ mod tests {
             content_language: ContentLanguage::En
         };
         let cbor_encoded = meta_map.cbor_encode()?;
-        println!("{:?}", cbor_encoded);
+
         // cbor map with 4 keys
         assert_eq!(cbor_encoded[0], 0xa4);
         // key 0
@@ -833,7 +832,7 @@ mod tests {
         assert_eq!(cbor_encoded[52], 0b000_11000);
         // the string application/json
         assert_eq!(&cbor_encoded[53..77], "application/octet-stream".as_bytes());
-        // no key 3, skip to key 4
+        // key 4, skip key 3 as it is not present
         assert_eq!(cbor_encoded[77], 0x04);
         // text string en length 2
         assert_eq!(cbor_encoded[78], 0b011_00010);
