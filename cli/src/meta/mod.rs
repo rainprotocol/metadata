@@ -378,7 +378,7 @@ pub async fn search_deployer(hash: &str, subgraphs: &Vec<String>, timeout: u32) 
 /// Given a k/v pair of meta hash and meta bytes either at instantiation or when using `update_with()`,
 /// it regenrates the hash from the meta to check the validity of the given k/v pair
 /// 
-/// @example
+/// ### example
 /// ```rust
 /// // to instantiate with including default subgraphs
 /// // pass 'false' to not include default rain subgraph endpoints
