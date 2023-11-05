@@ -85,7 +85,9 @@ impl AuthoringMeta {
                                 Token::FixedBytes(bytes) => {
                                     word = utils::parse_bytes32_string(bytes.as_slice().try_into()?)?.to_string();
                                 },
-                                other => Err(anyhow::anyhow!("unexpected token type at index {index}, expected FixedBytes, got {}", other.to_string()))?
+                                other => Err(anyhow::anyhow!(
+                                    "unexpected token type at index {index}, expected FixedBytes, got {}", other.to_string()
+                                ))?
                             }
                             match &t[1] {
                                 Token::Uint(uint) => {
@@ -95,13 +97,17 @@ impl AuthoringMeta {
                                         operand_parser_offset = uint.byte(0);
                                     }
                                 },
-                                other => Err(anyhow::anyhow!("unexpected token type at index {index}, expected Uint, got {}", other.to_string()))?
+                                other => Err(anyhow::anyhow!(
+                                    "unexpected token type at index {index}, expected Uint, got {}", other.to_string()
+                                ))?
                             }
                             match &t[2] {
                                 Token::String(str) => {
                                     description = str.clone();
                                 },
-                                other => Err(anyhow::anyhow!("unexpected token type at index {index}, expected String, got {}", other.to_string()))?
+                                other => Err(anyhow::anyhow!(
+                                    "unexpected token type at index {index}, expected String, got {}", other.to_string()
+                                ))?
                             }
                             let am = AuthoringMetaItem { 
                                 word: RainSymbol { value: word },
@@ -111,7 +117,9 @@ impl AuthoringMeta {
                             // am.validate()?;
                             ama.push(am)
                         },
-                        other => Err(anyhow::anyhow!("unexpected token type at index {index}, expected Tuple, got {}", other.to_string()))?
+                        other => Err(anyhow::anyhow!(
+                            "unexpected token type at index {index}, expected Tuple, got {}", other.to_string()
+                        ))?
                     }
                 }
                 Ok(AuthoringMeta(ama))
@@ -144,8 +152,12 @@ impl TryFrom<Vec<u8>> for AuthoringMeta {
         match AuthoringMeta::abi_decode(&value.to_vec()) {
             Ok(am) => Ok(am),
             Err(_e) => serde_json::from_str::<AuthoringMeta>(
-                std::str::from_utf8(&value).or(Err(anyhow::anyhow!("deserialization attempts failed with both abi decoding and json deserialization")))?
-            ).or(Err(anyhow::anyhow!("deserialization attempts failed with both abi decoding and json deserialization")))
+                std::str::from_utf8(&value).or(Err(anyhow::anyhow!(
+                    "deserialization attempts failed with both abi decoding and json deserialization"
+                )))?
+            ).or(Err(anyhow::anyhow!(
+                "deserialization attempts failed with both abi decoding and json deserialization"
+            )))
         }
     }
 }

@@ -6,20 +6,20 @@ pub struct KnownSubgraphs;
 impl KnownSubgraphs {
     /// Rain known subgraphs on ethereum mainnet
     pub const ETHEREUM: [&'static str; 2] = [
-        "https://api.thegraph.com/subgraphs/name/rainprotocol/interpreter-registry-ethereum",
-        "https://api.thegraph.com/subgraphs/name/rainprotocol/interpreter-registry-np-eth"
+        "https://api.thegraph.com/subgraphs/name/rainprotocol/interpreter-registry-ethereum",   // legacy endpoint
+        "https://api.thegraph.com/subgraphs/name/rainprotocol/interpreter-registry-np-eth"      // np endpoint
     ];
 
     /// Rain known subgraphs on polygon mainnet
     pub const POLYGON: [&'static str; 2] = [
-        "https://api.thegraph.com/subgraphs/name/rainprotocol/interpreter-registry-polygon",
-        "https://api.thegraph.com/subgraphs/name/rainprotocol/interpreter-registry-np-matic"
+        "https://api.thegraph.com/subgraphs/name/rainprotocol/interpreter-registry-polygon",    // legacy endpoint
+        "https://api.thegraph.com/subgraphs/name/rainprotocol/interpreter-registry-np-matic"    // np endpoint
     ];
 
     /// Rain known subgraphs on mumbai (polygon testnet)
     pub const MUMBAI: [&'static str; 2] = [
-        "https://api.thegraph.com/subgraphs/name/rainprotocol/interpreter-registry",
-        "https://api.thegraph.com/subgraphs/name/rainprotocol/interpreter-registry-np"
+        "https://api.thegraph.com/subgraphs/name/rainprotocol/interpreter-registry",            // legacy endpoint
+        "https://api.thegraph.com/subgraphs/name/rainprotocol/interpreter-registry-np"          // np endpoint
     ];
 
     /// Rain NativeParser subgraphs of all implemented networks

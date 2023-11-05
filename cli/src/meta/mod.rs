@@ -20,6 +20,7 @@ use serde::de::{Deserialize, Deserializer, Visitor};
 use serde::ser::{Serialize, Serializer, SerializeMap};
 
 pub use super::subgraph::KnownSubgraphs;
+pub use query::{MetaResponse, DeployerMetaResponse};
 
 
 /// # Known Meta
@@ -27,12 +28,12 @@ pub use super::subgraph::KnownSubgraphs;
 #[derive(Copy, Clone, EnumString, EnumIter, strum::Display, Debug, PartialEq)]
 #[strum(serialize_all = "kebab-case")]
 pub enum KnownMeta {
-    SolidityAbiV2,
-    InterpreterCallerMetaV1,
     OpV1,
-    AuthoringMetaV1,
     DotrainV1,
     RainlangV1,
+    SolidityAbiV2,
+    AuthoringMetaV1,
+    InterpreterCallerMetaV1,
     ExpressionDeployerV2BytecodeV1,
 }
 
@@ -40,13 +41,13 @@ impl TryFrom<KnownMagic> for KnownMeta {
     type Error = anyhow::Error;
     fn try_from(magic: KnownMagic) -> anyhow::Result<Self> {
         match magic {
-            KnownMagic::SolidityAbiV2 => Ok(KnownMeta::SolidityAbiV2),
-            KnownMagic::InterpreterCallerMetaV1 => Ok(KnownMeta::InterpreterCallerMetaV1),
-            KnownMagic::OpMetaV1 => Ok(KnownMeta::OpV1),
-            KnownMagic::AuthoringMetaV1 => Ok(KnownMeta::AuthoringMetaV1),
-            KnownMagic::DotrainV1 => Ok(KnownMeta::DotrainV1),
-            KnownMagic::RainlangV1 => Ok(KnownMeta::RainlangV1),
-            KnownMagic::ExpressionDeployerV2BytecodeV1 => Ok(KnownMeta::ExpressionDeployerV2BytecodeV1),
+            KnownMagic::OpMetaV1                        => Ok(KnownMeta::OpV1),
+            KnownMagic::DotrainV1                       => Ok(KnownMeta::DotrainV1),
+            KnownMagic::RainlangV1                      => Ok(KnownMeta::RainlangV1),
+            KnownMagic::SolidityAbiV2                   => Ok(KnownMeta::SolidityAbiV2),
+            KnownMagic::AuthoringMetaV1                 => Ok(KnownMeta::AuthoringMetaV1),
+            KnownMagic::InterpreterCallerMetaV1         => Ok(KnownMeta::InterpreterCallerMetaV1),
+            KnownMagic::ExpressionDeployerV2BytecodeV1  => Ok(KnownMeta::ExpressionDeployerV2BytecodeV1),
             _ => Err(anyhow::anyhow!("Unsupported meta {}", magic)),
         }
     }
@@ -277,9 +278,9 @@ impl<'de> Deserialize<'de> for MetaMap {
                 while match map.next_key() {
                     Ok(Some(key)) => {
                         match key {
-                            0 => payload = Some(map.next_value()?),
-                            1 => magic = Some(map.next_value()?),
-                            2 => content_type = Some(map.next_value()?),
+                            0 => payload          = Some(map.next_value()?),
+                            1 => magic            = Some(map.next_value()?),
+                            2 => content_type     = Some(map.next_value()?),
                             3 => content_encoding = Some(map.next_value()?),
                             4 => content_language = Some(map.next_value()?),
                             other => Err(serde::de::Error::custom(&format!("found unexpected key in the map: {other}")))?
@@ -386,6 +387,7 @@ pub async fn search_deployer(hash: &str, subgraphs: &Vec<String>, timeout: u32) 
 /// ```rust
 /// use rain_meta::meta::Store;
 /// use std::collections::HashMap;
+///
 /// 
 /// // to instantiate with including default subgraphs
 /// let mut store = Store::new();
@@ -408,27 +410,30 @@ pub async fn search_deployer(hash: &str, subgraphs: &Vec<String>, timeout: u32) 
 /// // update the store with another Store (merges the stores)
 /// store.merge(&Store::default());
 /// 
+/// // hash of a meta to search and store
+/// let hash = "some-hash".to_string();
+/// 
 /// // updates the meta store with a new meta by searching through subgraphs
-/// store.update(&"some-hash".to_string());
+/// store.update(&hash);
 /// 
 /// // updates the meta store with a new meta hash and bytes
-/// store.update_with(&"some-hash".to_string(), &vec![0u8, 1u8]);
+/// store.update_with(&hash, &vec![0u8, 1u8]);
 /// 
 /// // to get a record from store
-/// let meta = store.get_meta(&"some-hash".to_string());
+/// let meta = store.get_meta(&hash);
 /// 
 /// // to get a authoring meta record from store
-/// let am = store.get_authoring_meta(&"some-hash".to_string());
+/// let am = store.get_authoring_meta(&hash);
+/// 
+/// // path to a .rain file
+/// let dotrain_uri = "path/to/file.rain";
+/// let dotrain_content = ".rain content read from the uri".to_string();
 /// 
 /// // updates the dotrain cache for a dotrain text and uri
-/// let (new_hash, old_hash) = store.set_dotrain(
-///     &"some .rain text".to_string(), 
-///     &".rain document uri".to_string(), 
-///     false
-/// ).unwrap();
+/// let (new_hash, old_hash) = store.set_dotrain(&dotrain_content, &dotrain_uri.to_string(), false).unwrap();
 /// 
 /// // to get dotrain meta bytes given a uri
-/// let dotrain_meta_bytes = store.get_dotrain_meta(&".rain document uri".to_string());
+/// let dotrain_meta_bytes = store.get_dotrain_meta(&dotrain_uri.to_string());
 /// ```
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct Store {
@@ -685,6 +690,7 @@ impl Store {
         self.authoring_cache.get(&h)
     }
 }
+
 
 
 #[cfg(test)]

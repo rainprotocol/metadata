@@ -3,7 +3,7 @@ use reqwest::{Client, Url};
 use serde::{Deserialize, Serialize};
 use graphql_client::{GraphQLQuery, Response, QueryBody};
 
-// type ID = String;
+
 type Bytes = String;
 
 #[derive(GraphQLQuery)]
@@ -14,12 +14,6 @@ type Bytes = String;
 )] 
 pub(super) struct MetaQuery;
 
-/// response data struct for a meta
-#[derive(Serialize, Deserialize, Debug)]
-pub struct MetaResponse {
-    pub bytes: Vec<u8>
-}
-
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "src/meta/query/schema.json",
@@ -28,12 +22,20 @@ pub struct MetaResponse {
 )]
 pub(super) struct DeployerQuery;
 
+
+/// response data struct for a meta
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub struct MetaResponse {
+    pub bytes: Vec<u8>
+}
+
 /// response data struct for a deployer meta
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct DeployerMetaResponse {
     pub hash: String,
     pub bytes: Vec<u8>
 }
+
 
 /// process a response for a meta
 pub(super) async fn process_meta_query(
