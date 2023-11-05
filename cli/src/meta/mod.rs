@@ -104,7 +104,7 @@ pub enum ContentLanguage {
 }
 
 /// # Rain Meta Map
-/// represents a meta map that can be cbor encoded or unpacked based on the fields configuration to the meta types
+/// represents a rain meta data and configuration that can be cbor encoded or unpacked back to the meta types
 #[derive(PartialEq, Debug, Clone)]
 pub struct MetaMap {
     pub payload: serde_bytes::ByteBuf,
