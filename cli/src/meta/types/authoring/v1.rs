@@ -153,10 +153,10 @@ impl TryFrom<Vec<u8>> for AuthoringMeta {
             Ok(am) => Ok(am),
             Err(_e) => serde_json::from_str::<AuthoringMeta>(
                 std::str::from_utf8(&value).or(Err(anyhow::anyhow!(
-                    "deserialization attempts failed with both abi decoding and json deserialization"
+                    "deserialization attempts failed with both abi decoding and json parsing"
                 )))?
             ).or(Err(anyhow::anyhow!(
-                "deserialization attempts failed with both abi decoding and json deserialization"
+                "deserialization attempts failed with both abi decoding and json parsing"
             )))
         }
     }

@@ -27,10 +27,10 @@ impl KnownMeta {
                     _ => AuthoringMeta::abi_encode_validate(
                         &serde_json::from_str::<AuthoringMeta>(
                             std::str::from_utf8(data).or(Err(anyhow::anyhow!(
-                                "deserialization attempts failed with both abi decoding and json deserialization"
+                                "deserialization attempts failed with both abi decoding and json parsing"
                             )))?
                         ).or(Err(anyhow::anyhow!(
-                            "deserialization attempts failed with both abi decoding and json deserialization"
+                            "deserialization attempts failed with both abi decoding and json parsing"
                         )))?
                     )?
                 }

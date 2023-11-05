@@ -138,7 +138,13 @@ pub fn build(b: Build) -> anyhow::Result<()> {
         ));
     }
     let mut items: Vec<BuildItem> = vec![];
-    for(input_path, magic, content_type, content_encoding, content_language) in izip!(
+    for(
+        input_path, 
+        magic, 
+        content_type, 
+        content_encoding, 
+        content_language
+    ) in izip!(
         b.input_path.iter(),
         b.magic.iter(),
         b.content_type.iter(),
