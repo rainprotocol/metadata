@@ -123,7 +123,7 @@ impl TryFrom<MetaMap> for String {
     }
 }
 
-// this implementation is mainly used by ExpressionDeployerV2Bytecode metas as it is aliased type for Vec<u8>
+// this implementation is mainly used by ExpressionDeployerV2Bytecode meta as it is aliased type for Vec<u8>
 impl TryFrom<MetaMap> for Vec<u8> {
     type Error = anyhow::Error;
     fn try_from(value: MetaMap) -> Result<Self, Self::Error> {
