@@ -1,24 +1,23 @@
-/// Returns a bytes32 string representation of text. If the length of text exceeds 32 bytes,
-/// an error is returned.
+/// converts string to bytes32
 pub fn format_bytes32_string(text: &str) -> anyhow::Result<[u8; 32]> {
-  let str_bytes: &[u8] = text.as_bytes();
-  if str_bytes.len() > 32 {
+  let bytes: &[u8] = text.as_bytes();
+  if bytes.len() > 32 {
       return Err(anyhow::anyhow!("unexpected length, must be 32 bytes"))
   }
 
-  let mut bytes32: [u8; 32] = [0u8; 32];
-  bytes32[..str_bytes.len()].copy_from_slice(str_bytes);
+  let mut b32: [u8; 32] = [0u8; 32];
+  b32[..bytes.len()].copy_from_slice(bytes);
 
-  Ok(bytes32)
+  Ok(b32)
 }
 
-/// Returns the decoded string represented by the bytes32 encoded data.
+/// converts bytes32 to string
 pub fn parse_bytes32_string(bytes: &[u8; 32]) -> anyhow::Result<&str> {
-  let mut length = 0;
-  while length < 32 && bytes[length] != 0 {
-      length += 1;
-  }
-  Ok(std::str::from_utf8(&bytes[..length])?)
+  let mut len = 32;
+  if let Some((pos, _)) = itertools::Itertools::find_position(&mut bytes.iter(), |b| **b == 0u8) {
+    len = pos;
+  };
+  Ok(std::str::from_utf8(&bytes[..len])?)
 }
 
 
@@ -28,7 +27,7 @@ mod tests {
     use alloy_primitives::hex;
 
     #[test]
-    fn bytes32_string_parsing() {
+    fn test_parsing() {
         let text_bytes_list = vec![
             ("", hex!("0000000000000000000000000000000000000000000000000000000000000000")),
             ("A", hex!("4100000000000000000000000000000000000000000000000000000000000000")),
@@ -48,7 +47,7 @@ mod tests {
     }
 
     #[test]
-    fn bytes32_string_formatting() {
+    fn test_formating() {
         let text_bytes_list = vec![
             ("", hex!("0000000000000000000000000000000000000000000000000000000000000000")),
             ("A", hex!("4100000000000000000000000000000000000000000000000000000000000000")),
@@ -68,7 +67,7 @@ mod tests {
     }
 
     #[test]
-    fn bytes32_string_formatting_too_long() {
+    fn test_formatting_long() {
         assert!(matches!(
             format_bytes32_string("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456").unwrap_err(),
             anyhow::Error { .. }
