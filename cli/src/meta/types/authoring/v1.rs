@@ -1,9 +1,7 @@
-use serde::Serialize;
-use serde::Deserialize;
-use validator::Validate;
 use schemars::JsonSchema;
-use validator::ValidationErrors;
 use alloy_sol_types::{SolType, sol};
+use serde::{Serialize, Deserialize};
+use validator::{Validate, ValidationErrors};
 use super::super::{
     super::{
         MetaMap, 
