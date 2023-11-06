@@ -1,6 +1,5 @@
-use strum::EnumIter;
-use strum::EnumString;
 use serde_json::Value;
+use strum::{EnumIter, EnumString};
 
 #[derive(Copy, Clone, EnumString, EnumIter, strum::Display)]
 #[strum(serialize_all = "kebab-case")]

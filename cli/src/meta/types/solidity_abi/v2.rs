@@ -8,8 +8,8 @@ use schemars::JsonSchema;
 use alloy_json_abi::JsonAbi;
 use validator::ValidationErrors;
 use serde::ser::SerializeStruct;
-
 use super::super::super::MetaMap;
+
 
 /// # SolidityABI
 /// JSON representation of a Solidity ABI interface. can be switched to ethers ABI struct using TryFrom trait

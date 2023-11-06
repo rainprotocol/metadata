@@ -3,14 +3,12 @@ pub mod types;
 pub mod query;
 pub mod normalize;
 
-use strum::EnumIter;
-use strum::EnumString;
-
 use reqwest::Client;
 use futures::future;
 use magic::KnownMagic;
 use alloy_primitives::keccak256;
 use graphql_client::GraphQLQuery;
+use strum::{EnumIter, EnumString};
 use serde::de::{Deserialize, Deserializer, Visitor};
 use serde::ser::{Serialize, Serializer, SerializeMap};
 use std::{sync::Arc, fmt::Debug, convert::TryFrom, collections::HashMap};

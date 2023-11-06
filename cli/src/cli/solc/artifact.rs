@@ -1,7 +1,8 @@
-use crate::solc::ArtifactComponent;
 use clap::Parser;
-use crate::cli::output::SupportedOutputEncoding;
 use std::path::PathBuf;
+use crate::solc::ArtifactComponent;
+use crate::cli::output::SupportedOutputEncoding;
+
 
 #[derive(Parser)]
 pub struct Artifact {

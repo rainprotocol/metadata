@@ -1,14 +1,17 @@
-use crate::cli::output::SupportedOutputEncoding;
-use crate::meta::magic::KnownMagic;
-use crate::meta::ContentEncoding;
-use crate::meta::ContentLanguage;
-use crate::meta::ContentType;
-use crate::meta::KnownMeta;
-use crate::meta::MetaMap;
-use anyhow::anyhow;
 use clap::Parser;
+use anyhow::anyhow;
 use itertools::izip;
 use std::path::PathBuf;
+use crate::cli::output::SupportedOutputEncoding;
+use crate::meta::{
+    MetaMap,
+    KnownMeta,
+    ContentType,
+    ContentEncoding,
+    ContentLanguage,
+    magic::KnownMagic,
+};
+
 
 /// command for building rain meta
 #[derive(Parser)]

@@ -1,9 +1,8 @@
-use schemars::JsonSchema;
 use regex::Regex;
-use once_cell::sync::Lazy;
-use serde::Deserialize;
-use serde::Serialize;
 use validator::Validate;
+use schemars::JsonSchema;
+use once_cell::sync::Lazy;
+use serde::{Serialize, Deserialize};
 
 
 /// Valid symbols in Rainlang are alpha prefixed alphanumeric kebab case.

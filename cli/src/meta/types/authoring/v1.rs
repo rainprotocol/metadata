@@ -4,7 +4,6 @@ use validator::Validate;
 use schemars::JsonSchema;
 use validator::ValidationErrors;
 use alloy_sol_types::{SolType, sol};
-
 use super::super::{
     common::v1::REGEX_RAIN_SYMBOL,
     common::v1::REGEX_RAIN_STRING,

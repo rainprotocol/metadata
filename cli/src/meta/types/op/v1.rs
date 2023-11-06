@@ -2,13 +2,13 @@ use serde::Serialize;
 use serde::Deserialize;
 use validator::Validate;
 use schemars::JsonSchema;
-use validator::ValidationErrors;
-use validator::ValidationError;
-
-use super::super::super::MetaMap;
-use super::super::common::v1::RainSymbol;
-use super::super::common::v1::Description;
-use super::super::common::v1::RainString;
+use validator::{ValidationError, ValidationErrors};
+use super::super::{
+    super::MetaMap,
+    common::v1::RainSymbol,
+    common::v1::RainString,
+    common::v1::Description,
+};
 
 
 pub type Computation = RainString;

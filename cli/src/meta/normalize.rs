@@ -1,8 +1,12 @@
-use super::KnownMeta;
-use super::types::op::v1::OpMeta;
-use super::types::authoring::v1::AuthoringMeta;
-use super::types::solidity_abi::v2::SolidityAbiMeta;
-use super::types::interpreter_caller::v1::InterpreterCallerMeta;
+use super::{
+    KnownMeta,
+    types::{
+        op::v1::OpMeta,
+        authoring::v1::AuthoringMeta,
+        solidity_abi::v2::SolidityAbiMeta,
+        interpreter_caller::v1::InterpreterCallerMeta,
+    }
+};
 
 
 fn normalize_json<'de, T: serde::Deserialize<'de> + serde::Serialize + validator::Validate>(data: &'de [u8]) -> anyhow::Result<Vec<u8>> {

@@ -1,7 +1,8 @@
 use std::io::Write;
-use std::path::PathBuf;
-use strum::EnumString;
 use strum::EnumIter;
+use strum::EnumString;
+use std::path::PathBuf;
+
 
 #[derive(serde::Serialize, Clone, Copy, EnumString, EnumIter, strum::Display)]
 #[strum(serialize_all = "kebab_case")]

@@ -1,6 +1,7 @@
-use crate::meta::KnownMeta;
 use clap::Parser;
 use std::path::PathBuf;
+use crate::meta::KnownMeta;
+
 
 /// command for validating a meta 
 #[derive(Parser)]
