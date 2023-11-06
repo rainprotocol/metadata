@@ -5,12 +5,11 @@ use schemars::JsonSchema;
 use validator::ValidationErrors;
 use alloy_sol_types::{SolType, sol};
 use super::super::{
-    common::v1::REGEX_RAIN_SYMBOL,
-    common::v1::REGEX_RAIN_STRING,
     super::{
         MetaMap, 
         super::utils::{str_to_bytes32, bytes32_to_str}
-    }
+    },
+    common::v1::{REGEX_RAIN_SYMBOL, REGEX_RAIN_STRING}
 };
 
 
