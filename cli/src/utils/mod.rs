@@ -1,5 +1,5 @@
 /// converts string to bytes32
-pub fn format_bytes32_string(text: &str) -> anyhow::Result<[u8; 32]> {
+pub fn str_to_bytes32(text: &str) -> anyhow::Result<[u8; 32]> {
   let bytes: &[u8] = text.as_bytes();
   if bytes.len() > 32 {
       return Err(anyhow::anyhow!("unexpected length, must be 32 bytes"))
@@ -12,7 +12,7 @@ pub fn format_bytes32_string(text: &str) -> anyhow::Result<[u8; 32]> {
 }
 
 /// converts bytes32 to string
-pub fn parse_bytes32_string(bytes: &[u8; 32]) -> anyhow::Result<&str> {
+pub fn bytes32_to_str(bytes: &[u8; 32]) -> anyhow::Result<&str> {
   let mut len = 32;
   if let Some((pos, _)) = itertools::Itertools::find_position(&mut bytes.iter(), |b| **b == 0u8) {
     len = pos;
@@ -27,7 +27,7 @@ mod tests {
     use alloy_primitives::hex;
 
     #[test]
-    fn test_parsing() {
+    fn test_bytes32_to_str() {
         let text_bytes_list = vec![
             ("", hex!("0000000000000000000000000000000000000000000000000000000000000000")),
             ("A", hex!("4100000000000000000000000000000000000000000000000000000000000000")),
@@ -42,12 +42,12 @@ mod tests {
         ];
 
         for (text, bytes) in text_bytes_list {
-            assert_eq!(text, parse_bytes32_string(&bytes).unwrap());
+            assert_eq!(text, bytes32_to_str(&bytes).unwrap());
         }
     }
 
     #[test]
-    fn test_formating() {
+    fn test_str_to_bytes32() {
         let text_bytes_list = vec![
             ("", hex!("0000000000000000000000000000000000000000000000000000000000000000")),
             ("A", hex!("4100000000000000000000000000000000000000000000000000000000000000")),
@@ -62,14 +62,14 @@ mod tests {
         ];
 
         for (text, bytes) in text_bytes_list {
-            assert_eq!(bytes, format_bytes32_string(text).unwrap());
+            assert_eq!(bytes, str_to_bytes32(text).unwrap());
         }
     }
 
     #[test]
-    fn test_formatting_long() {
+    fn test_str_to_bytes32_long() {
         assert!(matches!(
-            format_bytes32_string("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456").unwrap_err(),
+            str_to_bytes32("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456").unwrap_err(),
             anyhow::Error { .. }
         ));
     }

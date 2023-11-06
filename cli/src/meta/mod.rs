@@ -753,12 +753,12 @@ mod tests {
         let authoring_meta_abi_encoded = authoring_meta.abi_encode_validate()?;
         let expected_abi_encoded_data = <alloy_sol_types::sol!((bytes32, uint8, string)[])>::abi_encode(&vec![
             (
-                utils::format_bytes32_string("stack")?,
+                utils::str_to_bytes32("stack")?,
                 16u8,
                 "Copies an existing value from the stack.".to_string()
             ),
             (
-                utils::format_bytes32_string("constant")?,
+                utils::str_to_bytes32("constant")?,
                 16u8,
                 "Copies a constant value onto the stack.".to_string()
             )

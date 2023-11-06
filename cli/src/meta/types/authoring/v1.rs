@@ -10,7 +10,7 @@ use super::super::{
     common::v1::REGEX_RAIN_STRING,
     super::{
         MetaMap, 
-        super::utils::{format_bytes32_string, parse_bytes32_string}
+        super::utils::{str_to_bytes32, bytes32_to_str}
     }
 };
 
@@ -46,7 +46,7 @@ pub struct AuthoringMetaItem {
 impl AuthoringMetaItem {
     pub fn abi_encode(&self) -> anyhow::Result<Vec<u8>> {
         Ok(AuthoringMetaStruct::abi_encode(&(
-            format_bytes32_string(self.word.as_str())?,
+            str_to_bytes32(self.word.as_str())?,
             self.operand_parser_offset,
             self.description.clone()
         )))
@@ -60,7 +60,7 @@ impl AuthoringMetaItem {
     pub fn abi_decode(data: &Vec<u8>) -> anyhow::Result<AuthoringMetaItem> {
         let result = AuthoringMetaStruct::abi_decode(data, false)?;
         Ok(AuthoringMetaItem { 
-            word: parse_bytes32_string(&result.0)?.to_string(), 
+            word: bytes32_to_str(&result.0)?.to_string(), 
             operand_parser_offset: result.1, 
             description: result.2.to_string() 
         })
@@ -69,7 +69,7 @@ impl AuthoringMetaItem {
     pub fn abi_decode_validate(data: &Vec<u8>) -> anyhow::Result<AuthoringMetaItem> {
         let result = AuthoringMetaStruct::abi_decode(data, true)?;
         let am = AuthoringMetaItem { 
-            word: parse_bytes32_string(&result.0)?.to_string(), 
+            word: bytes32_to_str(&result.0)?.to_string(), 
             operand_parser_offset: result.1, 
             description: result.2.to_string() 
         };
@@ -86,7 +86,7 @@ impl AuthoringMeta {
         let mut v = vec![];
         for item in &self.0 {
             v.push((
-                format_bytes32_string(item.word.as_str())?,
+                str_to_bytes32(item.word.as_str())?,
                 item.operand_parser_offset,
                 item.description.clone()
             ))
@@ -106,7 +106,7 @@ impl AuthoringMeta {
         let mut am = vec![];
         for item in result {
             am.push(AuthoringMetaItem { 
-                word: parse_bytes32_string(&item.0)?.to_string(), 
+                word: bytes32_to_str(&item.0)?.to_string(), 
                 operand_parser_offset: item.1, 
                 description: item.2.to_string() 
             });
@@ -120,7 +120,7 @@ impl AuthoringMeta {
         let mut ams = vec![];
         for item in result {
             ams.push(AuthoringMetaItem { 
-                word: parse_bytes32_string(&item.0)?.to_string(), 
+                word: bytes32_to_str(&item.0)?.to_string(), 
                 operand_parser_offset: item.1, 
                 description: item.2.to_string() 
             });
@@ -206,12 +206,12 @@ mod tests {
         let authoring_meta_abi_encoded = authoring_meta.abi_encode_validate()?;
         let expected_abi_encoded_data = <sol!((bytes32, uint8, string)[])>::abi_encode(&vec![
             (
-                utils::format_bytes32_string("stack")?,
+                utils::str_to_bytes32("stack")?,
                 16u8,
                 "Copies an existing value from the stack.".to_string()
             ),
             (
-                utils::format_bytes32_string("constant")?,
+                utils::str_to_bytes32("constant")?,
                 16u8,
                 "Copies a constant value onto the stack.".to_string()
             )
