@@ -10,7 +10,7 @@ use clap::Parser;
 use itertools::izip;
 use std::path::PathBuf;
 
-/// CLI options for the build command.
+/// command for building rain meta
 #[derive(Parser)]
 pub struct Build {
     /// Output path. If not specified, the output is written to stdout.

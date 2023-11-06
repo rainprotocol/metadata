@@ -1,6 +1,7 @@
 use clap::{Subcommand, Parser};
 use crate::subgraph::KnownSubgraphs;
 
+/// command related to subgraphs
 #[derive(Subcommand, strum::Display)]
 pub enum Sg {
     /// show all subgraph URLs

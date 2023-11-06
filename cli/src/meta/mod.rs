@@ -3,21 +3,18 @@ pub mod types;
 pub mod query;
 pub mod normalize;
 
-use std::sync::Arc;
-use std::fmt::Debug;
-use std::convert::TryFrom;
-use std::collections::HashMap;
-
+use alloy_primitives::keccak256;
 use strum::EnumIter;
 use strum::EnumString;
 
 use reqwest::Client;
 use futures::future;
 use magic::KnownMagic;
-use ethers::utils::keccak256;
+// use ethers::utils::keccak256;
 use graphql_client::GraphQLQuery;
 use serde::de::{Deserialize, Deserializer, Visitor};
 use serde::ser::{Serialize, Serializer, SerializeMap};
+use std::{sync::Arc, fmt::Debug, convert::TryFrom, collections::HashMap};
 
 pub use super::subgraph::KnownSubgraphs;
 pub use query::{MetaResponse, DeployerMetaResponse};
@@ -149,9 +146,9 @@ impl MetaMap {
     /// method to hash(keccak256) the cbor encoded bytes of this instance
     pub fn hash(&self, as_rain_meta_document: bool) -> anyhow::Result<[u8; 32]> {
         if as_rain_meta_document {
-            Ok(keccak256(Self::cbor_encode_seq(&vec![self.clone()], KnownMagic::RainMetaDocumentV1)?))
+            Ok(keccak256(Self::cbor_encode_seq(&vec![self.clone()], KnownMagic::RainMetaDocumentV1)?).0)
         } else {
-            Ok(keccak256(self.cbor_encode()?))
+            Ok(keccak256(self.cbor_encode()?).0)
         }
     }
 
@@ -372,10 +369,11 @@ pub async fn search_deployer(hash: &str, subgraphs: &Vec<String>, timeout: u32) 
 }
 
 
+
 /// # Meta Store(CAS)
 /// 
 /// Reads, stores and simply manages k/v pairs of meta hash and meta bytes and provides the functionalities 
-/// to easliy utilize them. Hashes must be 32 bytes (in hex string format) and will be stored as lower case.
+/// to easliy utilize them. a hash is a 32 bytes data in hex string format and will be stored as lower case.
 /// Meta items are stored as cbor encoded raw bytes.
 /// 
 /// Given a k/v pair of meta hash and meta bytes when using `update_with()` or `create()`,
@@ -515,7 +513,9 @@ impl Store {
     /// add new subgraph endpoints
     pub fn add_subgraphs(&mut self, subgraphs: &Vec<String>) {
         for sg in subgraphs {
-            if !self.subgraphs.contains(sg) { self.subgraphs.push(sg.clone()); }
+            if !self.subgraphs.contains(sg) { 
+                self.subgraphs.push(sg.clone()); 
+            }
         }
     }
 
@@ -559,7 +559,9 @@ impl Store {
     /// get the corresponding uri of the given dotrain hash if it exists
     pub fn get_dotrain_uri(&self, hash: &String) -> Option<&String> {
         for (uri, h) in &self.dotrain_cache {
-            if h.eq_ignore_ascii_case(hash) { return Some(uri); }
+            if h.eq_ignore_ascii_case(hash) { 
+                return Some(uri); 
+            }
         }
         return None;
     }
@@ -572,7 +574,9 @@ impl Store {
     /// deletes a dotrain record given a uri
     pub fn delete_dotrain(&mut self, uri: &String, keep_meta: bool) {
         if let Some(kv) = self.dotrain_cache.remove_entry(uri) {
-            if !keep_meta { self.cache.remove(&kv.1); }
+            if !keep_meta { 
+                self.cache.remove(&kv.1); 
+            }
         };
     }
 
@@ -695,19 +699,20 @@ impl Store {
 
 #[cfg(test)]
 mod tests {
+    use alloy_sol_types::SolType;
+
     use super::{
         MetaMap, 
         ContentType, 
+        super::utils,
         ContentEncoding, 
         ContentLanguage, 
         magic::KnownMagic, 
         types::{
             dotrain::v1::DotrainMeta,
-            common::v1::{RainSymbol, Description}, 
             authoring::v1::{AuthoringMetaItem, AuthoringMeta}
         }
     };
-    use ethers::{abi::{self, Token}, utils, types::U256};
 
     /// Roundtrip test for an authoring meta
     /// original content -> pack -> MetaMap -> cbor encode -> cbor decode -> MetaMap -> unpack -> original content,
@@ -728,37 +733,36 @@ mod tests {
 
         // check the deserialization
         let authoring_meta: AuthoringMeta = serde_json::from_str(authoring_meta_content)?;
-
         assert_eq!(
             authoring_meta, 
             AuthoringMeta(vec![
                 AuthoringMetaItem{
-                    word: RainSymbol{ value: "stack".to_string() }, 
+                    word: "stack".to_string(), 
                     operand_parser_offset: 16u8, 
-                    description: Description{ value: "Copies an existing value from the stack.".to_string() }
+                    description: "Copies an existing value from the stack.".to_string()
                 }, 
                 AuthoringMetaItem{
-                    word: RainSymbol{ value: "constant".to_string() }, 
+                    word: "constant".to_string(), 
                     operand_parser_offset: 16u8, 
-                    description: Description{ value: "Copies a constant value onto the stack.".to_string() }
+                    description: "Copies a constant value onto the stack.".to_string()
                 }
             ])
         );
 
         // abi encode the authoring meta with performing validation
         let authoring_meta_abi_encoded = authoring_meta.abi_encode_validate()?;
-        let expected_abi_encoded_data = abi::encode(&[Token::Array(vec![
-            Token::Tuple(vec![
-                Token::FixedBytes(utils::format_bytes32_string("stack")?.to_vec()), 
-                Token::Uint(U256::from(16u8)), 
-                Token::String("Copies an existing value from the stack.".to_string())
-            ]),
-            Token::Tuple(vec![
-                Token::FixedBytes(utils::format_bytes32_string("constant")?.to_vec()), 
-                Token::Uint(U256::from(16u8)), 
-                Token::String("Copies a constant value onto the stack.".to_string())
-            ])
-        ])]);
+        let expected_abi_encoded_data = <alloy_sol_types::sol!((bytes32, uint8, string)[])>::abi_encode(&vec![
+            (
+                utils::format_bytes32_string("stack")?,
+                16u8,
+                "Copies an existing value from the stack.".to_string()
+            ),
+            (
+                utils::format_bytes32_string("constant")?,
+                16u8,
+                "Copies a constant value onto the stack.".to_string()
+            )
+        ]);
 
         // check the encoded bytes agaiinst the expected
         assert_eq!(authoring_meta_abi_encoded, expected_abi_encoded_data);
@@ -798,7 +802,7 @@ mod tests {
         // decode the data back to MetaMap
         let cbor_decoded = MetaMap::cbor_decode(&cbor_encoded)?;
         // the length of decoded maps must be 1 as we only had 1 encoded item
-        assert_eq!(cbor_decoded.len(), 1usize);
+        assert_eq!(cbor_decoded.len(), 1);
         // decoded item must be equal to the original meta_map
         assert_eq!(cbor_decoded[0], meta_map);
 
@@ -806,7 +810,7 @@ mod tests {
         let unpacked_payload: AuthoringMeta = cbor_decoded[0].unpack_into()?;
         // must be equal to original meta
         assert_eq!(unpacked_payload, authoring_meta);
-        
+
         Ok(())
     }
 
@@ -868,7 +872,7 @@ mod tests {
         // decode the data back to MetaMap
         let cbor_decoded = MetaMap::cbor_decode(&cbor_encoded)?;
         // the length of decoded maps must be 1 as we only had 1 encoded item
-        assert_eq!(cbor_decoded.len(), 1usize);
+        assert_eq!(cbor_decoded.len(), 1);
         // decoded item must be equal to the original meta_map
         assert_eq!(cbor_decoded[0], meta_map);
 
@@ -991,7 +995,7 @@ mod tests {
         // decode the data back to MetaMap
         let cbor_decoded = MetaMap::cbor_decode(&cbor_encoded)?;
         // the length of decoded maps must be 2 as we had 2 encoded item
-        assert_eq!(cbor_decoded.len(), 2usize);
+        assert_eq!(cbor_decoded.len(), 2);
 
         // decoded item 1 must be equal to the original meta_map_1
         assert_eq!(cbor_decoded[0], meta_map_1);

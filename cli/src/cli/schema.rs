@@ -5,6 +5,7 @@ pub mod show;
 use clap::Subcommand;
 use show::Show;
 
+/// command related to meta json schema
 #[derive(Subcommand)]
 pub enum Schema {
     /// Print all known schemas.

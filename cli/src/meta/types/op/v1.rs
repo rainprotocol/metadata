@@ -6,13 +6,20 @@ use validator::ValidationErrors;
 use validator::ValidationError;
 
 use super::super::super::MetaMap;
-use super::super::common::v1::Operand;
 use super::super::common::v1::RainSymbol;
 use super::super::common::v1::Description;
 use super::super::common::v1::RainString;
 
 
 pub type Computation = RainString;
+
+/// Operands in the standard interpreter are `u16` values.
+#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize, PartialEq, PartialOrd)]
+#[serde(transparent)]
+#[repr(transparent)]
+pub struct Operand {
+    pub value: u16
+}
 
 /// BitIntegers are zero indexed.
 pub const MIN_BIT_INTEGER: usize = 0;

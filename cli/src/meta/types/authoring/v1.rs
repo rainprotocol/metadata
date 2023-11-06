@@ -3,20 +3,27 @@ use serde::Deserialize;
 use validator::Validate;
 use schemars::JsonSchema;
 use validator::ValidationErrors;
-use ethers::{abi, utils, abi::Token, types::U256};
+use alloy_sol_types::{SolType, sol};
 
-use super::super::super::MetaMap;
-use super::super::common::v1::RainSymbol;
-use super::super::super::types::common::v1::RainString;
-use super::super::super::types::common::v1::Description;
+use super::super::{
+    common::v1::REGEX_RAIN_SYMBOL,
+    common::v1::REGEX_RAIN_STRING,
+    super::{
+        MetaMap, 
+        super::utils::{format_bytes32_string, parse_bytes32_string}
+    }
+};
 
 
 /// authoring meta struct
-pub const AUTHORING_META_STRUCT: &str = "(bytes32, uint8, string)[]";
+pub type AuthoringMetaStruct = sol!((bytes32, uint8, string));
+
+/// array of authoring meta struct
+pub type AuthoringMetaStructArray = sol!((bytes32, uint8, string)[]);
 
 /// # Authoring Meta
 /// array of native parser opcode metadata
-#[derive(JsonSchema, Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, JsonSchema)]
 pub struct AuthoringMeta(pub Vec<AuthoringMetaItem>);
 
 /// AuthoringMeta single item
@@ -25,113 +32,101 @@ pub struct AuthoringMeta(pub Vec<AuthoringMetaItem>);
 pub struct AuthoringMetaItem {
     /// # Word
     /// Primary word used to identify the opcode.
-    #[validate]
-    pub word: RainSymbol,
+    #[validate(regex(path = "REGEX_RAIN_SYMBOL", message = "Must be alphanumeric lower-kebab-case beginning with a letter.\n"))]
+    pub word: String,
     /// # Operand Offest
     pub operand_parser_offset: u8,
     /// # Description
     /// Brief description of the opcode.
-    #[validate]
     #[serde(default)]
-    pub description: Description,
+    #[validate(regex(path = "REGEX_RAIN_STRING", message = "Must be printable ASCII characters and whitespace.\n"))]
+    pub description: String,
 }
 
+impl AuthoringMetaItem {
+    pub fn abi_encode(&self) -> anyhow::Result<Vec<u8>> {
+        Ok(AuthoringMetaStruct::abi_encode(&(
+            format_bytes32_string(self.word.as_str())?,
+            self.operand_parser_offset,
+            self.description.clone()
+        )))
+    }
+
+    pub fn abi_encode_validate(&self) -> anyhow::Result<Vec<u8>> {
+        self.validate()?;
+        self.abi_encode()
+    }
+
+    pub fn abi_decode(data: &Vec<u8>) -> anyhow::Result<AuthoringMetaItem> {
+        let result = AuthoringMetaStruct::abi_decode(data, false)?;
+        Ok(AuthoringMetaItem { 
+            word: parse_bytes32_string(&result.0)?.to_string(), 
+            operand_parser_offset: result.1, 
+            description: result.2.to_string() 
+        })
+    }
+
+    pub fn abi_decode_validate(data: &Vec<u8>) -> anyhow::Result<AuthoringMetaItem> {
+        let result = AuthoringMetaStruct::abi_decode(data, true)?;
+        let am = AuthoringMetaItem { 
+            word: parse_bytes32_string(&result.0)?.to_string(), 
+            operand_parser_offset: result.1, 
+            description: result.2.to_string() 
+        };
+        am.validate()?;
+        Ok(am)
+    }
+}
+
+
 impl AuthoringMeta {
+    
     /// abi encodes array of AuthoringMeta items
     pub fn abi_encode(&self) -> anyhow::Result<Vec<u8>> {
-        let mut tokens: Vec<Token> = vec![];
+        let mut v = vec![];
         for item in &self.0 {
-            tokens.push(Token::Tuple(
-                vec![
-                    Token::FixedBytes(utils::format_bytes32_string(item.word.value.as_str())?.to_vec()), 
-                    Token::Uint(U256::from(item.operand_parser_offset)), 
-                    Token::String(item.description.value.clone())
-                ]
-            ));
-        }
-        Ok(abi::encode(&[Token::Array(tokens)]))
+            v.push((
+                format_bytes32_string(item.word.as_str())?,
+                item.operand_parser_offset,
+                item.description.clone()
+            ))
+        };
+        Ok(AuthoringMetaStructArray::abi_encode(&v))
     }
 
     /// abi encodes array of AuthoringMeta items after validating each
     pub fn abi_encode_validate(&self) -> anyhow::Result<Vec<u8>> {
-        let mut tokens: Vec<Token> = vec![];
-        for item in &self.0 {
-            item.validate()?;
-            tokens.push(Token::Tuple(
-                vec![
-                    Token::FixedBytes(utils::format_bytes32_string(item.word.value.as_str())?.to_vec()), 
-                    Token::Uint(U256::from(item.operand_parser_offset)), 
-                    Token::String(item.description.value.clone())
-                ]
-            ));
-        }
-        Ok(abi::encode(&[Token::Array(tokens)]))
+        self.validate()?;
+        self.abi_encode()
     }
 
     /// abi decodes some data into array of AuthoringMeta
     pub fn abi_decode(data: &Vec<u8>) -> anyhow::Result<AuthoringMeta> {
-        let params = abi::HumanReadableParser::parse_type("(bytes32, uint8, string)[]")?;
-        let tokens = abi::decode(&[params], data)?;
-        match &tokens[0] {
-            Token::Array(tuples) => {
-                let mut ama: Vec<AuthoringMetaItem> = vec![];
-                for (index, tuple) in tuples.iter().enumerate() {
-                    match tuple {
-                        Token::Tuple(t) => {
-                            let mut word = String::new();
-                            let mut description = String::new();
-                            let mut operand_parser_offset: u8 = 0;
-                            match &t[0] {
-                                Token::FixedBytes(bytes) => {
-                                    word = utils::parse_bytes32_string(bytes.as_slice().try_into()?)?.to_string();
-                                },
-                                other => Err(anyhow::anyhow!(
-                                    "unexpected token type at index {index}, expected FixedBytes, got {}", other.to_string()
-                                ))?
-                            }
-                            match &t[1] {
-                                Token::Uint(uint) => {
-                                    if uint.gt(&U256::from(255)) {
-                                        Err(anyhow::anyhow!("operand value out of range of uint8, {:?}", uint))?
-                                    } else {
-                                        operand_parser_offset = uint.byte(0);
-                                    }
-                                },
-                                other => Err(anyhow::anyhow!(
-                                    "unexpected token type at index {index}, expected Uint, got {}", other.to_string()
-                                ))?
-                            }
-                            match &t[2] {
-                                Token::String(str) => {
-                                    description = str.clone();
-                                },
-                                other => Err(anyhow::anyhow!(
-                                    "unexpected token type at index {index}, expected String, got {}", other.to_string()
-                                ))?
-                            }
-                            let am = AuthoringMetaItem { 
-                                word: RainSymbol { value: word },
-                                operand_parser_offset, 
-                                description: RainString { value: description } 
-                            };
-                            // am.validate()?;
-                            ama.push(am)
-                        },
-                        other => Err(anyhow::anyhow!(
-                            "unexpected token type at index {index}, expected Tuple, got {}", other.to_string()
-                        ))?
-                    }
-                }
-                Ok(AuthoringMeta(ama))
-            },
-            _ => Err(anyhow::anyhow!("invalid type"))?
-        }
+        let result = AuthoringMetaStructArray::abi_decode(data, false)?;
+        let mut am = vec![];
+        for item in result {
+            am.push(AuthoringMetaItem { 
+                word: parse_bytes32_string(&item.0)?.to_string(), 
+                operand_parser_offset: item.1, 
+                description: item.2.to_string() 
+            });
+        };
+        Ok(AuthoringMeta(am))
     }
 
     /// abi decodes some data into array of AuthoringMeta and validates each decoded item
     pub fn abi_decode_validate(data: &Vec<u8>) -> anyhow::Result<AuthoringMeta> {
-        let am = Self::abi_decode(data)?;
-        am.abi_encode_validate()?;
+        let result = AuthoringMetaStructArray::abi_decode(data, true)?;
+        let mut ams = vec![];
+        for item in result {
+            ams.push(AuthoringMetaItem { 
+                word: parse_bytes32_string(&item.0)?.to_string(), 
+                operand_parser_offset: item.1, 
+                description: item.2.to_string() 
+            });
+        };
+        let am = AuthoringMeta(ams);
+        am.validate()?;
         Ok(am)
     }
 }
@@ -165,6 +160,68 @@ impl TryFrom<Vec<u8>> for AuthoringMeta {
 impl TryFrom<MetaMap> for AuthoringMeta {
     type Error = anyhow::Error;
     fn try_from(value: MetaMap) -> Result<Self, Self::Error> {
-        AuthoringMeta::abi_decode(&value.unpack()?)
+        AuthoringMeta::try_from(value.unpack()?)
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use crate::utils;
+    use alloy_sol_types::{SolType, sol};
+    use super::{AuthoringMeta, AuthoringMetaItem};
+
+    #[test]
+    fn test_encode_decode_validate() -> anyhow::Result<()> {
+        let authoring_meta_content = r#"[
+            {
+                "word": "stack",
+                "description": "Copies an existing value from the stack.",
+                "operandParserOffset": 16
+            },
+            {
+                "word": "constant",
+                "description": "Copies a constant value onto the stack.",
+                "operandParserOffset": 16
+            }
+        ]"#;
+
+        // check the deserialization
+        let authoring_meta: AuthoringMeta = serde_json::from_str(authoring_meta_content)?;
+        let expected_authoring_meta = AuthoringMeta(vec![
+            AuthoringMetaItem{
+                word: "stack".to_string(), 
+                operand_parser_offset: 16u8, 
+                description: "Copies an existing value from the stack.".to_string()
+            }, 
+            AuthoringMetaItem{
+                word: "constant".to_string(), 
+                operand_parser_offset: 16u8, 
+                description: "Copies a constant value onto the stack.".to_string()
+            }
+        ]);
+        assert_eq!(authoring_meta, expected_authoring_meta );
+
+        // abi encode the authoring meta with performing validation
+        let authoring_meta_abi_encoded = authoring_meta.abi_encode_validate()?;
+        let expected_abi_encoded_data = <sol!((bytes32, uint8, string)[])>::abi_encode(&vec![
+            (
+                utils::format_bytes32_string("stack")?,
+                16u8,
+                "Copies an existing value from the stack.".to_string()
+            ),
+            (
+                utils::format_bytes32_string("constant")?,
+                16u8,
+                "Copies a constant value onto the stack.".to_string()
+            )
+        ]);
+        // check the encoded bytes agaiinst the expected
+        assert_eq!(authoring_meta_abi_encoded, expected_abi_encoded_data);
+
+        let authoring_meta_abi_decoded = AuthoringMeta::abi_decode_validate(&authoring_meta_abi_encoded)?;
+        assert_eq!(authoring_meta_abi_decoded, expected_authoring_meta);
+
+        Ok(())
     }
 }

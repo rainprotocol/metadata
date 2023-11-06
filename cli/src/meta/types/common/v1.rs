@@ -5,13 +5,6 @@ use serde::Deserialize;
 use serde::Serialize;
 use validator::Validate;
 
-/// Operands in the standard interpreter are `u16` values.
-#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize, PartialEq, PartialOrd)]
-#[serde(transparent)]
-#[repr(transparent)]
-pub struct Operand {
-    pub value: u16
-}
 
 /// Valid symbols in Rainlang are alpha prefixed alphanumeric kebab case.
 pub const REGEX_RAIN_SYMBOL: Lazy<Regex> = Lazy::new(|| {
@@ -78,6 +71,8 @@ pub struct SolidityIdentifier {
 
 #[cfg(test)]
 mod test {
+    use crate::meta::types::common::v1::HASH_PATTERN;
+
     use super::RainSymbol;
     use super::RainString;
     use super::RainTitle;
@@ -133,6 +128,19 @@ mod test {
         // invalids
         for i in ["", "a-", "a-a", "♥", "-", " ", "a ", "0", "0a", "0A", "\n", "\t", "\r"] {
             assert!(SolidityIdentifier{ value: i.to_string()}.validate().is_err(), "String '{}' considered valid.", i);
+        }
+    }
+
+    #[test]
+    fn test_hash_pattern() {
+        // valids
+        for i in ["0x0000000000000000000000000000000000000000000000000000000000000000", "0x78fd1edb0bdb928db6015990fecafbb964b44692e2d435693062dd4efc6254dd", "0x78FD1EDB0BDB928DB6015990FECAFBB964B44692E2D435693062DD4EFC6254DD", "0x78fD1eDb0BdB928dB6015990fEcAfBb964B44692e2D435693062dD4eFc6254Dd"] {
+            assert!(HASH_PATTERN.is_match(i), "String '{}' considered valid.", i);
+        }
+
+        // invalids
+        for i in ["0", "_", "0x", "0x1", "0xk", "0x12.", "0x123456789abcdef", "something", "ox1234567890abcdefABCDEF", "x1234567890abcdefABCDEF", "1234567890abcdefABCDEF", "0X1234567890abcdefABCDEF", "0x1234567890abcdefABCDEF", "0x1234567890abcdefABCDEFG", "0x78fd1edb0bdb928db6015990fecafbb964b44692e2d435693062dd4efc6254dd1", "0x78fd1edb0bdb928db6015990fecafbb964b44692e2d435693062dd4efc6254d", "0x78fd1edb0bdb928db6015990fecafbb964b44692e2d435693062dd4efc6254dd ", " 0x78fd1edb0bdb928db6015990fecafbb964b44692e2d435693062dd4efc6254dd", "0x78fd1edb0bdb928db6015990fecafbb9 64b44692e2d435693062dd4efc6254dd"] {
+            assert!(!HASH_PATTERN.is_match(i), "String '{}' considered invalid.", i);
         }
     }
 }
