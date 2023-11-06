@@ -3,5 +3,5 @@ pub mod solc;
 pub mod utils;
 pub mod subgraph;
 
-// re-export main types and functionalities of this lib
+// re-export main types and functionalities
 pub use meta::*;
