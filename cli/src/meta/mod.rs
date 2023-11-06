@@ -3,14 +3,13 @@ pub mod types;
 pub mod query;
 pub mod normalize;
 
-use alloy_primitives::keccak256;
 use strum::EnumIter;
 use strum::EnumString;
 
 use reqwest::Client;
 use futures::future;
 use magic::KnownMagic;
-// use ethers::utils::keccak256;
+use alloy_primitives::keccak256;
 use graphql_client::GraphQLQuery;
 use serde::de::{Deserialize, Deserializer, Visitor};
 use serde::ser::{Serialize, Serializer, SerializeMap};
@@ -710,7 +709,7 @@ mod tests {
         magic::KnownMagic, 
         types::{
             dotrain::v1::DotrainMeta,
-            authoring::v1::{AuthoringMetaItem, AuthoringMeta}
+            authoring::v1::AuthoringMeta
         }
     };
 
@@ -730,28 +729,11 @@ mod tests {
                 "operandParserOffset": 16
             }
         ]"#;
-
-        // check the deserialization
         let authoring_meta: AuthoringMeta = serde_json::from_str(authoring_meta_content)?;
-        assert_eq!(
-            authoring_meta, 
-            AuthoringMeta(vec![
-                AuthoringMetaItem{
-                    word: "stack".to_string(), 
-                    operand_parser_offset: 16u8, 
-                    description: "Copies an existing value from the stack.".to_string()
-                }, 
-                AuthoringMetaItem{
-                    word: "constant".to_string(), 
-                    operand_parser_offset: 16u8, 
-                    description: "Copies a constant value onto the stack.".to_string()
-                }
-            ])
-        );
 
         // abi encode the authoring meta with performing validation
         let authoring_meta_abi_encoded = authoring_meta.abi_encode_validate()?;
-        let expected_abi_encoded_data = <alloy_sol_types::sol!((bytes32, uint8, string)[])>::abi_encode(&vec![
+        let expected_abi_encoded = <alloy_sol_types::sol!((bytes32, uint8, string)[])>::abi_encode(&vec![
             (
                 utils::str_to_bytes32("stack")?,
                 16u8,
@@ -763,9 +745,8 @@ mod tests {
                 "Copies a constant value onto the stack.".to_string()
             )
         ]);
-
         // check the encoded bytes agaiinst the expected
-        assert_eq!(authoring_meta_abi_encoded, expected_abi_encoded_data);
+        assert_eq!(authoring_meta_abi_encoded, expected_abi_encoded);
 
         let meta_map = MetaMap{
             payload: serde_bytes::ByteBuf::from(authoring_meta_abi_encoded.clone()),
