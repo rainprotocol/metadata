@@ -1,23 +1,21 @@
 /// converts string to bytes32
 pub fn str_to_bytes32(text: &str) -> anyhow::Result<[u8; 32]> {
-  let bytes: &[u8] = text.as_bytes();
-  if bytes.len() > 32 {
-      return Err(anyhow::anyhow!("unexpected length, must be 32 bytes"))
-  }
-
-  let mut b32: [u8; 32] = [0u8; 32];
-  b32[..bytes.len()].copy_from_slice(bytes);
-
-  Ok(b32)
+    let bytes: &[u8] = text.as_bytes();
+    if bytes.len() > 32 {
+        return Err(anyhow::anyhow!("unexpected length, must be 32 bytes"))
+    }
+    let mut b32 = [0u8; 32];
+    b32[..bytes.len()].copy_from_slice(bytes);
+    Ok(b32)
 }
 
 /// converts bytes32 to string
 pub fn bytes32_to_str(bytes: &[u8; 32]) -> anyhow::Result<&str> {
-  let mut len = 32;
-  if let Some((pos, _)) = itertools::Itertools::find_position(&mut bytes.iter(), |b| **b == 0u8) {
-    len = pos;
-  };
-  Ok(std::str::from_utf8(&bytes[..len])?)
+    let mut len = 32;
+    if let Some((pos, _)) = itertools::Itertools::find_position(&mut bytes.iter(), |b| **b == 0u8) {
+        len = pos;
+    };
+    Ok(std::str::from_utf8(&bytes[..len])?)
 }
 
 
