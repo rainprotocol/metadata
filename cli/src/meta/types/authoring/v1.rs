@@ -200,7 +200,7 @@ mod tests {
                 description: "Copies a constant value onto the stack.".to_string()
             }
         ]);
-        assert_eq!(authoring_meta, expected_authoring_meta );
+        assert_eq!(authoring_meta, expected_authoring_meta);
 
         // abi encode the authoring meta with performing validation
         let authoring_meta_abi_encoded = authoring_meta.abi_encode_validate()?;
