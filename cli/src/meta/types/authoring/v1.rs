@@ -40,6 +40,7 @@ pub struct AuthoringMetaItem {
 }
 
 impl AuthoringMetaItem {
+
     pub fn abi_encode(&self) -> anyhow::Result<Vec<u8>> {
         Ok(AuthoringMetaStruct::abi_encode(&(
             str_to_bytes32(self.word.as_str())?,
@@ -48,6 +49,7 @@ impl AuthoringMetaItem {
         )))
     }
 
+    // validates and abi encodes
     pub fn abi_encode_validate(&self) -> anyhow::Result<Vec<u8>> {
         self.validate()?;
         self.abi_encode()
@@ -62,6 +64,7 @@ impl AuthoringMetaItem {
         })
     }
 
+    // abi decodes and validates
     pub fn abi_decode_validate(data: &Vec<u8>) -> anyhow::Result<AuthoringMetaItem> {
         let result = AuthoringMetaStruct::abi_decode(data, true)?;
         let am = AuthoringMetaItem { 

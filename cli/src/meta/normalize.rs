@@ -9,7 +9,8 @@ use super::{
 };
 
 
-fn normalize_json<'de, T: serde::Deserialize<'de> + serde::Serialize + validator::Validate>(data: &'de [u8]) -> anyhow::Result<Vec<u8>> {
+fn normalize_json<'de, T>(data: &'de [u8]) -> anyhow::Result<Vec<u8>> 
+    where T: serde::Deserialize<'de> + serde::Serialize + validator::Validate {
     let parsed = serde_json::from_str::<T>(std::str::from_utf8(data)?)?;
     parsed.validate()?;
     Ok(serde_json::to_string(&parsed)?.as_bytes().to_vec())

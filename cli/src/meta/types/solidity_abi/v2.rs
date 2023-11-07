@@ -17,6 +17,16 @@ use super::super::super::MetaMap;
 #[derive(JsonSchema, Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct SolidityAbiMeta(Vec<SolidityAbiItem>);
 
+impl SolidityAbiMeta {
+
+    // extracts abi from a solc json artifact, errors if abi section is not found
+    pub fn from_artifact(artifact: &Vec<u8>) -> anyhow::Result<SolidityAbiMeta> {
+        serde_json::from_value(
+            serde_json::from_slice::<serde_json::Value>(artifact)?["abi"].clone()
+        ).map_err(anyhow::Error::from)
+    }
+}
+
 impl Validate for SolidityAbiMeta {
     fn validate(&self) -> Result<(), ValidationErrors> {
         ValidationErrors::merge_all(
@@ -482,7 +492,7 @@ mod tests {
     // test json roundtrip for SolidityAbiMeta and alloy JsonAbi
     #[test]
     fn test_json_roundtrip() -> anyhow::Result<()> {
-        let path = "./test/abis";
+        let path = "./test/abis/valid";
         for file in std::fs::read_dir(path)? {
             let file = file?;
             let original_json_value: serde_json::Value = serde_json::from_slice(std::fs::read(file.path())?.as_slice())?;
@@ -506,7 +516,7 @@ mod tests {
     // test conversion between SolidityAbiMeta and alloy JsonAbi
     #[test]
     fn test_abi_conversion() -> anyhow::Result<()> {
-        let path = "./test/abis";
+        let path = "./test/abis/valid";
         for file in std::fs::read_dir(path)? {
             let file = file?;
             let original_json_value: serde_json::Value = serde_json::from_slice(std::fs::read(file.path())?.as_slice())?;
@@ -529,6 +539,18 @@ mod tests {
             }
         }
 
+        Ok(())
+    }
+
+
+    // test reading a json artifact with no abi present
+    #[test]
+    fn test_no_abi_artifact_parse() -> anyhow::Result<()> {
+        let data = std::fs::read("./test/abis/invalid/NoAbi.json")?;
+        assert!(matches!(
+            SolidityAbiMeta::from_artifact(&data).unwrap_err(),
+            anyhow::Error { .. }
+        ));
         Ok(())
     }
 }
