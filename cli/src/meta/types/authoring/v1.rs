@@ -1,7 +1,7 @@
 use schemars::JsonSchema;
 use alloy_sol_types::{SolType, sol};
 use serde::{Serialize, Deserialize};
-use validator::{Validate, ValidationErrors};
+use validator::{Validate, ValidationErrors, ValidationError};
 use super::super::{
     super::{
         MetaMap, 
@@ -132,11 +132,16 @@ impl AuthoringMeta {
 
 impl Validate for AuthoringMeta {
     fn validate(&self) -> Result<(), ValidationErrors> {
-        ValidationErrors::merge_all(
-            Ok(()),
-            "root",
-            self.0.iter().map(|item| item.validate()).collect()
-        )
+        for (index, item) in self.0.iter().enumerate() {
+            if let Err(mut e) = item.validate() {
+                e.add(
+                    Box::leak(format!("at index {}", index).into_boxed_str()), 
+                    ValidationError::new("")
+                );
+                return Err(e);
+            }
+        }
+        Ok(())
     }
 }
 
@@ -184,7 +189,6 @@ mod tests {
                 "operandParserOffset": 16
             }
         ]"#;
-
         // check the deserialization
         let authoring_meta: AuthoringMeta = serde_json::from_str(authoring_meta_content)?;
         let expected_authoring_meta = AuthoringMeta(vec![

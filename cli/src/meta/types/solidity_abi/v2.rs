@@ -6,9 +6,9 @@ use serde::Deserializer;
 use validator::Validate;
 use schemars::JsonSchema;
 use alloy_json_abi::JsonAbi;
-use validator::ValidationErrors;
 use serde::ser::SerializeStruct;
 use super::super::super::MetaMap;
+use validator::{ValidationErrors, ValidationError};
 
 
 /// # SolidityABI
@@ -29,11 +29,21 @@ impl SolidityAbiMeta {
 
 impl Validate for SolidityAbiMeta {
     fn validate(&self) -> Result<(), ValidationErrors> {
-        ValidationErrors::merge_all(
-            Ok(()),
-            "root",
-            self.0.iter().map(|item| item.validate()).collect()
-        )
+        // ValidationErrors::merge_all(
+        //     Ok(()),
+        //     "root",
+        //     self.0.iter().map(|item| item.validate()).collect()
+        // )
+        for (index, item) in self.0.iter().enumerate() {
+            if let Err(mut e) = item.validate() {
+                e.add(
+                    Box::leak(format!("at index {}", index).into_boxed_str()), 
+                    ValidationError::new("")
+                );
+                return Err(e);
+            }
+        }
+        Ok(())
     }
 }
 
