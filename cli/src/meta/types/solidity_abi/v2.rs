@@ -531,11 +531,9 @@ mod tests {
             // since alloy JsonAbi doesn't keep the original order of abi items, we need to check item by item
             let converted_abi_meta: SolidityAbiMeta = json_abi_alloy.clone().try_into()?;
             for item in solidity_abi_meta.0.iter() {
-                if let Some(v) = converted_abi_meta.0.iter().find(|e| *e == item ) {
-                    assert_eq!(v, item);
-                } else {
+                if let None = converted_abi_meta.0.iter().find(|e| *e == item ) {
                     return Err(anyhow::anyhow!("wrong conversion!"))
-                };
+                }
             }
         }
 
