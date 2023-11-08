@@ -10,7 +10,6 @@ use serde::ser::SerializeStruct;
 use super::super::super::MetaMap;
 use validator::{ValidationErrors, ValidationError};
 
-
 /// # SolidityABI
 /// JSON representation of a Solidity ABI interface. can be switched to ethers ABI struct using TryFrom trait
 /// https://docs.soliditylang.org/en/latest/abi-spec.html#json
@@ -18,27 +17,22 @@ use validator::{ValidationErrors, ValidationError};
 pub struct SolidityAbiMeta(Vec<SolidityAbiItem>);
 
 impl SolidityAbiMeta {
-
     // extracts abi from a solc json artifact, errors if abi section is not found
     pub fn from_artifact(artifact: &Vec<u8>) -> anyhow::Result<SolidityAbiMeta> {
         serde_json::from_value(
-            serde_json::from_slice::<serde_json::Value>(artifact)?["abi"].clone()
-        ).map_err(anyhow::Error::from)
+            serde_json::from_slice::<serde_json::Value>(artifact)?["abi"].clone(),
+        )
+        .map_err(anyhow::Error::from)
     }
 }
 
 impl Validate for SolidityAbiMeta {
     fn validate(&self) -> Result<(), ValidationErrors> {
-        // ValidationErrors::merge_all(
-        //     Ok(()),
-        //     "root",
-        //     self.0.iter().map(|item| item.validate()).collect()
-        // )
         for (index, item) in self.0.iter().enumerate() {
             if let Err(mut e) = item.validate() {
                 e.add(
-                    Box::leak(format!("at index {}", index).into_boxed_str()), 
-                    ValidationError::new("")
+                    Box::leak(format!("at index {}", index).into_boxed_str()),
+                    ValidationError::new(""),
                 );
                 return Err(e);
             }
@@ -55,7 +49,7 @@ impl TryFrom<Vec<u8>> for SolidityAbiMeta {
                 Ok(()) => Ok(t),
                 Err(e) => Err(e),
             },
-            Err(e) => Err(e)
+            Err(e) => Err(e),
         }
     }
 }
@@ -77,7 +71,9 @@ impl TryFrom<MetaMap> for JsonAbi {
 impl TryFrom<SolidityAbiMeta> for JsonAbi {
     type Error = anyhow::Error;
     fn try_from(value: SolidityAbiMeta) -> Result<Self, Self::Error> {
-        Ok(serde_json::from_str(serde_json::to_string(&value)?.as_str())?)
+        Ok(serde_json::from_str(
+            serde_json::to_string(&value)?.as_str(),
+        )?)
     }
 }
 
@@ -221,7 +217,9 @@ impl Serialize for SolidityAbiItem {
     {
         match self {
             SolidityAbiItem::Function(item_fn) => item_fn.serialize(serializer),
-            SolidityAbiItem::Constructor(item_constructor) => item_constructor.serialize(serializer),
+            SolidityAbiItem::Constructor(item_constructor) => {
+                item_constructor.serialize(serializer)
+            }
             SolidityAbiItem::Receive(item_receive) => item_receive.serialize(serializer),
             SolidityAbiItem::Fallback(item_fallback) => item_fallback.serialize(serializer),
             SolidityAbiItem::Event(item_event) => item_event.serialize(serializer),
@@ -311,7 +309,7 @@ impl<'de> Deserialize<'de> for SolidityAbiItem {
             inputs: Option<Vec<IntermediateIO>>,
             outputs: Option<Vec<IntermediateIO>>,
             state_mutability: Option<SolidityAbiFnMutability>,
-            anonymous: Option<bool>
+            anonymous: Option<bool>,
         }
 
         #[derive(Debug, Deserialize)]
@@ -338,16 +336,17 @@ impl<'de> Deserialize<'de> for SolidityAbiItem {
 
         let intermediate = Intermediate::deserialize(deserializer)?;
 
-        fn map_item_fn_io(intermediate_io: &IntermediateIO) -> Result<SolidityAbiFnIO, String>{
+        fn map_item_fn_io(intermediate_io: &IntermediateIO) -> Result<SolidityAbiFnIO, String> {
             if intermediate_io.indexed.is_some() {
                 return Err("indexed found on fn io".into());
             }
 
             let components: Option<Vec<SolidityAbiFnIO>> = match &intermediate_io.components {
                 Some(cs) => {
-                    let result: Result<Vec<SolidityAbiFnIO>, String> = cs.iter().map(map_item_fn_io).collect();
+                    let result: Result<Vec<SolidityAbiFnIO>, String> =
+                        cs.iter().map(map_item_fn_io).collect();
                     Some(result?)
-                },
+                }
                 None => None,
             };
             Ok(SolidityAbiFnIO {
@@ -358,19 +357,25 @@ impl<'de> Deserialize<'de> for SolidityAbiItem {
             })
         }
 
-        fn map_item_event_input(intermediate_io: &IntermediateIO) -> Result<SolidityAbiEventInput, String> {
-            fn map_item_event_input_component(intermediate_io: &IntermediateIO) -> Result<SolidityAbiEventInputComponent, String> {
+        fn map_item_event_input(
+            intermediate_io: &IntermediateIO,
+        ) -> Result<SolidityAbiEventInput, String> {
+            fn map_item_event_input_component(
+                intermediate_io: &IntermediateIO,
+            ) -> Result<SolidityAbiEventInputComponent, String> {
                 if intermediate_io.indexed.is_some() {
                     return Err("indexed found on event component".into());
                 }
 
-                let components: Option<Vec<SolidityAbiEventInputComponent>> = match &intermediate_io.components {
-                    Some(cs) => {
-                        let result: Result<Vec<SolidityAbiEventInputComponent>, String> = cs.iter().map(map_item_event_input_component).collect();
-                        Some(result?)
-                    },
-                    None => None,
-                };
+                let components: Option<Vec<SolidityAbiEventInputComponent>> =
+                    match &intermediate_io.components {
+                        Some(cs) => {
+                            let result: Result<Vec<SolidityAbiEventInputComponent>, String> =
+                                cs.iter().map(map_item_event_input_component).collect();
+                            Some(result?)
+                        }
+                        None => None,
+                    };
                 Ok(SolidityAbiEventInputComponent {
                     components,
                     internal_type: intermediate_io.internal_type.clone(),
@@ -379,33 +384,40 @@ impl<'de> Deserialize<'de> for SolidityAbiItem {
                 })
             }
 
-            let components: Option<Vec<SolidityAbiEventInputComponent>> = match &intermediate_io.components {
-                Some(cs) => {
-                    let result: Result<Vec<SolidityAbiEventInputComponent>, String> = cs.iter().map(map_item_event_input_component).collect();
-                    Some(result?)
-                },
-                None => None,
-            };
+            let components: Option<Vec<SolidityAbiEventInputComponent>> =
+                match &intermediate_io.components {
+                    Some(cs) => {
+                        let result: Result<Vec<SolidityAbiEventInputComponent>, String> =
+                            cs.iter().map(map_item_event_input_component).collect();
+                        Some(result?)
+                    }
+                    None => None,
+                };
 
             Ok(SolidityAbiEventInput {
                 components,
-                indexed: intermediate_io.indexed.ok_or::<String>("indexed missing on event input".into())?,
+                indexed: intermediate_io
+                    .indexed
+                    .ok_or::<String>("indexed missing on event input".into())?,
                 internal_type: intermediate_io.internal_type.clone(),
                 name: intermediate_io.name.clone(),
                 typ: intermediate_io.typ.clone(),
             })
         }
 
-        fn map_item_error_input(intermediate_io: &IntermediateIO) -> Result<SolidityAbiErrorInput, String> {
+        fn map_item_error_input(
+            intermediate_io: &IntermediateIO,
+        ) -> Result<SolidityAbiErrorInput, String> {
             if intermediate_io.indexed.is_some() {
                 return Err("indexed found on fn io".into());
             }
 
             let components: Option<Vec<SolidityAbiErrorInput>> = match &intermediate_io.components {
                 Some(cs) => {
-                    let result: Result<Vec<SolidityAbiErrorInput>, String> = cs.iter().map(map_item_error_input).collect();
+                    let result: Result<Vec<SolidityAbiErrorInput>, String> =
+                        cs.iter().map(map_item_error_input).collect();
                     Some(result?)
-                },
+                }
                 None => None,
             };
             Ok(SolidityAbiErrorInput {
@@ -420,79 +432,95 @@ impl<'de> Deserialize<'de> for SolidityAbiItem {
             IntermediateType::Function => {
                 let inputs: Vec<SolidityAbiFnIO> = match intermediate.inputs {
                     Some(is) => {
-                        let result: Result<Vec<SolidityAbiFnIO>, String> = is.iter().map(map_item_fn_io).collect();
+                        let result: Result<Vec<SolidityAbiFnIO>, String> =
+                            is.iter().map(map_item_fn_io).collect();
                         result.map_err(|e| D::Error::custom(e))?
-                    },
+                    }
                     None => vec![],
                 };
                 let outputs: Vec<SolidityAbiFnIO> = match intermediate.outputs {
                     Some(os) => {
-                        let result: Result<Vec<SolidityAbiFnIO>, String> = os.iter().map(map_item_fn_io).collect();
+                        let result: Result<Vec<SolidityAbiFnIO>, String> =
+                            os.iter().map(map_item_fn_io).collect();
                         result.map_err(|e| D::Error::custom(e))?
-                    },
+                    }
                     None => vec![],
                 };
                 Ok(SolidityAbiItem::Function(SolidityAbiItemFn {
-                    name: intermediate.name.ok_or(D::Error::custom("function missing name"))?,
+                    name: intermediate
+                        .name
+                        .ok_or(D::Error::custom("function missing name"))?,
                     inputs,
                     outputs,
-                    state_mutability: intermediate.state_mutability.ok_or(D::Error::custom("function missing mutability"))?,
+                    state_mutability: intermediate
+                        .state_mutability
+                        .ok_or(D::Error::custom("function missing mutability"))?,
                 }))
-            },
+            }
             IntermediateType::Constructor => {
                 let inputs: Vec<SolidityAbiFnIO> = match intermediate.inputs {
                     Some(is) => {
-                        let result: Result<Vec<SolidityAbiFnIO>, String> = is.iter().map(map_item_fn_io).collect();
+                        let result: Result<Vec<SolidityAbiFnIO>, String> =
+                            is.iter().map(map_item_fn_io).collect();
                         result.map_err(|e| D::Error::custom(e))?
-                    },
+                    }
                     None => vec![],
                 };
                 Ok(SolidityAbiItem::Constructor(SolidityAbiItemConstructor {
                     inputs,
-                    state_mutability: intermediate.state_mutability.ok_or(D::Error::custom("constructor missing mutability"))?,
+                    state_mutability: intermediate
+                        .state_mutability
+                        .ok_or(D::Error::custom("constructor missing mutability"))?,
                 }))
-            },
-            IntermediateType::Receive => {
-                Ok(SolidityAbiItem::Receive(SolidityAbiItemReceive {
-                    state_mutability: intermediate.state_mutability.ok_or(D::Error::custom("receive missing mutability"))?,
-                }))
-            },
-            IntermediateType::Fallback => {
-                Ok(SolidityAbiItem::Fallback(SolidityAbiItemFallback {
-                    state_mutability: intermediate.state_mutability.ok_or(D::Error::custom("fallback missing mutability"))?,
-                }))
-            },
+            }
+            IntermediateType::Receive => Ok(SolidityAbiItem::Receive(SolidityAbiItemReceive {
+                state_mutability: intermediate
+                    .state_mutability
+                    .ok_or(D::Error::custom("receive missing mutability"))?,
+            })),
+            IntermediateType::Fallback => Ok(SolidityAbiItem::Fallback(SolidityAbiItemFallback {
+                state_mutability: intermediate
+                    .state_mutability
+                    .ok_or(D::Error::custom("fallback missing mutability"))?,
+            })),
             IntermediateType::Event => {
                 let inputs: Vec<SolidityAbiEventInput> = match intermediate.inputs {
                     Some(is) => {
-                        let result: Result<Vec<SolidityAbiEventInput>, String> = is.iter().map(map_item_event_input).collect();
+                        let result: Result<Vec<SolidityAbiEventInput>, String> =
+                            is.iter().map(map_item_event_input).collect();
                         result.map_err(|e| D::Error::custom(e))?
-                    },
+                    }
                     None => vec![],
                 };
                 Ok(SolidityAbiItem::Event(SolidityAbiItemEvent {
-                    name: intermediate.name.ok_or(D::Error::custom("event missing name"))?,
+                    name: intermediate
+                        .name
+                        .ok_or(D::Error::custom("event missing name"))?,
                     inputs,
-                    anonymous: intermediate.anonymous.ok_or(D::Error::custom("event missing anonymous"))?,
+                    anonymous: intermediate
+                        .anonymous
+                        .ok_or(D::Error::custom("event missing anonymous"))?,
                 }))
-            },
+            }
             IntermediateType::Error => {
                 let inputs: Vec<SolidityAbiErrorInput> = match intermediate.inputs {
                     Some(is) => {
-                        let result: Result<Vec<SolidityAbiErrorInput>, String> = is.iter().map(map_item_error_input).collect();
+                        let result: Result<Vec<SolidityAbiErrorInput>, String> =
+                            is.iter().map(map_item_error_input).collect();
                         result.map_err(|e| D::Error::custom(e))?
-                    },
+                    }
                     None => vec![],
                 };
                 Ok(SolidityAbiItem::Error(SolidityAbiItemError {
-                    name: intermediate.name.ok_or(D::Error::custom("error missing name"))?,
+                    name: intermediate
+                        .name
+                        .ok_or(D::Error::custom("error missing name"))?,
                     inputs,
                 }))
             }
         }
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -505,16 +533,22 @@ mod tests {
         let path = "./test/abis/valid";
         for file in std::fs::read_dir(path)? {
             let file = file?;
-            let original_json_value: serde_json::Value = serde_json::from_slice(std::fs::read(file.path())?.as_slice())?;
-            let original_json_abi : serde_json::Value = original_json_value["abi"].clone();
+            let original_json_value: serde_json::Value =
+                serde_json::from_slice(std::fs::read(file.path())?.as_slice())?;
+            let original_json_abi: serde_json::Value = original_json_value["abi"].clone();
 
-            let solidity_abi_meta: SolidityAbiMeta = serde_json::from_value(original_json_abi.clone())?;
+            let solidity_abi_meta: SolidityAbiMeta =
+                serde_json::from_value(original_json_abi.clone())?;
             assert_eq!(original_json_abi, serde_json::to_value(&solidity_abi_meta)?);
 
             // since alloy JsonAbi doesn't keep the original order of abi items, we need to check item by item
-            let json_abi_alloy: JsonAbi = serde_json::from_str(original_json_abi.clone().to_string().as_str())?;
+            let json_abi_alloy: JsonAbi =
+                serde_json::from_str(original_json_abi.clone().to_string().as_str())?;
             for e in original_json_abi.as_array().unwrap().iter() {
-                if let None = json_abi_alloy.items().find(|item| &serde_json::to_value(item).unwrap() == e) {
+                if let None = json_abi_alloy
+                    .items()
+                    .find(|item| &serde_json::to_value(item).unwrap() == e)
+                {
                     return Err(anyhow::anyhow!("roundtrip failed!"));
                 }
             }
@@ -529,11 +563,14 @@ mod tests {
         let path = "./test/abis/valid";
         for file in std::fs::read_dir(path)? {
             let file = file?;
-            let original_json_value: serde_json::Value = serde_json::from_slice(std::fs::read(file.path())?.as_slice())?;
-            let original_json_abi : serde_json::Value = original_json_value["abi"].clone();
+            let original_json_value: serde_json::Value =
+                serde_json::from_slice(std::fs::read(file.path())?.as_slice())?;
+            let original_json_abi: serde_json::Value = original_json_value["abi"].clone();
 
-            let solidity_abi_meta: SolidityAbiMeta = serde_json::from_value(original_json_abi.clone())?;
-            let json_abi_alloy: JsonAbi = serde_json::from_str(original_json_abi.clone().to_string().as_str())?;
+            let solidity_abi_meta: SolidityAbiMeta =
+                serde_json::from_value(original_json_abi.clone())?;
+            let json_abi_alloy: JsonAbi =
+                serde_json::from_str(original_json_abi.clone().to_string().as_str())?;
 
             let converted_json_abi: JsonAbi = solidity_abi_meta.clone().try_into()?;
             assert_eq!(converted_json_abi, json_abi_alloy);
@@ -541,15 +578,14 @@ mod tests {
             // since alloy JsonAbi doesn't keep the original order of abi items, we need to check item by item
             let converted_abi_meta: SolidityAbiMeta = json_abi_alloy.clone().try_into()?;
             for item in solidity_abi_meta.0.iter() {
-                if let None = converted_abi_meta.0.iter().find(|e| *e == item ) {
-                    return Err(anyhow::anyhow!("wrong conversion!"))
+                if let None = converted_abi_meta.0.iter().find(|e| *e == item) {
+                    return Err(anyhow::anyhow!("wrong conversion!"));
                 }
             }
         }
 
         Ok(())
     }
-
 
     // test reading a json artifact with no abi present
     #[test]

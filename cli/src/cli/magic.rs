@@ -9,7 +9,7 @@ pub enum Magic {
     Ls,
 }
 
-pub fn dispatch (magic: Magic) -> anyhow::Result<()> {
+pub fn dispatch(magic: Magic) -> anyhow::Result<()> {
     match magic {
         Magic::Ls => ls::ls(),
     }

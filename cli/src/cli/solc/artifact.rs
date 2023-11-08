@@ -3,7 +3,6 @@ use std::path::PathBuf;
 use crate::solc::ArtifactComponent;
 use crate::cli::output::SupportedOutputEncoding;
 
-
 #[derive(Parser)]
 pub struct Artifact {
     /// artifact component: abi, bytecode, deployed-bytecode
@@ -25,8 +24,8 @@ pub struct Artifact {
 
 pub fn artifact(artifact: Artifact) -> anyhow::Result<()> {
     let extracted_component = crate::solc::extract_artifact_component_json(
-        artifact.component, 
-        &std::fs::read(artifact.input_path)?
+        artifact.component,
+        &std::fs::read(artifact.input_path)?,
     )?;
 
     let component_string = if artifact.pretty_print {
@@ -35,5 +34,9 @@ pub fn artifact(artifact: Artifact) -> anyhow::Result<()> {
         serde_json::to_string(&extracted_component)?
     };
 
-    crate::cli::output::output(&artifact.output_path, artifact.output_encoding, component_string.as_bytes())
+    crate::cli::output::output(
+        &artifact.output_path,
+        artifact.output_encoding,
+        component_string.as_bytes(),
+    )
 }

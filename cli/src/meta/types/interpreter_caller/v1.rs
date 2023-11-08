@@ -2,14 +2,9 @@ use validator::Validate;
 use schemars::JsonSchema;
 use serde::{Serialize, Deserialize};
 use super::super::{
-    super::MetaMap,
-    common::v1::RainTitle,
-    common::v1::RainSymbol,
-    common::v1::Description,
-    common::v1::RainString,
-    common::v1::SolidityIdentifier,
+    super::MetaMap, common::v1::RainTitle, common::v1::RainSymbol, common::v1::Description,
+    common::v1::RainString, common::v1::SolidityIdentifier,
 };
-
 
 type AbiPath = RainString;
 
@@ -55,7 +50,7 @@ impl TryFrom<Vec<u8>> for InterpreterCallerMeta {
                 Ok(()) => Ok(t),
                 Err(e) => Err(e),
             },
-            Err(e) => Err(e)
+            Err(e) => Err(e),
         }
     }
 }
@@ -150,5 +145,5 @@ pub struct ContextCell {
     pub desc: Description,
     #[serde(default)]
     #[validate]
-    pub alias: Option<RainSymbol>
+    pub alias: Option<RainSymbol>,
 }

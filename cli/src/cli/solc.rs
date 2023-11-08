@@ -7,7 +7,7 @@ use artifact::Artifact;
 #[derive(Subcommand)]
 pub enum Solc {
     /// Parse data out of a solc artifact.
-    Artifact(Artifact)
+    Artifact(Artifact),
 }
 
 pub fn dispatch(solc: Solc) -> anyhow::Result<()> {

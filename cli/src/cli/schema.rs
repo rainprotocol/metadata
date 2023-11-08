@@ -1,7 +1,6 @@
 pub mod ls;
 pub mod show;
 
-
 use clap::Subcommand;
 use show::Show;
 
@@ -14,7 +13,7 @@ pub enum Schema {
     Show(Show),
 }
 
-pub fn dispatch (schema: Schema) -> anyhow::Result<()> {
+pub fn dispatch(schema: Schema) -> anyhow::Result<()> {
     match schema {
         Schema::Ls => ls::ls(),
         Schema::Show(s) => show::show(s),

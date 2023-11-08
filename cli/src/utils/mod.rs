@@ -2,7 +2,9 @@
 pub fn str_to_bytes32(text: &str) -> anyhow::Result<[u8; 32]> {
     let bytes: &[u8] = text.as_bytes();
     if bytes.len() > 32 {
-        return Err(anyhow::anyhow!("unexpected length, must be 32 bytes or less"))
+        return Err(anyhow::anyhow!(
+            "unexpected length, must be 32 bytes or less"
+        ));
     }
     let mut b32 = [0u8; 32];
     b32[..bytes.len()].copy_from_slice(bytes);
@@ -18,7 +20,6 @@ pub fn bytes32_to_str(bytes: &[u8; 32]) -> anyhow::Result<&str> {
     Ok(std::str::from_utf8(&bytes[..len])?)
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -27,8 +28,14 @@ mod tests {
     #[test]
     fn test_bytes32_to_str() {
         let text_bytes_list = vec![
-            ("", hex!("0000000000000000000000000000000000000000000000000000000000000000")),
-            ("A", hex!("4100000000000000000000000000000000000000000000000000000000000000")),
+            (
+                "",
+                hex!("0000000000000000000000000000000000000000000000000000000000000000"),
+            ),
+            (
+                "A",
+                hex!("4100000000000000000000000000000000000000000000000000000000000000"),
+            ),
             (
                 "ABCDEFGHIJKLMNOPQRSTUVWXYZ012345",
                 hex!("4142434445464748494a4b4c4d4e4f505152535455565758595a303132333435"),
@@ -47,8 +54,14 @@ mod tests {
     #[test]
     fn test_str_to_bytes32() {
         let text_bytes_list = vec![
-            ("", hex!("0000000000000000000000000000000000000000000000000000000000000000")),
-            ("A", hex!("4100000000000000000000000000000000000000000000000000000000000000")),
+            (
+                "",
+                hex!("0000000000000000000000000000000000000000000000000000000000000000"),
+            ),
+            (
+                "A",
+                hex!("4100000000000000000000000000000000000000000000000000000000000000"),
+            ),
             (
                 "ABCDEFGHIJKLMNOPQRSTUVWXYZ012345",
                 hex!("4142434445464748494a4b4c4d4e4f505152535455565758595a303132333435"),
@@ -71,5 +84,4 @@ mod tests {
             anyhow::Error { .. }
         ));
     }
-
 }

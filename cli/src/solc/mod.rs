@@ -6,11 +6,13 @@ use strum::{EnumIter, EnumString};
 pub enum ArtifactComponent {
     Abi,
     Bytecode,
-    DeployedBytecode
-
+    DeployedBytecode,
 }
 
-pub fn extract_artifact_component_json(component: ArtifactComponent, data: &[u8]) -> anyhow::Result<Value> {
+pub fn extract_artifact_component_json(
+    component: ArtifactComponent,
+    data: &[u8],
+) -> anyhow::Result<Value> {
     let json = serde_json::from_str::<Value>(std::str::from_utf8(data)?)?;
     match component {
         ArtifactComponent::Abi => Ok(json["abi"].clone()),

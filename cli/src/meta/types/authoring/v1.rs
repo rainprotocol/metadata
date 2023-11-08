@@ -4,12 +4,11 @@ use serde::{Serialize, Deserialize};
 use validator::{Validate, ValidationErrors, ValidationError};
 use super::super::{
     super::{
-        MetaMap, 
-        super::utils::{str_to_bytes32, bytes32_to_str}
+        MetaMap,
+        super::utils::{str_to_bytes32, bytes32_to_str},
     },
-    common::v1::{REGEX_RAIN_SYMBOL, REGEX_RAIN_STRING}
+    common::v1::{REGEX_RAIN_SYMBOL, REGEX_RAIN_STRING},
 };
-
 
 /// authoring meta struct
 pub type AuthoringMetaStruct = sol!((bytes32, uint8, string));
@@ -28,24 +27,29 @@ pub struct AuthoringMeta(pub Vec<AuthoringMetaItem>);
 pub struct AuthoringMetaItem {
     /// # Word
     /// Primary word used to identify the opcode.
-    #[validate(regex(path = "REGEX_RAIN_SYMBOL", message = "Must be alphanumeric lower-kebab-case beginning with a letter.\n"))]
+    #[validate(regex(
+        path = "REGEX_RAIN_SYMBOL",
+        message = "Must be alphanumeric lower-kebab-case beginning with a letter.\n"
+    ))]
     pub word: String,
     /// # Operand Offest
     pub operand_parser_offset: u8,
     /// # Description
     /// Brief description of the opcode.
     #[serde(default)]
-    #[validate(regex(path = "REGEX_RAIN_STRING", message = "Must be printable ASCII characters and whitespace.\n"))]
+    #[validate(regex(
+        path = "REGEX_RAIN_STRING",
+        message = "Must be printable ASCII characters and whitespace.\n"
+    ))]
     pub description: String,
 }
 
 impl AuthoringMetaItem {
-
     pub fn abi_encode(&self) -> anyhow::Result<Vec<u8>> {
         Ok(AuthoringMetaStruct::abi_encode(&(
             str_to_bytes32(self.word.as_str())?,
             self.operand_parser_offset,
-            self.description.clone()
+            self.description.clone(),
         )))
     }
 
@@ -57,29 +61,27 @@ impl AuthoringMetaItem {
 
     pub fn abi_decode(data: &Vec<u8>) -> anyhow::Result<AuthoringMetaItem> {
         let result = AuthoringMetaStruct::abi_decode(data, false)?;
-        Ok(AuthoringMetaItem { 
-            word: bytes32_to_str(&result.0)?.to_string(), 
-            operand_parser_offset: result.1, 
-            description: result.2.to_string() 
+        Ok(AuthoringMetaItem {
+            word: bytes32_to_str(&result.0)?.to_string(),
+            operand_parser_offset: result.1,
+            description: result.2.to_string(),
         })
     }
 
     // abi decodes and validates
     pub fn abi_decode_validate(data: &Vec<u8>) -> anyhow::Result<AuthoringMetaItem> {
         let result = AuthoringMetaStruct::abi_decode(data, true)?;
-        let am = AuthoringMetaItem { 
-            word: bytes32_to_str(&result.0)?.to_string(), 
-            operand_parser_offset: result.1, 
-            description: result.2.to_string() 
+        let am = AuthoringMetaItem {
+            word: bytes32_to_str(&result.0)?.to_string(),
+            operand_parser_offset: result.1,
+            description: result.2.to_string(),
         };
         am.validate()?;
         Ok(am)
     }
 }
 
-
 impl AuthoringMeta {
-    
     /// abi encodes array of AuthoringMeta items
     pub fn abi_encode(&self) -> anyhow::Result<Vec<u8>> {
         let mut v = vec![];
@@ -87,9 +89,9 @@ impl AuthoringMeta {
             v.push((
                 str_to_bytes32(item.word.as_str())?,
                 item.operand_parser_offset,
-                item.description.clone()
+                item.description.clone(),
             ))
-        };
+        }
         Ok(AuthoringMetaStructArray::abi_encode(&v))
     }
 
@@ -104,12 +106,12 @@ impl AuthoringMeta {
         let result = AuthoringMetaStructArray::abi_decode(data, false)?;
         let mut am = vec![];
         for item in result {
-            am.push(AuthoringMetaItem { 
-                word: bytes32_to_str(&item.0)?.to_string(), 
-                operand_parser_offset: item.1, 
-                description: item.2.to_string() 
+            am.push(AuthoringMetaItem {
+                word: bytes32_to_str(&item.0)?.to_string(),
+                operand_parser_offset: item.1,
+                description: item.2.to_string(),
             });
-        };
+        }
         Ok(AuthoringMeta(am))
     }
 
@@ -118,12 +120,12 @@ impl AuthoringMeta {
         let result = AuthoringMetaStructArray::abi_decode(data, true)?;
         let mut ams = vec![];
         for item in result {
-            ams.push(AuthoringMetaItem { 
-                word: bytes32_to_str(&item.0)?.to_string(), 
-                operand_parser_offset: item.1, 
-                description: item.2.to_string() 
+            ams.push(AuthoringMetaItem {
+                word: bytes32_to_str(&item.0)?.to_string(),
+                operand_parser_offset: item.1,
+                description: item.2.to_string(),
             });
-        };
+        }
         let am = AuthoringMeta(ams);
         am.validate()?;
         Ok(am)
@@ -135,8 +137,8 @@ impl Validate for AuthoringMeta {
         for (index, item) in self.0.iter().enumerate() {
             if let Err(mut e) = item.validate() {
                 e.add(
-                    Box::leak(format!("at index {}", index).into_boxed_str()), 
-                    ValidationError::new("")
+                    Box::leak(format!("at index {}", index).into_boxed_str()),
+                    ValidationError::new(""),
                 );
                 return Err(e);
             }
@@ -150,13 +152,14 @@ impl TryFrom<Vec<u8>> for AuthoringMeta {
     fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
         match AuthoringMeta::abi_decode(&value.to_vec()) {
             Ok(am) => Ok(am),
-            Err(_e) => serde_json::from_str::<AuthoringMeta>(
-                std::str::from_utf8(&value).or(Err(anyhow::anyhow!(
+            Err(_e) => serde_json::from_str::<AuthoringMeta>(std::str::from_utf8(&value).or(
+                Err(anyhow::anyhow!(
                     "deserialization attempts failed with both abi decoding and json parsing"
-                )))?
-            ).or(Err(anyhow::anyhow!(
+                )),
+            )?)
+            .or(Err(anyhow::anyhow!(
                 "deserialization attempts failed with both abi decoding and json parsing"
-            )))
+            ))),
         }
     }
 }
@@ -167,7 +170,6 @@ impl TryFrom<MetaMap> for AuthoringMeta {
         AuthoringMeta::try_from(value.unpack()?)
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -192,16 +194,16 @@ mod tests {
         // check the deserialization
         let authoring_meta: AuthoringMeta = serde_json::from_str(authoring_meta_content)?;
         let expected_authoring_meta = AuthoringMeta(vec![
-            AuthoringMetaItem{
-                word: "stack".to_string(), 
-                operand_parser_offset: 16u8, 
-                description: "Copies an existing value from the stack.".to_string()
-            }, 
-            AuthoringMetaItem{
-                word: "constant".to_string(), 
-                operand_parser_offset: 16u8, 
-                description: "Copies a constant value onto the stack.".to_string()
-            }
+            AuthoringMetaItem {
+                word: "stack".to_string(),
+                operand_parser_offset: 16u8,
+                description: "Copies an existing value from the stack.".to_string(),
+            },
+            AuthoringMetaItem {
+                word: "constant".to_string(),
+                operand_parser_offset: 16u8,
+                description: "Copies a constant value onto the stack.".to_string(),
+            },
         ]);
         assert_eq!(authoring_meta, expected_authoring_meta);
 
@@ -211,18 +213,19 @@ mod tests {
             (
                 utils::str_to_bytes32("stack")?,
                 16u8,
-                "Copies an existing value from the stack.".to_string()
+                "Copies an existing value from the stack.".to_string(),
             ),
             (
                 utils::str_to_bytes32("constant")?,
                 16u8,
-                "Copies a constant value onto the stack.".to_string()
-            )
+                "Copies a constant value onto the stack.".to_string(),
+            ),
         ]);
         // check the encoded bytes agaiinst the expected
         assert_eq!(authoring_meta_abi_encoded, expected_abi_encoded_data);
 
-        let authoring_meta_abi_decoded = AuthoringMeta::abi_decode_validate(&authoring_meta_abi_encoded)?;
+        let authoring_meta_abi_decoded =
+            AuthoringMeta::abi_decode_validate(&authoring_meta_abi_encoded)?;
         assert_eq!(authoring_meta_abi_decoded, expected_authoring_meta);
 
         Ok(())

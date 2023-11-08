@@ -1,6 +1,16 @@
 /// # Rain Magic Numbers
 /// all known magic numbers
-#[derive(serde::Serialize, Clone, Copy, strum::EnumIter, strum::EnumString, strum::Display, Debug, PartialEq, serde::Deserialize)]
+#[derive(
+    serde::Serialize,
+    Clone,
+    Copy,
+    strum::EnumIter,
+    strum::EnumString,
+    strum::Display,
+    Debug,
+    PartialEq,
+    serde::Deserialize,
+)]
 #[strum(serialize_all = "kebab_case")]
 #[serde(rename_all = "kebab-case")]
 #[repr(u64)]
@@ -35,15 +45,19 @@ impl TryFrom<u64> for KnownMagic {
     type Error = anyhow::Error;
     fn try_from(value: u64) -> Result<Self, Self::Error> {
         match value {
-            v if v == KnownMagic::OpMetaV1 as u64                       => Ok(KnownMagic::OpMetaV1),
-            v if v == KnownMagic::DotrainV1 as u64                      => Ok(KnownMagic::DotrainV1),
-            v if v == KnownMagic::RainlangV1 as u64                     => Ok(KnownMagic::RainlangV1),
-            v if v == KnownMagic::SolidityAbiV2 as u64                  => Ok(KnownMagic::SolidityAbiV2),
-            v if v == KnownMagic::AuthoringMetaV1 as u64                => Ok(KnownMagic::AuthoringMetaV1),
-            v if v == KnownMagic::RainMetaDocumentV1 as u64             => Ok(KnownMagic::RainMetaDocumentV1),
-            v if v == KnownMagic::InterpreterCallerMetaV1 as u64        => Ok(KnownMagic::InterpreterCallerMetaV1),
-            v if v == KnownMagic::ExpressionDeployerV2BytecodeV1 as u64 => Ok(KnownMagic::ExpressionDeployerV2BytecodeV1),
-            _ => Err(anyhow::anyhow!("unknown magic number"))
+            v if v == KnownMagic::OpMetaV1 as u64 => Ok(KnownMagic::OpMetaV1),
+            v if v == KnownMagic::DotrainV1 as u64 => Ok(KnownMagic::DotrainV1),
+            v if v == KnownMagic::RainlangV1 as u64 => Ok(KnownMagic::RainlangV1),
+            v if v == KnownMagic::SolidityAbiV2 as u64 => Ok(KnownMagic::SolidityAbiV2),
+            v if v == KnownMagic::AuthoringMetaV1 as u64 => Ok(KnownMagic::AuthoringMetaV1),
+            v if v == KnownMagic::RainMetaDocumentV1 as u64 => Ok(KnownMagic::RainMetaDocumentV1),
+            v if v == KnownMagic::InterpreterCallerMetaV1 as u64 => {
+                Ok(KnownMagic::InterpreterCallerMetaV1)
+            }
+            v if v == KnownMagic::ExpressionDeployerV2BytecodeV1 as u64 => {
+                Ok(KnownMagic::ExpressionDeployerV2BytecodeV1)
+            }
+            _ => Err(anyhow::anyhow!("unknown magic number")),
         }
     }
 }
@@ -99,7 +113,7 @@ mod tests {
 
         assert_eq!(hex::encode(magic_number_after_prefix), "ffdac2f2f37be894");
     }
-    
+
     #[test]
     fn test_rainlang_meta_v1() {
         let magic_number = KnownMagic::RainlangV1;

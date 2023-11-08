@@ -4,14 +4,8 @@ use itertools::izip;
 use std::path::PathBuf;
 use crate::cli::output::SupportedOutputEncoding;
 use crate::meta::{
-    MetaMap,
-    KnownMeta,
-    ContentType,
-    ContentEncoding,
-    ContentLanguage,
-    magic::KnownMagic,
+    MetaMap, KnownMeta, ContentType, ContentEncoding, ContentLanguage, magic::KnownMagic,
 };
-
 
 /// command for building rain meta
 #[derive(Parser)]
@@ -87,13 +81,6 @@ impl TryFrom<&BuildItem> for MetaMap {
     }
 }
 
-// impl BuildItem {
-//     /// Write a BuildItem to a byte buffer as normalized, encoded cbor rain meta.
-//     pub fn write<W: std::io::Write>(&self, writer: &mut W) -> anyhow::Result<()> {
-//         Ok(serde_cbor::to_writer(writer, &MetaContent::try_from(self)?)?)
-//     }
-// }
-
 /// Build a rain meta document from a sequence of BuildItems.
 pub fn build_bytes(magic: KnownMagic, items: Vec<BuildItem>) -> anyhow::Result<Vec<u8>> {
     let mut metas: Vec<MetaMap> = vec![];
@@ -141,13 +128,7 @@ pub fn build(b: Build) -> anyhow::Result<()> {
         ));
     }
     let mut items: Vec<BuildItem> = vec![];
-    for(
-        input_path, 
-        magic, 
-        content_type, 
-        content_encoding, 
-        content_language
-    ) in izip!(
+    for (input_path, magic, content_type, content_encoding, content_language) in izip!(
         b.input_path.iter(),
         b.magic.iter(),
         b.content_type.iter(),
@@ -162,13 +143,20 @@ pub fn build(b: Build) -> anyhow::Result<()> {
             content_language: *content_language,
         });
     }
-    crate::cli::output::output(&b.output_path, b.output_encoding, &build_bytes(b.global_magic, items)?)
+    crate::cli::output::output(
+        &b.output_path,
+        b.output_encoding,
+        &build_bytes(b.global_magic, items)?,
+    )
 }
 
 #[cfg(test)]
 mod tests {
     use strum::IntoEnumIterator;
-    use crate::meta::{magic::{self, KnownMagic}, ContentType, ContentEncoding, ContentLanguage, MetaMap};
+    use crate::meta::{
+        magic::{self, KnownMagic},
+        ContentType, ContentEncoding, ContentLanguage, MetaMap,
+    };
     use super::BuildItem;
     use super::build_bytes;
 
@@ -224,7 +212,10 @@ mod tests {
 
         // https://github.com/rainprotocol/specs/blob/main/metadata-v1.md#example
         // 8 byte magic number prefix
-        assert_eq!(&bytes[0..8], KnownMagic::RainMetaDocumentV1.to_prefix_bytes());
+        assert_eq!(
+            &bytes[0..8],
+            KnownMagic::RainMetaDocumentV1.to_prefix_bytes()
+        );
         // cbor map with 5 keys
         assert_eq!(bytes[8], 0xa5);
         // key 0
@@ -277,7 +268,10 @@ mod tests {
 
         // https://github.com/rainprotocol/specs/blob/main/metadata-v1.md#example
         // 8 byte magic number prefix
-        assert_eq!(&bytes[0..8], KnownMagic::RainMetaDocumentV1.to_prefix_bytes());
+        assert_eq!(
+            &bytes[0..8],
+            KnownMagic::RainMetaDocumentV1.to_prefix_bytes()
+        );
         // cbor map with 5 keys
         assert_eq!(bytes[8], 0xa5);
         // key 0
