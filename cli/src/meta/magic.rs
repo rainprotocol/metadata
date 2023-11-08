@@ -65,6 +65,7 @@ impl TryFrom<u64> for KnownMagic {
 #[cfg(test)]
 mod tests {
     use super::KnownMagic;
+    use alloy_primitives::hex;
 
     #[test]
     fn test_rain_meta_document_v1() {

@@ -21,7 +21,7 @@ pub fn output(
     let encoded_bytes: &[u8] = match output_encoding {
         SupportedOutputEncoding::Binary => bytes,
         SupportedOutputEncoding::Hex => {
-            hex_encoded = format!("0x{}", hex::encode(bytes));
+            hex_encoded = format!("{}", alloy_primitives::hex::encode_prefixed(bytes));
             hex_encoded.as_bytes()
         }
     };

@@ -1514,7 +1514,6 @@ dependencies = [
  "deflate",
  "futures",
  "graphql_client",
- "hex",
  "inflate",
  "itertools",
  "once_cell",

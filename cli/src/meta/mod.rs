@@ -6,9 +6,9 @@ pub mod normalize;
 use reqwest::Client;
 use futures::future;
 use magic::KnownMagic;
-use alloy_primitives::keccak256;
 use graphql_client::GraphQLQuery;
 use strum::{EnumIter, EnumString};
+use alloy_primitives::{keccak256, hex};
 use serde::de::{Deserialize, Deserializer, Visitor};
 use serde::ser::{Serialize, Serializer, SerializeMap};
 use std::{sync::Arc, fmt::Debug, convert::TryFrom, collections::HashMap};
@@ -733,7 +733,7 @@ impl Store {
             content_language: ContentLanguage::None,
         }
         .cbor_encode()?;
-        let new_hash = "0x".to_owned() + &hex::encode(keccak256(&bytes));
+        let new_hash = hex::encode_prefixed(keccak256(&bytes));
         if let Some(k) = self.dotrain_cache.get(uri) {
             let old_hash = k.clone();
             if new_hash.eq_ignore_ascii_case(&old_hash) {
