@@ -3,10 +3,7 @@ use alloy_sol_types::{SolType, sol};
 use serde::{Serialize, Deserialize};
 use validator::{Validate, ValidationErrors, ValidationError};
 use super::super::{
-    super::{
-        MetaMap,
-        super::utils::{str_to_bytes32, bytes32_to_str},
-    },
+    super::{MetaMap, str_to_bytes32, bytes32_to_str},
     common::v1::{REGEX_RAIN_SYMBOL, REGEX_RAIN_STRING},
 };
 
@@ -173,7 +170,7 @@ impl TryFrom<MetaMap> for AuthoringMeta {
 
 #[cfg(test)]
 mod tests {
-    use crate::utils;
+    use crate::meta::str_to_bytes32;
     use alloy_sol_types::{SolType, sol};
     use super::{AuthoringMeta, AuthoringMetaItem};
 
@@ -211,12 +208,12 @@ mod tests {
         let authoring_meta_abi_encoded = authoring_meta.abi_encode_validate()?;
         let expected_abi_encoded_data = <sol!((bytes32, uint8, string)[])>::abi_encode(&vec![
             (
-                utils::str_to_bytes32("stack")?,
+                str_to_bytes32("stack")?,
                 16u8,
                 "Copies an existing value from the stack.".to_string(),
             ),
             (
-                utils::str_to_bytes32("constant")?,
+                str_to_bytes32("constant")?,
                 16u8,
                 "Copies a constant value onto the stack.".to_string(),
             ),
