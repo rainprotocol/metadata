@@ -519,17 +519,43 @@ impl<'de> Deserialize<'de> for SolidityAbiItem {
 
 #[cfg(test)]
 mod tests {
+    use std::path::PathBuf;
     use alloy_json_abi::JsonAbi;
     use super::SolidityAbiMeta;
+
+    // building the artifacts
+    fn build_artifacts() -> anyhow::Result<Vec<PathBuf>> {
+        std::process::Command::new("forge")
+            .arg("build")
+            .current_dir("../")
+            .output()
+            .map_err(anyhow::Error::from)?;
+
+        let out_path = "../out";
+        let mut files_to_read = vec![];
+        for file in std::fs::read_dir(out_path)? {
+            let file = file?;
+            if file.path().is_dir() {
+                for file in std::fs::read_dir(file.path())? {
+                    let file = file?;
+                    if file.path().is_file() {
+                        files_to_read.push(file.path());
+                    }
+                }
+            } else if file.path().is_file() {
+                files_to_read.push(file.path());
+            }
+        }
+        Ok(files_to_read)
+    }
 
     // test json roundtrip for SolidityAbiMeta and alloy JsonAbi
     #[test]
     fn test_json_roundtrip() -> anyhow::Result<()> {
-        let path = "./test/abis/valid";
-        for file in std::fs::read_dir(path)? {
-            let file = file?;
+        let files_to_read = build_artifacts()?;
+        for path in files_to_read {
             let original_json_value: serde_json::Value =
-                serde_json::from_slice(std::fs::read(file.path())?.as_slice())?;
+                serde_json::from_slice(std::fs::read(path)?.as_slice())?;
             let original_json_abi: serde_json::Value = original_json_value["abi"].clone();
 
             let solidity_abi_meta: SolidityAbiMeta =
@@ -555,11 +581,10 @@ mod tests {
     // test conversion between SolidityAbiMeta and alloy JsonAbi
     #[test]
     fn test_abi_conversion() -> anyhow::Result<()> {
-        let path = "./test/abis/valid";
-        for file in std::fs::read_dir(path)? {
-            let file = file?;
+        let files_to_read = build_artifacts()?;
+        for path in files_to_read {
             let original_json_value: serde_json::Value =
-                serde_json::from_slice(std::fs::read(file.path())?.as_slice())?;
+                serde_json::from_slice(std::fs::read(path)?.as_slice())?;
             let original_json_abi: serde_json::Value = original_json_value["abi"].clone();
 
             let solidity_abi_meta: SolidityAbiMeta =
@@ -585,7 +610,13 @@ mod tests {
     // test reading a json artifact with no abi present
     #[test]
     fn test_no_abi_artifact_parse() -> anyhow::Result<()> {
-        let data = std::fs::read("./test/abis/invalid/NoAbi.json")?;
+        build_artifacts()?;
+        let json = "../out/MetaBoard.sol/MetaBoard.json";
+        let data = std::fs::read(json)?;
+        let mut v = serde_json::from_slice::<serde_json::Value>(&data)?;
+        // take out the abi field and serialize the json value again
+        v["abi"].take();
+        let data = serde_json::to_vec(&v)?;
         assert!(matches!(
             SolidityAbiMeta::from_artifact(&data).unwrap_err(),
             anyhow::Error { .. }
