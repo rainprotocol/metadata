@@ -4,7 +4,8 @@ use validator::Validate;
 use schemars::JsonSchema;
 use validator::{ValidationError, ValidationErrors};
 use super::super::{
-    super::MetaMap, common::v1::RainSymbol, common::v1::RainString, common::v1::Description,
+    super::MetaMap,
+    common::v1::{RainSymbol, RainString, Description},
 };
 
 pub type Computation = RainString;

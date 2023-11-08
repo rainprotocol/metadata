@@ -49,14 +49,14 @@ impl TryFrom<KnownMagic> for KnownMeta {
 }
 
 #[derive(
-    serde::Serialize,
     Copy,
     Clone,
-    EnumString,
-    EnumIter,
-    strum::Display,
     Debug,
+    EnumIter,
     PartialEq,
+    EnumString,
+    strum::Display,
+    serde::Serialize,
     serde::Deserialize,
 )]
 #[strum(serialize_all = "kebab-case")]
@@ -71,14 +71,14 @@ pub enum ContentType {
 }
 
 #[derive(
-    serde::Serialize,
     Copy,
     Clone,
-    EnumString,
-    EnumIter,
-    strum::Display,
     Debug,
+    EnumIter,
     PartialEq,
+    EnumString,
+    strum::Display,
+    serde::Serialize,
     serde::Deserialize,
 )]
 #[serde(rename_all = "kebab-case")]
@@ -111,14 +111,14 @@ impl ContentEncoding {
 }
 
 #[derive(
-    serde::Serialize,
     Copy,
     Clone,
-    EnumString,
-    EnumIter,
-    strum::Display,
     Debug,
+    EnumIter,
     PartialEq,
+    EnumString,
+    strum::Display,
+    serde::Serialize,
     serde::Deserialize,
 )]
 #[serde(rename_all = "kebab-case")]
@@ -489,8 +489,8 @@ pub async fn search_deployer(
 /// let dotrain_uri = "path/to/file.rain";
 ///
 /// // reading the dotrain content as an example,
-/// // Store is agnostic to dotrain contents it just maps the hash of the content to the given 
-/// // uri and puts it as a new meta into the meta cache, so obtaining and passing the correct 
+/// // Store is agnostic to dotrain contents it just maps the hash of the content to the given
+/// // uri and puts it as a new meta into the meta cache, so obtaining and passing the correct
 /// // content is up to the implementer
 /// let dotrain_content = std::fs::read_to_string(&dotrain_uri).unwrap_or(String::new());
 ///
@@ -786,12 +786,10 @@ impl Store {
 #[cfg(test)]
 mod tests {
     use alloy_sol_types::SolType;
-
     use super::{
-        MetaMap, ContentType,
         super::utils,
-        ContentEncoding, ContentLanguage,
         magic::KnownMagic,
+        MetaMap, ContentType, ContentEncoding, ContentLanguage,
         types::{dotrain::v1::DotrainMeta, authoring::v1::AuthoringMeta},
     };
 

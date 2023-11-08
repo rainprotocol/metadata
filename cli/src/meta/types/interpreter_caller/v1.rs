@@ -2,8 +2,8 @@ use validator::Validate;
 use schemars::JsonSchema;
 use serde::{Serialize, Deserialize};
 use super::super::{
-    super::MetaMap, common::v1::RainTitle, common::v1::RainSymbol, common::v1::Description,
-    common::v1::RainString, common::v1::SolidityIdentifier,
+    super::MetaMap,
+    common::v1::{RainTitle, RainSymbol, RainString, Description, SolidityIdentifier},
 };
 
 type AbiPath = RainString;
