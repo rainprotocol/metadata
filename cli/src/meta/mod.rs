@@ -1178,10 +1178,3 @@ mod tests {
         ));
     }
 }
-
-// #[cfg(test)]
-//   mod tests {
-//     use super::*;
-//     use alloy_primitives::hex;
-
-// }
