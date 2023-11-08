@@ -487,7 +487,12 @@ pub async fn search_deployer(
 ///
 /// // path to a .rain file
 /// let dotrain_uri = "path/to/file.rain";
-/// let dotrain_content = ".rain content read from the uri".to_string();
+///
+/// // reading the dotrain content as an example,
+/// // Store is agnostic to dotrain contents it just maps the hash of the content to the given 
+/// // uri and puts it as a new meta into the meta cache, so obtaining and passing the correct 
+/// // content is up to the implementer
+/// let dotrain_content = std::fs::read_to_string(&dotrain_uri).unwrap_or(String::new());
 ///
 /// // updates the dotrain cache for a dotrain text and uri
 /// let (new_hash, old_hash) = store.set_dotrain(&dotrain_content, &dotrain_uri.to_string(), false).unwrap();
