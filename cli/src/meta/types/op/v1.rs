@@ -4,7 +4,7 @@ use validator::Validate;
 use schemars::JsonSchema;
 use validator::{ValidationError, ValidationErrors};
 use super::super::{
-    super::RainMetaDocumentItem,
+    super::RainMetaDocumentV1Item,
     common::v1::{RainSymbol, RainString, Description},
 };
 
@@ -138,9 +138,9 @@ impl TryFrom<Vec<u8>> for OpMeta {
     }
 }
 
-impl TryFrom<RainMetaDocumentItem> for OpMeta {
+impl TryFrom<RainMetaDocumentV1Item> for OpMeta {
     type Error = anyhow::Error;
-    fn try_from(value: RainMetaDocumentItem) -> Result<Self, Self::Error> {
+    fn try_from(value: RainMetaDocumentV1Item) -> Result<Self, Self::Error> {
         Self::try_from(value.unpack()?)
     }
 }

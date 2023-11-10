@@ -1,7 +1,7 @@
 use validator::Validate;
 use schemars::JsonSchema;
 use alloy_json_abi::JsonAbi;
-use super::super::super::RainMetaDocumentItem;
+use super::super::super::RainMetaDocumentV1Item;
 use validator::{ValidationErrors, ValidationError};
 use serde::{Serialize, Serializer, Deserialize, Deserializer, de::Error, ser::SerializeStruct};
 
@@ -49,16 +49,16 @@ impl TryFrom<Vec<u8>> for SolidityAbiMeta {
     }
 }
 
-impl TryFrom<RainMetaDocumentItem> for SolidityAbiMeta {
+impl TryFrom<RainMetaDocumentV1Item> for SolidityAbiMeta {
     type Error = anyhow::Error;
-    fn try_from(value: RainMetaDocumentItem) -> Result<Self, Self::Error> {
+    fn try_from(value: RainMetaDocumentV1Item) -> Result<Self, Self::Error> {
         Self::try_from(value.unpack()?)
     }
 }
 
-impl TryFrom<RainMetaDocumentItem> for JsonAbi {
+impl TryFrom<RainMetaDocumentV1Item> for JsonAbi {
     type Error = anyhow::Error;
-    fn try_from(value: RainMetaDocumentItem) -> Result<Self, Self::Error> {
+    fn try_from(value: RainMetaDocumentV1Item) -> Result<Self, Self::Error> {
         Ok(serde_json::from_slice(value.unpack()?.as_slice())?)
     }
 }
