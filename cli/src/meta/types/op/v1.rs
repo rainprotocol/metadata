@@ -1,15 +1,22 @@
-use schemars::JsonSchema;
-use crate::meta::rain::v1::Operand;
-use crate::meta::rain::v1::RainSymbol;
-use crate::meta::rain::v1::Description;
-use crate::meta::rain::v1::RainString;
-use serde::Deserialize;
 use serde::Serialize;
+use serde::Deserialize;
 use validator::Validate;
-use validator::ValidationErrors;
-use validator::ValidationError;
+use schemars::JsonSchema;
+use validator::{ValidationError, ValidationErrors};
+use super::super::{
+    super::RainMetaDocumentV1Item,
+    common::v1::{RainSymbol, RainString, Description},
+};
 
 pub type Computation = RainString;
+
+/// Operands in the standard interpreter are `u16` values.
+#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize, PartialEq, PartialOrd)]
+#[serde(transparent)]
+#[repr(transparent)]
+pub struct Operand {
+    pub value: u16,
+}
 
 /// BitIntegers are zero indexed.
 pub const MIN_BIT_INTEGER: usize = 0;
@@ -20,9 +27,9 @@ pub const MAX_BIT_INTEGER: usize = (std::mem::size_of::<Operand>() * 8) - 1;
 /// Counts or ranges bits in an operand. Ranges are 0 indexed.
 #[derive(Validate, JsonSchema, Debug, Serialize, Deserialize, PartialOrd, PartialEq)]
 #[serde(transparent)]
-pub struct BitInteger{
+pub struct BitInteger {
     #[validate(range(min = "MIN_BIT_INTEGER", max = "MAX_BIT_INTEGER"))]
-    pub value: u8
+    pub value: u8,
 }
 
 /// # BitIntegerRange
@@ -40,7 +47,7 @@ impl Validate for BitIntegerRange {
                 Err(errors)
             },
             "range",
-            vec![self.0.validate(), self.1.validate()]
+            vec![self.0.validate(), self.1.validate()],
         )
     }
 }
@@ -56,19 +63,21 @@ impl Validate for OperandArgRange {
         ValidationErrors::merge_all(
             match self {
                 OperandArgRange::Exact(_) => Ok(()),
-                OperandArgRange::Range(min, max) => if min <= max {
-                    Ok(())
-                } else {
-                    let mut errors = ValidationErrors::new();
-                    errors.add("range", ValidationError::new("Bad operand arg range.\n"));
-                    Err(errors)
+                OperandArgRange::Range(min, max) => {
+                    if min <= max {
+                        Ok(())
+                    } else {
+                        let mut errors = ValidationErrors::new();
+                        errors.add("range", ValidationError::new("Bad operand arg range.\n"));
+                        Err(errors)
+                    }
                 }
             },
             "range",
             match self {
                 OperandArgRange::Exact(exact) => vec![exact.validate()],
                 OperandArgRange::Range(min, max) => vec![min.validate(), max.validate()],
-            }
+            },
         )
     }
 }
@@ -114,6 +123,26 @@ pub struct OpMeta {
     #[serde(default)]
     #[validate]
     pub aliases: Vec<RainSymbol>,
+}
+
+impl TryFrom<Vec<u8>> for OpMeta {
+    type Error = anyhow::Error;
+    fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
+        match serde_json::from_slice::<Self>(&value).map_err(anyhow::Error::from) {
+            Ok(t) => match t.validate().map_err(anyhow::Error::from) {
+                Ok(()) => Ok(t),
+                Err(e) => Err(e),
+            },
+            Err(e) => Err(e),
+        }
+    }
+}
+
+impl TryFrom<RainMetaDocumentV1Item> for OpMeta {
+    type Error = anyhow::Error;
+    fn try_from(value: RainMetaDocumentV1Item) -> Result<Self, Self::Error> {
+        Self::try_from(value.unpack()?)
+    }
 }
 
 /// # Input
@@ -170,18 +199,20 @@ pub struct InputParameter {
 #[derive(JsonSchema, Debug, Serialize, Deserialize)]
 pub enum Output {
     Exact(Operand),
-    Computed(BitIntegerRange, Computation)
+    Computed(BitIntegerRange, Computation),
 }
 
 impl Validate for Output {
-    fn validate (&self) -> Result<(), ValidationErrors> {
+    fn validate(&self) -> Result<(), ValidationErrors> {
         ValidationErrors::merge_all(
             Ok(()),
             "output",
             match self {
                 Output::Exact(operand) => vec![operand.validate()],
-                Output::Computed(range, computation) => vec![range.validate(), computation.validate()],
-            }
+                Output::Computed(range, computation) => {
+                    vec![range.validate(), computation.validate()]
+                }
+            },
         )
     }
 }
@@ -221,4 +252,3 @@ pub struct OperandArg {
     #[validate]
     pub valid_range: Option<Vec<OperandArgRange>>,
 }
-

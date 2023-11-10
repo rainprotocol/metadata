@@ -1,0 +1,6 @@
+query DeployerQuery($hash: String) { 
+  expressionDeployers(where: {meta_: {id: $hash}} first: 1) { 
+    constructorMetaHash 
+    constructorMeta 
+  }
+}

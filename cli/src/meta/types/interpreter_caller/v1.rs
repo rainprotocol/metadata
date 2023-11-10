@@ -1,12 +1,11 @@
-use schemars::JsonSchema;
-use crate::meta::rain::v1::RainTitle;
-use crate::meta::rain::v1::RainSymbol;
-use crate::meta::rain::v1::Description;
-use crate::meta::rain::v1::RainString;
-use crate::meta::rain::v1::SolidityIdentifier;
-use serde::Deserialize;
-use serde::Serialize;
 use validator::Validate;
+use schemars::JsonSchema;
+use serde::{Serialize, Deserialize};
+use super::super::{
+    super::RainMetaDocumentV1Item,
+    common::v1::{RainTitle, RainSymbol, RainString, Description, SolidityIdentifier},
+};
+
 type AbiPath = RainString;
 
 /// # InterpreterCallerMeta
@@ -41,6 +40,26 @@ pub struct InterpreterCallerMeta {
     #[validate(length(min = 1))]
     #[validate]
     pub methods: Vec<Method>,
+}
+
+impl TryFrom<Vec<u8>> for InterpreterCallerMeta {
+    type Error = anyhow::Error;
+    fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
+        match serde_json::from_slice::<Self>(&value).map_err(anyhow::Error::from) {
+            Ok(t) => match t.validate().map_err(anyhow::Error::from) {
+                Ok(()) => Ok(t),
+                Err(e) => Err(e),
+            },
+            Err(e) => Err(e),
+        }
+    }
+}
+
+impl TryFrom<RainMetaDocumentV1Item> for InterpreterCallerMeta {
+    type Error = anyhow::Error;
+    fn try_from(value: RainMetaDocumentV1Item) -> Result<Self, Self::Error> {
+        Self::try_from(value.unpack()?)
+    }
 }
 
 #[derive(Validate, JsonSchema, Debug, Serialize, Deserialize)]
@@ -126,5 +145,5 @@ pub struct ContextCell {
     pub desc: Description,
     #[serde(default)]
     #[validate]
-    pub alias: Option<RainSymbol>
+    pub alias: Option<RainSymbol>,
 }

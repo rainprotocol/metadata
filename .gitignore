@@ -1,5 +1,6 @@
 out
 cache
+.DS_Store
 
 subgraph/abis
 subgraph/artifacts

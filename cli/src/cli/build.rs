@@ -1,16 +1,14 @@
-use crate::cli::output::SupportedOutputEncoding;
-use crate::meta::magic::KnownMagic;
-use crate::meta::ContentEncoding;
-use crate::meta::ContentLanguage;
-use crate::meta::ContentType;
-use crate::meta::KnownMeta;
-use crate::meta::RainMetaDocumentV1Item;
-use anyhow::anyhow;
 use clap::Parser;
+use anyhow::anyhow;
 use itertools::izip;
 use std::path::PathBuf;
+use crate::cli::output::SupportedOutputEncoding;
+use crate::meta::{
+    RainMetaDocumentV1Item, KnownMeta, ContentType, ContentEncoding, ContentLanguage,
+    magic::KnownMagic,
+};
 
-/// CLI options for the build command.
+/// command for building rain meta
 #[derive(Parser)]
 pub struct Build {
     /// Output path. If not specified, the output is written to stdout.
@@ -73,7 +71,7 @@ impl TryFrom<&BuildItem> for RainMetaDocumentV1Item {
     type Error = anyhow::Error;
     fn try_from(item: &BuildItem) -> anyhow::Result<Self> {
         let normalized = TryInto::<KnownMeta>::try_into(item.magic)?.normalize(&item.data)?;
-        let encoded = item.content_encoding.encode(normalized)?;
+        let encoded = item.content_encoding.encode(&normalized)?;
         Ok(RainMetaDocumentV1Item {
             payload: serde_bytes::ByteBuf::from(encoded),
             magic: item.magic,
@@ -84,20 +82,13 @@ impl TryFrom<&BuildItem> for RainMetaDocumentV1Item {
     }
 }
 
-impl BuildItem {
-    /// Write a BuildItem to a byte buffer as normalized, encoded cbor rain meta.
-    fn write<W: std::io::Write>(&self, writer: &mut W) -> anyhow::Result<()> {
-        Ok(ciborium::into_writer(&RainMetaDocumentV1Item::try_from(self)?, writer)?)
-    }
-}
-
 /// Build a rain meta document from a sequence of BuildItems.
-fn build_bytes(magic: KnownMagic, items: Vec<BuildItem>) -> anyhow::Result<Vec<u8>> {
-    let mut bytes: Vec<u8> = magic.to_prefix_bytes().to_vec();
+pub fn build_bytes(magic: KnownMagic, items: Vec<BuildItem>) -> anyhow::Result<Vec<u8>> {
+    let mut metas: Vec<RainMetaDocumentV1Item> = vec![];
     for item in items {
-        item.write(&mut bytes)?;
+        metas.push(RainMetaDocumentV1Item::try_from(&item)?);
     }
-    Ok(bytes)
+    RainMetaDocumentV1Item::cbor_encode_seq(&metas, magic)
 }
 
 /// Build a rain meta document from command line options.
@@ -138,7 +129,7 @@ pub fn build(b: Build) -> anyhow::Result<()> {
         ));
     }
     let mut items: Vec<BuildItem> = vec![];
-    for(input_path, magic, content_type, content_encoding, content_language) in izip!(
+    for (input_path, magic, content_type, content_encoding, content_language) in izip!(
         b.input_path.iter(),
         b.magic.iter(),
         b.content_type.iter(),
@@ -153,13 +144,20 @@ pub fn build(b: Build) -> anyhow::Result<()> {
             content_language: *content_language,
         });
     }
-    crate::cli::output::output(&b.output_path, b.output_encoding, &build_bytes(b.global_magic, items)?)
+    crate::cli::output::output(
+        &b.output_path,
+        b.output_encoding,
+        &build_bytes(b.global_magic, items)?,
+    )
 }
 
 #[cfg(test)]
 mod tests {
     use strum::IntoEnumIterator;
-    use crate::meta::{magic::{self, KnownMagic}, ContentType, ContentEncoding, ContentLanguage, RainMetaDocumentV1Item};
+    use crate::meta::{
+        magic::{self, KnownMagic},
+        ContentType, ContentEncoding, ContentLanguage, RainMetaDocumentV1Item,
+    };
     use super::BuildItem;
     use super::build_bytes;
 
@@ -215,7 +213,10 @@ mod tests {
 
         // https://github.com/rainprotocol/specs/blob/main/metadata-v1.md#example
         // 8 byte magic number prefix
-        assert_eq!(&bytes[0..8], KnownMagic::RainMetaDocumentV1.to_prefix_bytes());
+        assert_eq!(
+            &bytes[0..8],
+            KnownMagic::RainMetaDocumentV1.to_prefix_bytes()
+        );
         // cbor map with 5 keys
         assert_eq!(bytes[8], 0xa5);
         // key 0
@@ -258,7 +259,7 @@ mod tests {
     fn test_cbor_encoding_type() -> anyhow::Result<()> {
         let build_item = BuildItem {
             data: "[]".as_bytes().to_vec(),
-            magic: KnownMagic::AuthoringMetaV1,
+            magic: KnownMagic::DotrainV1,
             content_type: ContentType::Cbor,
             content_encoding: ContentEncoding::Identity,
             content_language: ContentLanguage::En,
@@ -268,7 +269,10 @@ mod tests {
 
         // https://github.com/rainprotocol/specs/blob/main/metadata-v1.md#example
         // 8 byte magic number prefix
-        assert_eq!(&bytes[0..8], KnownMagic::RainMetaDocumentV1.to_prefix_bytes());
+        assert_eq!(
+            &bytes[0..8],
+            KnownMagic::RainMetaDocumentV1.to_prefix_bytes()
+        );
         // cbor map with 5 keys
         assert_eq!(bytes[8], 0xa5);
         // key 0
@@ -282,7 +286,7 @@ mod tests {
         // major type 0 (unsigned integer) value 27
         assert_eq!(bytes[14], 0b000_11011);
         // magic number
-        assert_eq!(&bytes[15..23], KnownMagic::AuthoringMetaV1.to_prefix_bytes());
+        assert_eq!(&bytes[15..23], KnownMagic::DotrainV1.to_prefix_bytes());
         // key 2
         assert_eq!(bytes[23], 0x02);
         // text string application/cbor length 16

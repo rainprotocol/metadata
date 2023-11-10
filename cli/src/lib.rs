@@ -1,3 +1,6 @@
-pub mod cli;
 pub mod meta;
 pub mod solc;
+pub mod subgraph;
+
+// re-export main types and functionalities
+pub use meta::*;
