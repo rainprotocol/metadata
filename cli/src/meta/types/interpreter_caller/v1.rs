@@ -2,7 +2,7 @@ use validator::Validate;
 use schemars::JsonSchema;
 use serde::{Serialize, Deserialize};
 use super::super::{
-    super::MetaMap,
+    super::RainMetaDocumentItem,
     common::v1::{RainTitle, RainSymbol, RainString, Description, SolidityIdentifier},
 };
 
@@ -55,9 +55,9 @@ impl TryFrom<Vec<u8>> for InterpreterCallerMeta {
     }
 }
 
-impl TryFrom<MetaMap> for InterpreterCallerMeta {
+impl TryFrom<RainMetaDocumentItem> for InterpreterCallerMeta {
     type Error = anyhow::Error;
-    fn try_from(value: MetaMap) -> Result<Self, Self::Error> {
+    fn try_from(value: RainMetaDocumentItem) -> Result<Self, Self::Error> {
         Self::try_from(value.unpack()?)
     }
 }

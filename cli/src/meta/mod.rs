@@ -128,10 +128,10 @@ pub enum ContentLanguage {
     En,
 }
 
-/// # Rain Meta Map
+/// # Rain Meta Document Item (meta map)
 /// represents a rain meta data and configuration that can be cbor encoded or unpacked back to the meta types
 #[derive(PartialEq, Debug, Clone)]
-pub struct MetaMap {
+pub struct RainMetaDocumentItem {
     pub payload: serde_bytes::ByteBuf,
     pub magic: KnownMagic,
     pub content_type: ContentType,
@@ -140,22 +140,22 @@ pub struct MetaMap {
 }
 
 // this implementation is mainly used by Rainlang and Dotrain metas as they are aliased type for String
-impl TryFrom<MetaMap> for String {
+impl TryFrom<RainMetaDocumentItem> for String {
     type Error = anyhow::Error;
-    fn try_from(value: MetaMap) -> Result<Self, Self::Error> {
+    fn try_from(value: RainMetaDocumentItem) -> Result<Self, Self::Error> {
         String::from_utf8(value.unpack()?).map_err(anyhow::Error::from)
     }
 }
 
 // this implementation is mainly used by ExpressionDeployerV2Bytecode meta as it is aliased type for Vec<u8>
-impl TryFrom<MetaMap> for Vec<u8> {
+impl TryFrom<RainMetaDocumentItem> for Vec<u8> {
     type Error = anyhow::Error;
-    fn try_from(value: MetaMap) -> Result<Self, Self::Error> {
+    fn try_from(value: RainMetaDocumentItem) -> Result<Self, Self::Error> {
         value.unpack()
     }
 }
 
-impl MetaMap {
+impl RainMetaDocumentItem {
     fn len(&self) -> usize {
         let mut l = 2;
         if !matches!(self.content_type, ContentType::None) {
@@ -193,7 +193,10 @@ impl MetaMap {
     }
 
     /// builds a cbor sequence from given MetaMaps
-    pub fn cbor_encode_seq(seq: &Vec<MetaMap>, magic: KnownMagic) -> anyhow::Result<Vec<u8>> {
+    pub fn cbor_encode_seq(
+        seq: &Vec<RainMetaDocumentItem>,
+        magic: KnownMagic,
+    ) -> anyhow::Result<Vec<u8>> {
         let mut bytes: Vec<u8> = magic.to_prefix_bytes().to_vec();
         for item in seq {
             serde_cbor::to_writer(&mut bytes, &item)?;
@@ -202,9 +205,9 @@ impl MetaMap {
     }
 
     /// method to cbor decode from given bytes
-    pub fn cbor_decode(data: &Vec<u8>) -> anyhow::Result<Vec<MetaMap>> {
+    pub fn cbor_decode(data: &Vec<u8>) -> anyhow::Result<Vec<RainMetaDocumentItem>> {
         let mut track: Vec<usize> = vec![];
-        let mut metas: Vec<MetaMap> = vec![];
+        let mut metas: Vec<RainMetaDocumentItem> = vec![];
         let mut is_rain_document_meta = false;
         let mut len = data.len();
         if data.starts_with(&KnownMagic::RainMetaDocumentV1.to_prefix_bytes()) {
@@ -270,7 +273,7 @@ impl MetaMap {
     }
 }
 
-impl Serialize for MetaMap {
+impl Serialize for RainMetaDocumentItem {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let mut map = serializer.serialize_map(Some(self.len()))?;
         map.serialize_entry(&0, &self.payload)?;
@@ -291,11 +294,11 @@ impl Serialize for MetaMap {
     }
 }
 
-impl<'de> Deserialize<'de> for MetaMap {
+impl<'de> Deserialize<'de> for RainMetaDocumentItem {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         struct EncodedMap;
         impl<'de> Visitor<'de> for EncodedMap {
-            type Value = MetaMap;
+            type Value = RainMetaDocumentItem;
 
             fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
                 formatter.write_str("rain meta cbor encoded bytes")
@@ -339,7 +342,7 @@ impl<'de> Deserialize<'de> for MetaMap {
                 let content_encoding = content_encoding.or(Some(ContentEncoding::None)).unwrap();
                 let content_language = content_language.or(Some(ContentLanguage::None)).unwrap();
 
-                Ok(MetaMap {
+                Ok(RainMetaDocumentItem {
                     payload,
                     magic,
                     content_type,
@@ -725,7 +728,7 @@ impl Store {
         uri: &String,
         keep_old: bool,
     ) -> anyhow::Result<(String, String)> {
-        let bytes = MetaMap {
+        let bytes = RainMetaDocumentItem {
             payload: serde_bytes::ByteBuf::from(text.as_bytes()),
             magic: KnownMagic::DotrainV1,
             content_type: ContentType::OctetStream,
@@ -759,7 +762,7 @@ impl Store {
     /// returns the reference to the authoring bytes if the meta bytes contained any
     fn store_content(&mut self, bytes: &Vec<u8>) -> Option<&Vec<u8>> {
         let mut h = String::new();
-        if let Ok(meta_maps) = MetaMap::cbor_decode(bytes) {
+        if let Ok(meta_maps) = RainMetaDocumentItem::cbor_decode(bytes) {
             if bytes.starts_with(&KnownMagic::RainMetaDocumentV1.to_prefix_bytes()) {
                 for meta_map in &meta_maps {
                     if let Ok(encoded_bytes) = meta_map.cbor_encode() {
@@ -812,7 +815,7 @@ mod tests {
     use super::{
         str_to_bytes32, bytes32_to_str,
         magic::KnownMagic,
-        MetaMap, ContentType, ContentEncoding, ContentLanguage,
+        RainMetaDocumentItem, ContentType, ContentEncoding, ContentLanguage,
         types::{dotrain::v1::DotrainMeta, authoring::v1::AuthoringMeta},
     };
 
@@ -852,7 +855,7 @@ mod tests {
         // check the encoded bytes agaiinst the expected
         assert_eq!(authoring_meta_abi_encoded, expected_abi_encoded);
 
-        let meta_map = MetaMap {
+        let meta_map = RainMetaDocumentItem {
             payload: serde_bytes::ByteBuf::from(authoring_meta_abi_encoded.clone()),
             magic: KnownMagic::AuthoringMetaV1,
             content_type: ContentType::Cbor,
@@ -888,7 +891,7 @@ mod tests {
         assert_eq!(&cbor_encoded[529..], "application/cbor".as_bytes());
 
         // decode the data back to MetaMap
-        let cbor_decoded = MetaMap::cbor_decode(&cbor_encoded)?;
+        let cbor_decoded = RainMetaDocumentItem::cbor_decode(&cbor_encoded)?;
         // the length of decoded maps must be 1 as we only had 1 encoded item
         assert_eq!(cbor_decoded.len(), 1);
         // decoded item must be equal to the original meta_map
@@ -912,7 +915,7 @@ mod tests {
         let content_encoding = ContentEncoding::Deflate;
         let deflated_payload = content_encoding.encode(&dotrain_content_bytes)?;
 
-        let meta_map = MetaMap {
+        let meta_map = RainMetaDocumentItem {
             payload: serde_bytes::ByteBuf::from(deflated_payload.clone()),
             magic: KnownMagic::DotrainV1,
             content_type: ContentType::OctetStream,
@@ -961,7 +964,7 @@ mod tests {
         assert_eq!(&cbor_encoded[88..], "en".as_bytes());
 
         // decode the data back to MetaMap
-        let cbor_decoded = MetaMap::cbor_decode(&cbor_encoded)?;
+        let cbor_decoded = RainMetaDocumentItem::cbor_decode(&cbor_encoded)?;
         // the length of decoded maps must be 1 as we only had 1 encoded item
         assert_eq!(cbor_decoded.len(), 1);
         // decoded item must be equal to the original meta_map
@@ -993,7 +996,7 @@ mod tests {
         ]"#;
         let authoring_meta: AuthoringMeta = serde_json::from_str(authoring_meta_content)?;
         let authoring_meta_abi_encoded = authoring_meta.abi_encode_validate()?;
-        let meta_map_1 = MetaMap {
+        let meta_map_1 = RainMetaDocumentItem {
             payload: serde_bytes::ByteBuf::from(authoring_meta_abi_encoded.clone()),
             magic: KnownMagic::AuthoringMetaV1,
             content_type: ContentType::Cbor,
@@ -1005,7 +1008,7 @@ mod tests {
         let dotrain_content_bytes = dotrain_content.as_bytes().to_vec();
         let content_encoding = ContentEncoding::Deflate;
         let deflated_payload = content_encoding.encode(&dotrain_content_bytes)?;
-        let meta_map_2 = MetaMap {
+        let meta_map_2 = RainMetaDocumentItem {
             payload: serde_bytes::ByteBuf::from(deflated_payload.clone()),
             magic: KnownMagic::DotrainV1,
             content_type: ContentType::OctetStream,
@@ -1014,7 +1017,7 @@ mod tests {
         };
 
         // cbor encode as RainMetaDocument sequence
-        let cbor_encoded = MetaMap::cbor_encode_seq(
+        let cbor_encoded = RainMetaDocumentItem::cbor_encode_seq(
             &vec![meta_map_1.clone(), meta_map_2.clone()],
             KnownMagic::RainMetaDocumentV1,
         )?;
@@ -1096,7 +1099,7 @@ mod tests {
         assert_eq!(&cbor_encoded[641..], "en".as_bytes());
 
         // decode the data back to MetaMap
-        let cbor_decoded = MetaMap::cbor_decode(&cbor_encoded)?;
+        let cbor_decoded = RainMetaDocumentItem::cbor_decode(&cbor_encoded)?;
         // the length of decoded maps must be 2 as we had 2 encoded item
         assert_eq!(cbor_decoded.len(), 2);
 

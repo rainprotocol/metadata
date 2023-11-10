@@ -3,7 +3,7 @@ use alloy_sol_types::{SolType, sol};
 use serde::{Serialize, Deserialize};
 use validator::{Validate, ValidationErrors, ValidationError};
 use super::super::{
-    super::{MetaMap, str_to_bytes32, bytes32_to_str},
+    super::{RainMetaDocumentItem, str_to_bytes32, bytes32_to_str},
     common::v1::{REGEX_RAIN_SYMBOL, REGEX_RAIN_STRING},
 };
 
@@ -161,9 +161,9 @@ impl TryFrom<Vec<u8>> for AuthoringMeta {
     }
 }
 
-impl TryFrom<MetaMap> for AuthoringMeta {
+impl TryFrom<RainMetaDocumentItem> for AuthoringMeta {
     type Error = anyhow::Error;
-    fn try_from(value: MetaMap) -> Result<Self, Self::Error> {
+    fn try_from(value: RainMetaDocumentItem) -> Result<Self, Self::Error> {
         AuthoringMeta::try_from(value.unpack()?)
     }
 }
