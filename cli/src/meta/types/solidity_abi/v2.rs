@@ -523,17 +523,23 @@ mod tests {
     use alloy_json_abi::JsonAbi;
     use super::SolidityAbiMeta;
 
+    #[test]
+    fn test_all() -> anyhow::Result<()> {
+        let artifact_paths = build_artifacts()?;
+        test_json_roundtrip(artifact_paths.clone())?;
+        test_abi_conversion(artifact_paths.clone())?;
+        test_no_abi_artifact_parse()?;
+        Ok(())
+    }
+
     // building the artifacts
     fn build_artifacts() -> anyhow::Result<Vec<PathBuf>> {
-        println!("{:?}", std::env::current_dir());
-        let y = std::process::Command::new("forge")
+        std::process::Command::new("forge")
             .arg("build")
             .current_dir("../")
             .output()
             .map_err(anyhow::Error::from)?;
-        println!("{:?}", y);
-        let x = std::process::Command::new("ls").arg("-l").current_dir("./").output();
-        println!("{:?}", x);
+
         let out_path = "../out";
         let mut files_to_read = vec![];
         for file in std::fs::read_dir(out_path)? {
@@ -553,9 +559,7 @@ mod tests {
     }
 
     // test json roundtrip for SolidityAbiMeta and alloy JsonAbi
-    #[test]
-    fn test_json_roundtrip() -> anyhow::Result<()> {
-        let files_to_read = build_artifacts()?;
+    fn test_json_roundtrip(files_to_read: Vec<PathBuf>) -> anyhow::Result<()> {
         for path in files_to_read {
             let original_json_value: serde_json::Value =
                 serde_json::from_slice(std::fs::read(path)?.as_slice())?;
@@ -582,9 +586,7 @@ mod tests {
     }
 
     // test conversion between SolidityAbiMeta and alloy JsonAbi
-    #[test]
-    fn test_abi_conversion() -> anyhow::Result<()> {
-        let files_to_read = build_artifacts()?;
+    fn test_abi_conversion(files_to_read: Vec<PathBuf>) -> anyhow::Result<()> {
         for path in files_to_read {
             let original_json_value: serde_json::Value =
                 serde_json::from_slice(std::fs::read(path)?.as_slice())?;
@@ -611,9 +613,7 @@ mod tests {
     }
 
     // test reading a json artifact with no abi present
-    #[test]
     fn test_no_abi_artifact_parse() -> anyhow::Result<()> {
-        build_artifacts()?;
         let json = "../out/MetaBoard.sol/MetaBoard.json";
         let data = std::fs::read(json)?;
         let mut v = serde_json::from_slice::<serde_json::Value>(&data)?;
