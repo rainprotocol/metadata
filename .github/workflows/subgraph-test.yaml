@@ -7,30 +7,27 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: ./subgraph
-
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
-      - uses: cachix/install-nix-action@v13
-        with:
-          nix_path: nixpkgs=channel:nixos-unstable
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v4
 
-      - name: install npm dependencies
-        run: |
-          nix-shell --run init
-          
-      - name: Build Docker Compose images
-        run: |
-          nix-shell --run docker-down
-          nix-shell --run docker-up
-      
+      - uses: DeterminateSystems/magic-nix-cache-action@v2
+
+      - name: Initialize subgraph dependencies
+        working-directory: ./subgraph
+        run: nix run .#init
+
+      - name: Start docker container
+        working-directory: ./subgraph
+        run: nix run .#docker-up
 
       - name: Run Subgraph tests
-        run: nix-shell --run ci-test
+        working-directory: ./subgraph
+        run: nix run .#ci-test
 
       - name: Stop containers
-        run: nix-shell --run docker-down
+        working-directory: ./subgraph
+        run: nix run .#docker-down
