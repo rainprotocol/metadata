@@ -6,7 +6,7 @@ jobs:
     strategy:
       matrix:
         contract: [
-          "src/MetaBoard.sol:MetaBoard"
+          "src/concrete/MetaBoard.sol:MetaBoard"
         ]
     runs-on: ubuntu-latest
     steps:
