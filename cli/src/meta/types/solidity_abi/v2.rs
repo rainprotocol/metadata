@@ -527,13 +527,13 @@ mod tests {
     fn build_artifacts() -> anyhow::Result<Vec<PathBuf>> {
         let y = std::process::Command::new("forge")
             .arg("build")
-            .current_dir("../")
+            .current_dir("./")
             .output()
             .map_err(anyhow::Error::from)?;
         println!("{:?}", y);
         let x = std::process::Command::new("ls").arg("-l").current_dir("../").output();
         println!("{:?}", x);
-        let out_path = "../out";
+        let out_path = "./out";
         let mut files_to_read = vec![];
         for file in std::fs::read_dir(out_path)? {
             let file = file?;
