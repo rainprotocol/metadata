@@ -19,7 +19,7 @@
             npm install
             mkdir -p contracts && cp -r ../src/* contracts
 
-            ${compile}
+            hardhat compile --force
 
             rm -rf ./abis && mkdir ./abis
             cp artifacts/contracts/concrete/MetaBoard.sol/MetaBoard.json abis
