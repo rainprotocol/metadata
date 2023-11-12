@@ -11,7 +11,6 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
-        # jq = "${pkgs.jq}/bin/jq";
 
       in rec {
         packages = rec {
@@ -19,7 +18,7 @@
             npm install
             mkdir -p contracts && cp -r ../src/* contracts
 
-            hardhat compile --force
+            npx hardhat compile --force
 
             rm -rf ./abis && mkdir ./abis
             cp artifacts/contracts/concrete/MetaBoard.sol/MetaBoard.json abis
@@ -35,13 +34,13 @@
             hardhat compile --force
           '');
 
-          docker-up = pkgs.writeShellScriptBin "docker-up" ''
+          docker-up = pkgs.writeShellScriptBin "docker-up" (''
             docker-compose -f docker/docker-compose.yml up --build -d
-          '';
+          '');
 
-          docker-down = pkgs.writeShellScriptBin "docker-down" ''
+          docker-down = pkgs.writeShellScriptBin "docker-down" (''
             docker-compose -f docker/docker-compose.yml down
-          '';
+          '');
 
           default = init;
         };
