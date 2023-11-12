@@ -17,7 +17,7 @@
         packages = rec {
           init =  pkgs.writeShellScriptBin "init" (''
             npm install
-            mkdir -p contracts && cp ../src/* contracts
+            mkdir -p contracts && cp -r ../src/* contracts
 
             ${compile}
 
