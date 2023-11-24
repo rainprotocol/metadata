@@ -91,17 +91,17 @@ pub enum ContentEncoding {
 
 impl ContentEncoding {
     /// encode the data based on the variant
-    pub fn encode(&self, data: &Vec<u8>) -> anyhow::Result<Vec<u8>> {
+    pub fn encode(&self, data: &[u8]) -> anyhow::Result<Vec<u8>> {
         Ok(match self {
-            ContentEncoding::None | ContentEncoding::Identity => data.clone(),
+            ContentEncoding::None | ContentEncoding::Identity => data.to_vec(),
             ContentEncoding::Deflate => deflate::deflate_bytes_zlib(data),
         })
     }
 
     /// decode the data based on the variant
-    pub fn decode(&self, data: &Vec<u8>) -> anyhow::Result<Vec<u8>> {
+    pub fn decode(&self, data: &[u8]) -> anyhow::Result<Vec<u8>> {
         Ok(match self {
-            ContentEncoding::None | ContentEncoding::Identity => data.clone(),
+            ContentEncoding::None | ContentEncoding::Identity => data.to_vec(),
             ContentEncoding::Deflate => match inflate::inflate_bytes_zlib(data) {
                 Ok(v) => v,
                 Err(error) => Err(anyhow::anyhow!(error))?,
@@ -205,7 +205,7 @@ impl RainMetaDocumentV1Item {
     }
 
     /// method to cbor decode from given bytes
-    pub fn cbor_decode(data: &Vec<u8>) -> anyhow::Result<Vec<RainMetaDocumentV1Item>> {
+    pub fn cbor_decode(data: &[u8]) -> anyhow::Result<Vec<RainMetaDocumentV1Item>> {
         let mut track: Vec<usize> = vec![];
         let mut metas: Vec<RainMetaDocumentV1Item> = vec![];
         let mut is_rain_document_meta = false;
@@ -687,29 +687,35 @@ impl Store {
     /// updates the meta cache by searching through all subgraphs for the given hash
     /// returns the reference to the authoring bytes if the updated meta bytes contained any
     pub async fn update(&mut self, hash: &String) -> Option<&Vec<u8>> {
-        let mut am_bytes: Option<&Vec<u8>> = None;
+        // let mut am_bytes: Option<&Vec<u8>> = None;
         if types::common::v1::HASH_PATTERN.is_match(hash) {
             let _h = hash.to_ascii_lowercase();
             if !self.cache.contains_key(&_h) {
                 if let Ok(meta) = search(hash, &self.subgraphs, 6u32).await {
-                    self.cache.insert(_h, meta.bytes.clone());
-                    am_bytes = self.store_content(&meta.bytes);
-                };
+                    self.store_content(&meta.bytes);
+                    self.cache.insert(_h.clone(), meta.bytes);
+                    return self.cache.get(&_h);
+                } else {
+                    return None;
+                }
+            } else {
+                return self.cache.get(&_h);
             }
+        } else {
+            return None;
         }
-        am_bytes
     }
 
     /// updates the meta cache by the given hash and meta bytes, checks the hash to bytes validity
     /// returns the reference to the authoring bytes if the updated meta bytes contained any
-    pub fn update_with(&mut self, hash: &String, bytes: &Vec<u8>) -> Option<&Vec<u8>> {
+    pub fn update_with(&mut self, hash: &String, bytes: &[u8]) -> Option<&Vec<u8>> {
         let mut am_bytes: Option<&Vec<u8>> = None;
         if types::common::v1::HASH_PATTERN.is_match(hash) {
             let _h = hash.to_ascii_lowercase();
             if !self.cache.contains_key(&_h) {
                 if let Ok(hash_bytes) = hex::decode(&_h) {
                     if keccak256(bytes) == hash_bytes.as_slice() {
-                        self.cache.insert(_h, bytes.clone());
+                        self.cache.insert(_h, bytes.to_vec());
                         am_bytes = self.store_content(bytes);
                     }
                 }
@@ -760,7 +766,7 @@ impl Store {
     /// decodes each meta and stores the inner meta items into the cache
     /// if any of the inner items is an authoring meta, stores it in authoring meta cache as well
     /// returns the reference to the authoring bytes if the meta bytes contained any
-    fn store_content(&mut self, bytes: &Vec<u8>) -> Option<&Vec<u8>> {
+    fn store_content(&mut self, bytes: &[u8]) -> Option<&Vec<u8>> {
         let mut h = String::new();
         if let Ok(meta_maps) = RainMetaDocumentV1Item::cbor_decode(bytes) {
             if bytes.starts_with(&KnownMagic::RainMetaDocumentV1.to_prefix_bytes()) {
@@ -770,7 +776,7 @@ impl Store {
                         h = hash.clone();
                         self.update_with(&hash, &encoded_bytes);
                         if meta_map.magic == KnownMagic::AuthoringMetaV1 {
-                            self.authoring_cache.insert(hash.clone(), encoded_bytes);
+                            self.authoring_cache.insert(hash, encoded_bytes);
                         }
                     }
                 }
@@ -778,7 +784,7 @@ impl Store {
                 if meta_maps.len() == 1 && meta_maps[0].magic == KnownMagic::AuthoringMetaV1 {
                     let hash = "0x".to_owned() + &hex::encode(keccak256(bytes));
                     h = hash.clone();
-                    self.authoring_cache.insert(hash.clone(), bytes.clone());
+                    self.authoring_cache.insert(hash, bytes.to_vec());
                 }
             }
         }

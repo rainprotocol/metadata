@@ -56,7 +56,7 @@ impl AuthoringMetaItem {
         self.abi_encode()
     }
 
-    pub fn abi_decode(data: &Vec<u8>) -> anyhow::Result<AuthoringMetaItem> {
+    pub fn abi_decode(data: &[u8]) -> anyhow::Result<AuthoringMetaItem> {
         let result = AuthoringMetaStruct::abi_decode(data, false)?;
         Ok(AuthoringMetaItem {
             word: bytes32_to_str(&result.0)?.to_string(),
@@ -66,7 +66,7 @@ impl AuthoringMetaItem {
     }
 
     // abi decodes and validates
-    pub fn abi_decode_validate(data: &Vec<u8>) -> anyhow::Result<AuthoringMetaItem> {
+    pub fn abi_decode_validate(data: &[u8]) -> anyhow::Result<AuthoringMetaItem> {
         let result = AuthoringMetaStruct::abi_decode(data, true)?;
         let am = AuthoringMetaItem {
             word: bytes32_to_str(&result.0)?.to_string(),
@@ -99,7 +99,7 @@ impl AuthoringMeta {
     }
 
     /// abi decodes some data into array of AuthoringMeta
-    pub fn abi_decode(data: &Vec<u8>) -> anyhow::Result<AuthoringMeta> {
+    pub fn abi_decode(data: &[u8]) -> anyhow::Result<AuthoringMeta> {
         let result = AuthoringMetaStructArray::abi_decode(data, false)?;
         let mut am = vec![];
         for item in result {
@@ -113,7 +113,7 @@ impl AuthoringMeta {
     }
 
     /// abi decodes some data into array of AuthoringMeta and validates each decoded item
-    pub fn abi_decode_validate(data: &Vec<u8>) -> anyhow::Result<AuthoringMeta> {
+    pub fn abi_decode_validate(data: &[u8]) -> anyhow::Result<AuthoringMeta> {
         let result = AuthoringMetaStructArray::abi_decode(data, true)?;
         let mut ams = vec![];
         for item in result {
@@ -147,7 +147,7 @@ impl Validate for AuthoringMeta {
 impl TryFrom<Vec<u8>> for AuthoringMeta {
     type Error = anyhow::Error;
     fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
-        match AuthoringMeta::abi_decode(&value.to_vec()) {
+        match AuthoringMeta::abi_decode(&value) {
             Ok(am) => Ok(am),
             Err(_e) => serde_json::from_str::<AuthoringMeta>(std::str::from_utf8(&value).or(
                 Err(anyhow::anyhow!(

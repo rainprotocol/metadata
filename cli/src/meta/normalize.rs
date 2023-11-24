@@ -26,7 +26,7 @@ impl KnownMeta {
                 // for AuthoringMeta since it can be a json or abi encoded bytes, we try to abi
                 // decode first and then json deserialize if that fails, if either succeeds
                 // then the result of that will be abi encoded with validation
-                match AuthoringMeta::abi_decode(&data.to_vec()) {
+                match AuthoringMeta::abi_decode(data) {
                     Ok(am) => am.abi_encode_validate()?,
                     _ => AuthoringMeta::abi_encode_validate(
                         &serde_json::from_str::<AuthoringMeta>(
