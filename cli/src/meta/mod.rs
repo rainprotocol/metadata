@@ -256,7 +256,7 @@ impl RainMetaDocumentV1Item {
     }
 
     // unpacks the payload to given meta type based on configuration
-    pub fn unpack_into<T: TryFrom<Self, Error = anyhow::Error>>(&self) -> anyhow::Result<T> {
+    pub fn unpack_into<T: TryFrom<Self, Error = anyhow::Error>>(self) -> anyhow::Result<T> {
         // let data = self.unpack()?;
         match self.magic {
             KnownMagic::OpMetaV1
@@ -266,7 +266,7 @@ impl RainMetaDocumentV1Item {
             | KnownMagic::AuthoringMetaV1
             | KnownMagic::InterpreterCallerMetaV1
             | KnownMagic::ExpressionDeployerV2BytecodeV1 => {
-                T::try_from(self.clone()).map_err(anyhow::Error::from)
+                T::try_from(self).map_err(anyhow::Error::from)
             }
             _ => Err(anyhow::anyhow!("unsupproted magic number")),
         }
@@ -897,14 +897,14 @@ mod tests {
         assert_eq!(&cbor_encoded[529..], "application/cbor".as_bytes());
 
         // decode the data back to MetaMap
-        let cbor_decoded = RainMetaDocumentV1Item::cbor_decode(&cbor_encoded)?;
+        let mut cbor_decoded = RainMetaDocumentV1Item::cbor_decode(&cbor_encoded)?;
         // the length of decoded maps must be 1 as we only had 1 encoded item
         assert_eq!(cbor_decoded.len(), 1);
         // decoded item must be equal to the original meta_map
         assert_eq!(cbor_decoded[0], meta_map);
 
         // unpack the payload into AuthoringMeta
-        let unpacked_payload: AuthoringMeta = cbor_decoded[0].unpack_into()?;
+        let unpacked_payload: AuthoringMeta = cbor_decoded.pop().unwrap().unpack_into()?;
         // must be equal to original meta
         assert_eq!(unpacked_payload, authoring_meta);
 
@@ -970,14 +970,14 @@ mod tests {
         assert_eq!(&cbor_encoded[88..], "en".as_bytes());
 
         // decode the data back to MetaMap
-        let cbor_decoded = RainMetaDocumentV1Item::cbor_decode(&cbor_encoded)?;
+        let mut cbor_decoded = RainMetaDocumentV1Item::cbor_decode(&cbor_encoded)?;
         // the length of decoded maps must be 1 as we only had 1 encoded item
         assert_eq!(cbor_decoded.len(), 1);
         // decoded item must be equal to the original meta_map
         assert_eq!(cbor_decoded[0], meta_map);
 
         // unpack the payload into DotrainMeta, should handle inflation of the payload internally
-        let unpacked_payload: DotrainMeta = cbor_decoded[0].unpack_into()?;
+        let unpacked_payload: DotrainMeta = cbor_decoded.pop().unwrap().unpack_into()?;
         // must be equal to the original dotrain content
         assert_eq!(unpacked_payload, dotrain_content);
 
@@ -1105,7 +1105,7 @@ mod tests {
         assert_eq!(&cbor_encoded[641..], "en".as_bytes());
 
         // decode the data back to MetaMap
-        let cbor_decoded = RainMetaDocumentV1Item::cbor_decode(&cbor_encoded)?;
+        let mut cbor_decoded = RainMetaDocumentV1Item::cbor_decode(&cbor_encoded)?;
         // the length of decoded maps must be 2 as we had 2 encoded item
         assert_eq!(cbor_decoded.len(), 2);
 
@@ -1114,15 +1114,15 @@ mod tests {
         // decoded item 2 must be equal to the original meta_map_2
         assert_eq!(cbor_decoded[1], meta_map_2);
 
-        // unpack the payload of first decoded map into AuthoringMeta
-        let unpacked_payload_1: AuthoringMeta = cbor_decoded[0].unpack_into()?;
-        // must be equal to original meta
-        assert_eq!(unpacked_payload_1, authoring_meta);
-
         // unpack the payload of the second decoded map into DotrainMeta, should handle inflation of the payload internally
-        let unpacked_payload_2: DotrainMeta = cbor_decoded[1].unpack_into()?;
-        // must be equal to the original dotrain content
+        let unpacked_payload_2: DotrainMeta = cbor_decoded.pop().unwrap().unpack_into()?;
+        // must be equal to original meta
         assert_eq!(unpacked_payload_2, dotrain_content);
+
+        // unpack the payload of first decoded map into AuthoringMeta
+        let unpacked_payload_1: AuthoringMeta = cbor_decoded.pop().unwrap().unpack_into()?;
+        // must be equal to the original dotrain content
+        assert_eq!(unpacked_payload_1, authoring_meta);
 
         Ok(())
     }
