@@ -49,6 +49,19 @@ impl TryFrom<Vec<u8>> for SolidityAbiMeta {
     }
 }
 
+impl TryFrom<&[u8]> for SolidityAbiMeta {
+    type Error = anyhow::Error;
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+        match serde_json::from_slice::<Self>(value).map_err(anyhow::Error::from) {
+            Ok(t) => match t.validate().map_err(anyhow::Error::from) {
+                Ok(()) => Ok(t),
+                Err(e) => Err(e),
+            },
+            Err(e) => Err(e),
+        }
+    }
+}
+
 impl TryFrom<RainMetaDocumentV1Item> for SolidityAbiMeta {
     type Error = anyhow::Error;
     fn try_from(value: RainMetaDocumentV1Item) -> Result<Self, Self::Error> {
