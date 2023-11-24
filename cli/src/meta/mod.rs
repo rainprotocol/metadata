@@ -557,10 +557,8 @@ impl Store {
             if types::common::v1::HASH_PATTERN.is_match(hash) {
                 let _h = hash.to_ascii_lowercase();
                 if !store.authoring_cache.contains_key(&_h) {
-                    if let Ok(hash_bytes) = hex::decode(&_h) {
-                        if keccak256(bytes) == hash_bytes.as_slice() {
-                            store.authoring_cache.insert(_h, bytes.clone());
-                        }
+                    if hex::encode_prefixed(keccak256(bytes)) == _h {
+                        store.authoring_cache.insert(_h, bytes.clone());
                     }
                 }
             }
@@ -709,19 +707,23 @@ impl Store {
     /// updates the meta cache by the given hash and meta bytes, checks the hash to bytes validity
     /// returns the reference to the authoring bytes if the updated meta bytes contained any
     pub fn update_with(&mut self, hash: &String, bytes: &[u8]) -> Option<&Vec<u8>> {
-        let mut am_bytes: Option<&Vec<u8>> = None;
+        // let mut am_bytes: Option<&Vec<u8>> = None;
         if types::common::v1::HASH_PATTERN.is_match(hash) {
             let _h = hash.to_ascii_lowercase();
             if !self.cache.contains_key(&_h) {
-                if let Ok(hash_bytes) = hex::decode(&_h) {
-                    if keccak256(bytes) == hash_bytes.as_slice() {
-                        self.cache.insert(_h, bytes.to_vec());
-                        am_bytes = self.store_content(bytes);
-                    }
+                if hex::encode_prefixed(keccak256(bytes)) == _h {
+                    self.store_content(bytes);
+                    self.cache.insert(_h.clone(), bytes.to_vec());
+                    return self.cache.get(&_h);
+                } else {
+                    return None
                 }
+            } else {
+                return self.cache.get(&_h);
             }
+        } else {
+            return None;
         }
-        am_bytes
     }
 
     /// stores (or updates in case the URI already exists) the given dotrain text as meta into the store cache
