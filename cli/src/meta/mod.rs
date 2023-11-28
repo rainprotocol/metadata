@@ -595,19 +595,24 @@ impl Store {
         self.authoring_cache.get(&hash.to_ascii_lowercase())
     }
 
+    /// searches for authoring meta in the subgraphs given the deployer hash
+    pub async fn search_authoring_meta(&mut self, deployer_hash: &str) -> Option<&Vec<u8>> {
+        match search_deployer(deployer_hash, &self.subgraphs, 6u32).await {
+            Ok(res) => self.update_with(&res.hash, &res.bytes),
+            Err(_e) => None,
+        }
+    }
+
     /// if the authoring meta already is cached it returns it immediately else
     /// searches for authoring meta in the subgraphs given the deployer hash
-    pub async fn search_authoring_meta(&mut self, authoring_meta_hash: &str, deployer_hash: &str) -> Option<&Vec<u8>> {
+    pub async fn search_authoring_meta_check(&mut self, authoring_meta_hash: &str, deployer_hash: &str) -> Option<&Vec<u8>> {
         if self
             .authoring_cache
             .contains_key(&authoring_meta_hash.to_ascii_lowercase())
         {
             self.get_authoring_meta(authoring_meta_hash)
         } else {
-            match search_deployer(deployer_hash, &self.subgraphs, 6u32).await {
-                Ok(res) => self.update_with(&res.hash, &res.bytes),
-                Err(_e) => None,
-            }
+            self.search_authoring_meta(deployer_hash).await
         }
     }
 
@@ -668,29 +673,33 @@ impl Store {
     }
 
     /// updates the meta cache by searching through all subgraphs for the given hash
-    /// returns the reference to the authoring bytes if the updated meta bytes contained any
+    /// returns the reference to the meta bytes in the cache if it was found
     pub async fn update(&mut self, hash: &str) -> Option<&Vec<u8>> {
-        // let mut am_bytes: Option<&Vec<u8>> = None;
+        if let Ok(meta) = search(hash, &self.subgraphs, 6u32).await {
+            self.store_content(&meta.bytes);
+            self.cache.insert(hash.to_ascii_lowercase(), meta.bytes);
+            return self.get_meta(hash);
+        } else {
+            return None;
+        }
+    }
+
+    /// first checks if the meta is stored, if not will perform update()
+    pub async fn update_check(&mut self, hash: &str) -> Option<&Vec<u8>> {
         if types::common::v1::HASH_PATTERN.is_match(hash) {
             let h = hash.to_ascii_lowercase();
             if !self.cache.contains_key(&h) {
-                if let Ok(meta) = search(hash, &self.subgraphs, 6u32).await {
-                    self.store_content(&meta.bytes);
-                    self.cache.insert(h.clone(), meta.bytes);
-                    return self.cache.get(&h);
-                } else {
-                    return None;
-                }
+                self.update(hash).await
             } else {
-                return self.cache.get(&h);
+                return self.get_meta(hash);
             }
         } else {
             return None;
         }
     }
 
-    /// updates the meta cache by the given hash and meta bytes, checks the hash to bytes validity
-    /// returns the reference to the authoring bytes if the updated meta bytes contained any
+    /// updates the meta cache by the given hash and meta bytes, checks the hash to bytes 
+    /// validity returns the reference to the bytes if the updated meta bytes contained any
     pub fn update_with(&mut self, hash: &str, bytes: &[u8]) -> Option<&Vec<u8>> {
         // let mut am_bytes: Option<&Vec<u8>> = None;
         if types::common::v1::HASH_PATTERN.is_match(hash) {
@@ -704,7 +713,7 @@ impl Store {
                     return None
                 }
             } else {
-                return self.cache.get(&h);
+                return self.get_meta(hash);
             }
         } else {
             return None;
