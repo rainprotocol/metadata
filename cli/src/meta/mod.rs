@@ -382,16 +382,9 @@ pub async fn search(
         )));
     }
     let response_value = future::select_ok(promises.drain(..)).await?.0;
-
-    if response_value.starts_with("0x") {
-        Ok(query::MetaResponse {
-            bytes: hex::decode(&response_value[2..])?,
-        })
-    } else {
-        Ok(query::MetaResponse {
-            bytes: hex::decode(&response_value)?,
-        })
-    }
+    Ok(query::MetaResponse {
+        bytes: hex::decode(response_value)?,
+    })
 }
 
 /// # Search Deployer Meta
@@ -421,18 +414,10 @@ pub async fn search_deployer(
         )));
     }
     let response_value = future::select_ok(promises.drain(..)).await?.0;
-
-    if response_value.1.starts_with("0x") {
-        Ok(query::DeployerMetaResponse {
-            hash: response_value.0,
-            bytes: hex::decode(&response_value.1[2..])?,
-        })
-    } else {
-        Ok(query::DeployerMetaResponse {
-            hash: response_value.0,
-            bytes: hex::decode(&response_value.1)?,
-        })
-    }
+    Ok(query::DeployerMetaResponse {
+        hash: response_value.0,
+        bytes: hex::decode(response_value.1)?,
+    })
 }
 
 /// # Meta Store(CAS)
@@ -585,7 +570,7 @@ impl Store {
     pub fn add_subgraphs(&mut self, subgraphs: &Vec<String>) {
         for sg in subgraphs {
             if !self.subgraphs.contains(sg) {
-                self.subgraphs.push(sg.clone());
+                self.subgraphs.push(sg.to_string());
             }
         }
     }
@@ -596,7 +581,7 @@ impl Store {
     }
 
     /// get the corresponding meta bytes of the given hash if it exists
-    pub fn get_meta(&self, hash: &String) -> Option<&Vec<u8>> {
+    pub fn get_meta(&self, hash: &str) -> Option<&Vec<u8>> {
         self.cache.get(&hash.to_ascii_lowercase())
     }
 
@@ -606,20 +591,20 @@ impl Store {
     }
 
     /// get the corresponding authoring meta bytes of the given hash if it exists
-    pub fn get_authoring_meta(&self, hash: &String) -> Option<&Vec<u8>> {
+    pub fn get_authoring_meta(&self, hash: &str) -> Option<&Vec<u8>> {
         self.authoring_cache.get(&hash.to_ascii_lowercase())
     }
 
     /// if the authoring meta already is cached it returns it immediately else
     /// searches for authoring meta in the subgraphs given the deployer hash
-    pub async fn search_authoring_meta(&mut self, hash: &String) -> Option<&Vec<u8>> {
+    pub async fn search_authoring_meta(&mut self, authoring_meta_hash: &str, deployer_hash: &str) -> Option<&Vec<u8>> {
         if self
             .authoring_cache
-            .contains_key(&hash.to_ascii_lowercase())
+            .contains_key(&authoring_meta_hash.to_ascii_lowercase())
         {
-            self.get_authoring_meta(hash)
+            self.get_authoring_meta(authoring_meta_hash)
         } else {
-            match search_deployer(hash, &self.subgraphs, 6u32).await {
+            match search_deployer(deployer_hash, &self.subgraphs, 6u32).await {
                 Ok(res) => self.update_with(&res.hash, &res.bytes),
                 Err(_e) => None,
             }
@@ -632,12 +617,12 @@ impl Store {
     }
 
     /// get the corresponding dotrain hash of the given dotrain uri if it exists
-    pub fn get_dotrain_hash(&self, uri: &String) -> Option<&String> {
+    pub fn get_dotrain_hash(&self, uri: &str) -> Option<&String> {
         self.dotrain_cache.get(uri)
     }
 
     /// get the corresponding uri of the given dotrain hash if it exists
-    pub fn get_dotrain_uri(&self, hash: &String) -> Option<&String> {
+    pub fn get_dotrain_uri(&self, hash: &str) -> Option<&str> {
         for (uri, h) in &self.dotrain_cache {
             if h.eq_ignore_ascii_case(hash) {
                 return Some(uri);
@@ -647,12 +632,12 @@ impl Store {
     }
 
     /// get the corresponding meta bytes of the given dotrain uri if it exists
-    pub fn get_dotrain_meta(&self, uri: &String) -> Option<&Vec<u8>> {
+    pub fn get_dotrain_meta(&self, uri: &str) -> Option<&Vec<u8>> {
         self.get_meta(self.dotrain_cache.get(uri)?)
     }
 
     /// deletes a dotrain record given a uri
-    pub fn delete_dotrain(&mut self, uri: &String, keep_meta: bool) {
+    pub fn delete_dotrain(&mut self, uri: &str, keep_meta: bool) {
         if let Some(kv) = self.dotrain_cache.remove_entry(uri) {
             if !keep_meta {
                 self.cache.remove(&kv.1);
@@ -684,20 +669,20 @@ impl Store {
 
     /// updates the meta cache by searching through all subgraphs for the given hash
     /// returns the reference to the authoring bytes if the updated meta bytes contained any
-    pub async fn update(&mut self, hash: &String) -> Option<&Vec<u8>> {
+    pub async fn update(&mut self, hash: &str) -> Option<&Vec<u8>> {
         // let mut am_bytes: Option<&Vec<u8>> = None;
         if types::common::v1::HASH_PATTERN.is_match(hash) {
-            let _h = hash.to_ascii_lowercase();
-            if !self.cache.contains_key(&_h) {
+            let h = hash.to_ascii_lowercase();
+            if !self.cache.contains_key(&h) {
                 if let Ok(meta) = search(hash, &self.subgraphs, 6u32).await {
                     self.store_content(&meta.bytes);
-                    self.cache.insert(_h.clone(), meta.bytes);
-                    return self.cache.get(&_h);
+                    self.cache.insert(h.clone(), meta.bytes);
+                    return self.cache.get(&h);
                 } else {
                     return None;
                 }
             } else {
-                return self.cache.get(&_h);
+                return self.cache.get(&h);
             }
         } else {
             return None;
@@ -706,20 +691,20 @@ impl Store {
 
     /// updates the meta cache by the given hash and meta bytes, checks the hash to bytes validity
     /// returns the reference to the authoring bytes if the updated meta bytes contained any
-    pub fn update_with(&mut self, hash: &String, bytes: &[u8]) -> Option<&Vec<u8>> {
+    pub fn update_with(&mut self, hash: &str, bytes: &[u8]) -> Option<&Vec<u8>> {
         // let mut am_bytes: Option<&Vec<u8>> = None;
         if types::common::v1::HASH_PATTERN.is_match(hash) {
-            let _h = hash.to_ascii_lowercase();
-            if !self.cache.contains_key(&_h) {
-                if hex::encode_prefixed(keccak256(bytes)) == _h {
+            let h = hash.to_ascii_lowercase();
+            if !self.cache.contains_key(&h) {
+                if hex::encode_prefixed(keccak256(bytes)) == h {
                     self.store_content(bytes);
-                    self.cache.insert(_h.clone(), bytes.to_vec());
-                    return self.cache.get(&_h);
+                    self.cache.insert(h.clone(), bytes.to_vec());
+                    return self.cache.get(&h);
                 } else {
                     return None
                 }
             } else {
-                return self.cache.get(&_h);
+                return self.cache.get(&h);
             }
         } else {
             return None;
@@ -732,8 +717,8 @@ impl Store {
     /// externally by the implementer
     pub fn set_dotrain(
         &mut self,
-        text: &String,
-        uri: &String,
+        text: &str,
+        uri: &str,
         keep_old: bool,
     ) -> anyhow::Result<(String, String)> {
         let bytes = RainMetaDocumentV1Item {
@@ -742,40 +727,37 @@ impl Store {
             content_type: ContentType::OctetStream,
             content_encoding: ContentEncoding::None,
             content_language: ContentLanguage::None,
-        }
-        .cbor_encode()?;
+        }.cbor_encode()?;
         let new_hash = hex::encode_prefixed(keccak256(&bytes));
-        if let Some(k) = self.dotrain_cache.get(uri) {
-            let old_hash = k.clone();
+        if let Some(h) = self.dotrain_cache.get(uri) {
+            let old_hash = h.clone();
             if new_hash.eq_ignore_ascii_case(&old_hash) {
                 self.cache.insert(new_hash.clone(), bytes);
-                return Ok((new_hash, "".to_string()));
+                return Ok((new_hash, String::new()));
             } else {
                 self.cache.insert(new_hash.clone(), bytes);
-                self.dotrain_cache.insert(uri.clone(), new_hash.clone());
+                self.dotrain_cache.insert(uri.to_string(), new_hash.clone());
                 if !keep_old {
-                    self.cache.remove(&old_hash.clone());
+                    self.cache.remove(&old_hash);
                 }
                 return Ok((new_hash, old_hash));
             }
         } else {
-            self.dotrain_cache.insert(uri.clone(), new_hash.clone());
+            self.dotrain_cache.insert(uri.to_string(), new_hash.clone());
             self.cache.insert(new_hash.clone(), bytes);
-            return Ok((new_hash, "".to_string()));
+            return Ok((new_hash, String::new()));
         };
     }
 
     /// decodes each meta and stores the inner meta items into the cache
     /// if any of the inner items is an authoring meta, stores it in authoring meta cache as well
     /// returns the reference to the authoring bytes if the meta bytes contained any
-    fn store_content(&mut self, bytes: &[u8]) -> Option<&Vec<u8>> {
-        let mut h = String::new();
+    fn store_content(&mut self, bytes: &[u8]) {
         if let Ok(meta_maps) = RainMetaDocumentV1Item::cbor_decode(bytes) {
             if bytes.starts_with(&KnownMagic::RainMetaDocumentV1.to_prefix_bytes()) {
                 for meta_map in &meta_maps {
                     if let Ok(encoded_bytes) = meta_map.cbor_encode() {
                         let hash = "0x".to_owned() + &hex::encode(keccak256(&encoded_bytes));
-                        h = hash.clone();
                         self.update_with(&hash, &encoded_bytes);
                         if meta_map.magic == KnownMagic::AuthoringMetaV1 {
                             self.authoring_cache.insert(hash, encoded_bytes);
@@ -785,12 +767,10 @@ impl Store {
             } else {
                 if meta_maps.len() == 1 && meta_maps[0].magic == KnownMagic::AuthoringMetaV1 {
                     let hash = "0x".to_owned() + &hex::encode(keccak256(bytes));
-                    h = hash.clone();
                     self.authoring_cache.insert(hash, bytes.to_vec());
                 }
             }
         }
-        self.authoring_cache.get(&h)
     }
 }
 

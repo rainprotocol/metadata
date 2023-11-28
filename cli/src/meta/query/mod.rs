@@ -38,7 +38,7 @@ pub struct DeployerMetaResponse {
 pub(super) async fn process_meta_query(
     client: Arc<Client>,
     request_body: &QueryBody<meta_query::Variables>,
-    url: &String,
+    url: &str,
 ) -> anyhow::Result<String> {
     Ok(client
         .post(Url::parse(url)?)
@@ -58,7 +58,7 @@ pub(super) async fn process_meta_query(
 pub(super) async fn process_deployer_query(
     client: Arc<Client>,
     request_body: &QueryBody<deployer_query::Variables>,
-    url: &String,
+    url: &str,
 ) -> anyhow::Result<(String, String)> {
     let res = client
         .post(Url::parse(url)?)
