@@ -102,9 +102,16 @@ impl ContentEncoding {
     pub fn decode(&self, data: &[u8]) -> anyhow::Result<Vec<u8>> {
         Ok(match self {
             ContentEncoding::None | ContentEncoding::Identity => data.to_vec(),
-            ContentEncoding::Deflate => match inflate::inflate_bytes_zlib(data) {
+            ContentEncoding::Deflate => match inflate::inflate_bytes(data) {
                 Ok(v) => v,
-                Err(error) => Err(anyhow::anyhow!(error))?,
+                Err(_) => {
+                    match inflate::inflate_bytes_zlib(data) {
+                        Ok(v) => v,
+                        Err(error) => {
+                            Err(anyhow::anyhow!(error))?
+                        }
+                    }
+                }
             },
         })
     }
