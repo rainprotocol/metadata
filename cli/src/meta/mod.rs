@@ -765,18 +765,29 @@ impl Store {
         if let Ok(meta_maps) = RainMetaDocumentV1Item::cbor_decode(bytes) {
             if bytes.starts_with(&KnownMagic::RainMetaDocumentV1.to_prefix_bytes()) {
                 for meta_map in &meta_maps {
-                    if let Ok(encoded_bytes) = meta_map.cbor_encode() {
-                        let hash = hex::encode_prefixed(keccak256(&encoded_bytes));
-                        if meta_map.magic == KnownMagic::AuthoringMetaV1 {
-                            self.authoring_cache.insert(hash.clone(), encoded_bytes.clone());
+                    if meta_map.magic == KnownMagic::AuthoringMetaV1 {
+                        if let Ok(am_bytes) = meta_map.unpack() {
+                            self.authoring_cache.insert(
+                                hex::encode_prefixed(keccak256(&am_bytes)), 
+                                am_bytes
+                            );
                         }
-                        self.cache.insert(hash, encoded_bytes);
+                    }
+                    if let Ok(encoded_bytes) = meta_map.cbor_encode() {
+                        self.cache.insert(
+                            hex::encode_prefixed(keccak256(&encoded_bytes)), 
+                            encoded_bytes
+                        );
                     }
                 }
             } else {
                 if meta_maps.len() == 1 && meta_maps[0].magic == KnownMagic::AuthoringMetaV1 {
-                    let hash = hex::encode_prefixed(keccak256(bytes));
-                    self.authoring_cache.insert(hash, bytes.to_vec());
+                    if let Ok(am_bytes) = meta_maps[0].unpack() {
+                        self.authoring_cache.insert(
+                            hex::encode_prefixed(keccak256(&am_bytes)), 
+                            am_bytes
+                        );
+                    }
                 }
             }
         }
