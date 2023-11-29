@@ -766,16 +766,16 @@ impl Store {
             if bytes.starts_with(&KnownMagic::RainMetaDocumentV1.to_prefix_bytes()) {
                 for meta_map in &meta_maps {
                     if let Ok(encoded_bytes) = meta_map.cbor_encode() {
-                        let hash = "0x".to_owned() + &hex::encode(keccak256(&encoded_bytes));
-                        self.update_with(&hash, &encoded_bytes);
+                        let hash = hex::encode_prefixed(keccak256(&encoded_bytes));
                         if meta_map.magic == KnownMagic::AuthoringMetaV1 {
-                            self.authoring_cache.insert(hash, encoded_bytes);
+                            self.authoring_cache.insert(hash.clone(), encoded_bytes.clone());
                         }
+                        self.cache.insert(hash, encoded_bytes);
                     }
                 }
             } else {
                 if meta_maps.len() == 1 && meta_maps[0].magic == KnownMagic::AuthoringMetaV1 {
-                    let hash = "0x".to_owned() + &hex::encode(keccak256(bytes));
+                    let hash = hex::encode_prefixed(keccak256(bytes));
                     self.authoring_cache.insert(hash, bytes.to_vec());
                 }
             }

@@ -2,6 +2,7 @@ use std::sync::Arc;
 use reqwest::{Client, Url};
 use serde::{Deserialize, Serialize};
 use graphql_client::{GraphQLQuery, Response, QueryBody};
+use super::{RainMetaDocumentV1Item, KnownMagic};
 
 type Bytes = String;
 
@@ -32,6 +33,24 @@ pub struct MetaResponse {
 pub struct DeployerMetaResponse {
     pub hash: String,
     pub bytes: Vec<u8>,
+}
+
+impl DeployerMetaResponse {
+    /// get authoring meta bytes of this deployer meta
+    pub fn get_authoring_meta(&self) -> Option<Vec<u8>> {
+        if let Ok(meta_maps) = RainMetaDocumentV1Item::cbor_decode(&self.bytes) {
+            for meta_map in &meta_maps {
+                if meta_map.magic == KnownMagic::AuthoringMetaV1 {
+                    if let Ok(encoded_bytes) = meta_map.cbor_encode() {
+                        return Some(encoded_bytes);
+                    }
+                }
+            }
+            None
+        } else {
+            None
+        }
+    }
 }
 
 /// process a response for a meta
