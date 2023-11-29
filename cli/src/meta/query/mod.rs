@@ -44,7 +44,7 @@ impl DeployerMetaResponse {
             for meta_map in &meta_maps {
                 if meta_map.magic == KnownMagic::AuthoringMetaV1 {
                     if let Ok(v) = meta_map.unpack() {
-                        match AuthoringMeta::abi_decode(&v) {
+                        match AuthoringMeta::abi_decode_validate(&v) {
                             Ok(am) => return Some(am),
                             Err(_) => return None
                         }
