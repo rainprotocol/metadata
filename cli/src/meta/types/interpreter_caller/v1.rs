@@ -29,6 +29,11 @@ pub struct InterpreterCallerMeta {
     #[serde(default)]
     #[validate]
     pub desc: Description,
+    /// # Source
+    /// Determines the repository source
+    #[serde(default)]
+    #[validate]
+    pub source: Description,
     /// # Alias
     /// Alias of the caller used by Rainlang.
     #[serde(default)]
