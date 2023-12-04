@@ -366,8 +366,7 @@ impl<'de> Deserialize<'de> for RainMetaDocumentV1Item {
 /// searches for a meta matching the given hash in given subgraphs urls
 pub async fn search(
     hash: &str,
-    subgraphs: &Vec<String>,
-    timeout: u32,
+    subgraphs: &Vec<String>
 ) -> anyhow::Result<query::MetaResponse> {
     if !types::common::v1::HASH_PATTERN.is_match(hash) {
         return Err(anyhow::anyhow!("invalid hash"));
@@ -378,7 +377,7 @@ pub async fn search(
     let mut promises = vec![];
     let client = Arc::new(
         Client::builder()
-            .timeout(std::time::Duration::from_secs(timeout as u64))
+            // .timeout(std::time::Duration::from_secs(timeout as u64))
             .build()?,
     );
     for sg in subgraphs {
@@ -398,8 +397,7 @@ pub async fn search(
 /// searches for a deployer meta matching the given hash in given subgraphs urls
 pub async fn search_deployer(
     hash: &str,
-    subgraphs: &Vec<String>,
-    timeout: u32,
+    subgraphs: &Vec<String>
 ) -> anyhow::Result<query::DeployerMetaResponse> {
     if !types::common::v1::HASH_PATTERN.is_match(hash) {
         return Err(anyhow::anyhow!("invalid hash"));
@@ -410,7 +408,7 @@ pub async fn search_deployer(
     let mut promises = vec![];
     let client = Arc::new(
         Client::builder()
-            .timeout(std::time::Duration::from_secs(timeout as u64))
+            // .timeout(std::time::Duration::from_secs(timeout as u64))
             .build()?,
     );
     for sg in subgraphs {
@@ -604,7 +602,7 @@ impl Store {
 
     /// searches for authoring meta in the subgraphs given the deployer hash
     pub async fn search_authoring_meta(&mut self, deployer_hash: &str) -> Option<&Vec<u8>> {
-        match search_deployer(deployer_hash, &self.subgraphs, 6u32).await {
+        match search_deployer(deployer_hash, &self.subgraphs).await {
             Ok(res) => self.update_with(&res.hash, &res.bytes),
             Err(_e) => None,
         }
@@ -682,7 +680,7 @@ impl Store {
     /// updates the meta cache by searching through all subgraphs for the given hash
     /// returns the reference to the meta bytes in the cache if it was found
     pub async fn update(&mut self, hash: &str) -> Option<&Vec<u8>> {
-        if let Ok(meta) = search(hash, &self.subgraphs, 6u32).await {
+        if let Ok(meta) = search(hash, &self.subgraphs).await {
             self.store_content(&meta.bytes);
             self.cache.insert(hash.to_ascii_lowercase(), meta.bytes);
             return self.get_meta(hash);
