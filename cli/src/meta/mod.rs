@@ -389,7 +389,7 @@ pub async fn search(
     }
     let response_value = future::select_ok(promises.drain(..)).await?.0;
     Ok(query::MetaResponse {
-        bytes: hex::decode(response_value)?,
+        bytes: response_value
     })
 }
 
@@ -420,8 +420,12 @@ pub async fn search_deployer(
     }
     let response_value = future::select_ok(promises.drain(..)).await?.0;
     Ok(query::DeployerMetaResponse {
-        hash: response_value.0,
-        bytes: hex::decode(response_value.1)?,
+        meta_hash: response_value.0,
+        meta_bytes: response_value.1,
+        bytecode: response_value.2,
+        parser: response_value.3,
+        store: response_value.4,
+        interpreter: response_value.5,
     })
 }
 
@@ -603,7 +607,7 @@ impl Store {
     /// searches for authoring meta in the subgraphs given the deployer hash
     pub async fn search_authoring_meta(&mut self, deployer_hash: &str) -> Option<&Vec<u8>> {
         match search_deployer(deployer_hash, &self.subgraphs).await {
-            Ok(res) => self.update_with(&res.hash, &res.bytes),
+            Ok(res) => self.update_with(&res.meta_hash, &res.meta_bytes),
             Err(_e) => None,
         }
     }
@@ -632,7 +636,7 @@ impl Store {
     }
 
     /// get the corresponding uri of the given dotrain hash if it exists
-    pub fn get_dotrain_uri(&self, hash: &str) -> Option<&str> {
+    pub fn get_dotrain_uri(&self, hash: &str) -> Option<&String> {
         for (uri, h) in &self.dotrain_cache {
             if h.eq_ignore_ascii_case(hash) {
                 return Some(uri);

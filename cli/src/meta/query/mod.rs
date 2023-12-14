@@ -33,14 +33,18 @@ pub struct MetaResponse {
 /// response data struct for a deployer meta
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct DeployerMetaResponse {
-    pub hash: String,
-    pub bytes: Vec<u8>,
+    pub meta_hash: String,
+    pub meta_bytes: Vec<u8>,
+    pub bytecode: Vec<u8>,
+    pub parser: Vec<u8>,
+    pub store: Vec<u8>,
+    pub interpreter: Vec<u8>
 }
 
 impl DeployerMetaResponse {
     /// get authoring meta bytes of this deployer meta
     pub fn get_authoring_meta(&self) -> Option<AuthoringMeta> {
-        if let Ok(meta_maps) = RainMetaDocumentV1Item::cbor_decode(&self.bytes) {
+        if let Ok(meta_maps) = RainMetaDocumentV1Item::cbor_decode(&self.meta_bytes) {
             for meta_map in &meta_maps {
                 if meta_map.magic == KnownMagic::AuthoringMetaV1 {
                     if let Ok(v) = meta_map.unpack() {
@@ -63,8 +67,8 @@ pub(super) async fn process_meta_query(
     client: Arc<Client>,
     request_body: &QueryBody<meta_query::Variables>,
     url: &str,
-) -> anyhow::Result<String> {
-    Ok(client
+) -> anyhow::Result<Vec<u8>> {
+    Ok(alloy_primitives::hex::decode(client
         .post(Url::parse(url)?)
         .json(request_body)
         .send()
@@ -75,7 +79,7 @@ pub(super) async fn process_meta_query(
         .ok_or(anyhow::anyhow!("found no matching record!"))?
         .meta
         .ok_or(anyhow::anyhow!("found no matching record!"))?
-        .raw_bytes)
+        .raw_bytes)?)
 }
 
 /// process a response for a deployer meta
@@ -83,7 +87,7 @@ pub(super) async fn process_deployer_query(
     client: Arc<Client>,
     request_body: &QueryBody<deployer_query::Variables>,
     url: &str,
-) -> anyhow::Result<(String, String)> {
+) -> anyhow::Result<(String, Vec<u8>, Vec<u8>, Vec<u8>, Vec<u8>, Vec<u8>)> {
     let res = client
         .post(Url::parse(url)?)
         .json(request_body)
@@ -96,9 +100,33 @@ pub(super) async fn process_deployer_query(
         .expression_deployers;
 
     if res.len() > 0 {
+        let bytecode = if let Some(v) = &res[0].bytecode {
+            alloy_primitives::hex::decode(v)?
+        } else {
+            return Err(anyhow::anyhow!("found no matching record!"));
+        };
+        let parser = if let Some(v) = &res[0].parser {
+            alloy_primitives::hex::decode(&v.parser.bytecode)?
+        } else {
+            return Err(anyhow::anyhow!("found no matching record!"));
+        };
+        let store = if let Some(v) = &res[0].store {
+            alloy_primitives::hex::decode(&v.store.bytecode)?
+        } else {
+            return Err(anyhow::anyhow!("found no matching record!"));
+        };
+        let interpreter = if let Some(v) = &res[0].interpreter {
+            alloy_primitives::hex::decode(&v.interpreter.bytecode)?
+        } else {
+            return Err(anyhow::anyhow!("found no matching record!"));
+        };
         return Ok((
             res[0].constructor_meta_hash.clone(),
-            res[0].constructor_meta.clone(),
+            alloy_primitives::hex::decode(&res[0].constructor_meta)?,
+            bytecode,
+            parser,
+            store,
+            interpreter
         ));
     } else {
         return Err(anyhow::anyhow!("found no matching record!"));
