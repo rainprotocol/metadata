@@ -13,8 +13,10 @@ use serde::de::{Deserialize, Deserializer, Visitor};
 use serde::ser::{Serialize, Serializer, SerializeMap};
 use std::{sync::Arc, fmt::Debug, convert::TryFrom, collections::HashMap};
 
+use self::types::authoring::v1::AuthoringMeta;
+
 pub use super::subgraph::KnownSubgraphs;
-pub use query::{MetaResponse, DeployerMetaResponse};
+pub use query::{MetaResponse, DeployerNPResponse};
 
 /// # Known Meta
 /// all known meta identifiers
@@ -398,7 +400,7 @@ pub async fn search(
 pub async fn search_deployer(
     hash: &str,
     subgraphs: &Vec<String>
-) -> anyhow::Result<query::DeployerMetaResponse> {
+) -> anyhow::Result<query::DeployerNPResponse> {
     if !types::common::v1::HASH_PATTERN.is_match(hash) {
         return Err(anyhow::anyhow!("invalid hash"));
     }
@@ -419,7 +421,7 @@ pub async fn search_deployer(
         )));
     }
     let response_value = future::select_ok(promises.drain(..)).await?.0;
-    Ok(query::DeployerMetaResponse {
+    Ok(query::DeployerNPResponse {
         meta_hash: response_value.0,
         meta_bytes: response_value.1,
         bytecode: response_value.2,
@@ -427,6 +429,27 @@ pub async fn search_deployer(
         store: response_value.4,
         interpreter: response_value.5,
     })
+}
+
+/// # DeployerNPRecord
+/// 
+/// Holds all the data required to redeploy the RainterpreterExpressionDeployerNPE2 into a local evm
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+pub struct NPE2Deployer {
+    /// constructor meta hash
+    pub meta_hash: String,
+    /// constructor meta bytes
+    pub meta_bytes: Vec<u8>,
+    /// RainterpreterExpressionDeployerNPE2 contract bytecode
+    pub bytecode: Vec<u8>,
+    /// RainterpreterParserNPE2 contract bytecode
+    pub parser: Vec<u8>,
+    /// RainterpreterStoreNPE2 contract bytecode
+    pub store: Vec<u8>,
+    /// RainterpreterNPE2 contract bytecode
+    pub interpreter: Vec<u8>,
+    /// RainterpreterExpressionDeployerNPE2 authoring meta
+    pub authoring_meta: Option<AuthoringMeta>
 }
 
 /// # Meta Store(CAS)
@@ -480,7 +503,7 @@ pub async fn search_deployer(
 /// let meta = store.get_meta(&hash);
 ///
 /// // to get a authoring meta record from store
-/// let am = store.get_authoring_meta(&hash);
+/// let deployer_record = store.get_deployer(&hash);
 ///
 /// // path to a .rain file
 /// let dotrain_uri = "path/to/file.rain";
@@ -502,7 +525,7 @@ pub struct Store {
     subgraphs: Vec<String>,
     cache: HashMap<String, Vec<u8>>,
     dotrain_cache: HashMap<String, String>,
-    authoring_cache: HashMap<String, Vec<u8>>,
+    deployer_cache: HashMap<String, NPE2Deployer>,
 }
 
 impl Default for Store {
@@ -510,7 +533,7 @@ impl Default for Store {
         Store {
             cache: HashMap::new(),
             dotrain_cache: HashMap::new(),
-            authoring_cache: HashMap::new(),
+            deployer_cache: HashMap::new(),
             subgraphs: KnownSubgraphs::NP.map(|url| url.to_string()).to_vec(),
         }
     }
@@ -524,7 +547,7 @@ impl Store {
             subgraphs: vec![],
             cache: HashMap::new(),
             dotrain_cache: HashMap::new(),
-            authoring_cache: HashMap::new(),
+            deployer_cache: HashMap::new(),
         }
     }
 
@@ -533,7 +556,7 @@ impl Store {
     pub fn create(
         subgraphs: &Vec<String>,
         cache: &HashMap<String, Vec<u8>>,
-        authoring_cache: &HashMap<String, Vec<u8>>,
+        deployer_cache: &HashMap<String, NPE2Deployer>,
         dotrain_cache: &HashMap<String, String>,
         include_rain_subgraphs: bool,
     ) -> Store {
@@ -547,14 +570,9 @@ impl Store {
         for (hash, bytes) in cache {
             store.update_with(hash, bytes);
         }
-        for (hash, bytes) in authoring_cache {
+        for (hash, deployer) in deployer_cache {
             if types::common::v1::HASH_PATTERN.is_match(hash) {
-                let _h = hash.to_ascii_lowercase();
-                if !store.authoring_cache.contains_key(&_h) {
-                    if hex::encode_prefixed(keccak256(bytes)) == _h {
-                        store.authoring_cache.insert(_h, bytes.clone());
-                    }
-                }
+                store.deployer_cache.insert(hash.to_ascii_lowercase(), deployer.clone());
             }
         }
         for (uri, hash) in dotrain_cache {
@@ -595,34 +613,73 @@ impl Store {
     }
 
     /// getter method for the whole authoring meta cache
-    pub fn authoring_cache(&self) -> &HashMap<String, Vec<u8>> {
-        &self.authoring_cache
+    pub fn deployer_cache(&self) -> &HashMap<String, NPE2Deployer> {
+        &self.deployer_cache
     }
 
-    /// get the corresponding authoring meta bytes of the given hash if it exists
-    pub fn get_authoring_meta(&self, hash: &str) -> Option<&Vec<u8>> {
-        self.authoring_cache.get(&hash.to_ascii_lowercase())
+    /// get the corresponding DeployerNPRecord of the given deployer hash if it exists
+    pub fn get_deployer(&self, deployer_bytecode_hash: &str) -> Option<&NPE2Deployer> {
+        self.deployer_cache.get(&deployer_bytecode_hash.to_ascii_lowercase())
     }
 
-    /// searches for authoring meta in the subgraphs given the deployer hash
-    pub async fn search_authoring_meta(&mut self, deployer_hash: &str) -> Option<&Vec<u8>> {
-        match search_deployer(deployer_hash, &self.subgraphs).await {
-            Ok(res) => self.update_with(&res.meta_hash, &res.meta_bytes),
+    /// searches for DeployerNPRecord in the subgraphs given the deployer hash
+    pub async fn search_deployer(&mut self, deployer_bytecode_hash: &str) -> Option<&NPE2Deployer> {
+        match search_deployer(deployer_bytecode_hash, &self.subgraphs).await {
+            Ok(res) => {
+                self.cache.insert(res.meta_hash.to_ascii_lowercase(), res.meta_bytes.clone());
+                let authoring_meta = res.get_authoring_meta();
+                self.deployer_cache.insert(
+                    deployer_bytecode_hash.to_ascii_lowercase(), 
+                    NPE2Deployer { 
+                        meta_hash: res.meta_hash.to_ascii_lowercase(), 
+                        meta_bytes: res.meta_bytes, 
+                        bytecode: res.bytecode, 
+                        parser: res.parser, 
+                        store: res.store, 
+                        interpreter: res.interpreter,
+                        authoring_meta
+                    }
+                );
+                self.deployer_cache.get(deployer_bytecode_hash)
+            },
             Err(_e) => None,
         }
     }
 
-    /// if the authoring meta already is cached it returns it immediately else
-    /// searches for authoring meta in the subgraphs given the deployer hash
-    pub async fn search_authoring_meta_check(&mut self, authoring_meta_hash: &str, deployer_hash: &str) -> Option<&Vec<u8>> {
+    /// if the DeployerNPRecord already is cached it returns it immediately else
+    /// searches for DeployerNPRecord in the subgraphs given the deployer hash
+    pub async fn search_deployer_check(&mut self, deployer_bytecode_hash: &str) -> Option<&NPE2Deployer> {
         if self
-            .authoring_cache
-            .contains_key(&authoring_meta_hash.to_ascii_lowercase())
+            .deployer_cache
+            .contains_key(&deployer_bytecode_hash.to_ascii_lowercase())
         {
-            self.get_authoring_meta(authoring_meta_hash)
+            self.get_deployer(deployer_bytecode_hash)
         } else {
-            self.search_authoring_meta(deployer_hash).await
+            self.search_deployer(deployer_bytecode_hash).await
         }
+    }
+
+    /// sets deployer record from the deployer query response
+    pub fn set_deployer(&mut self, deployer_bytecode_hash: &str, deployer_query_response: DeployerNPResponse) -> NPE2Deployer {
+        self.cache.insert(
+            deployer_query_response.meta_hash.to_ascii_lowercase(), 
+            deployer_query_response.meta_bytes.clone()
+        );
+        let authoring_meta = deployer_query_response.get_authoring_meta();
+        let result = NPE2Deployer { 
+            meta_hash: deployer_query_response.meta_hash.to_ascii_lowercase(), 
+            meta_bytes: deployer_query_response.meta_bytes, 
+            bytecode: deployer_query_response.bytecode, 
+            parser: deployer_query_response.parser, 
+            store: deployer_query_response.store, 
+            interpreter: deployer_query_response.interpreter,
+            authoring_meta
+        };
+        self.deployer_cache.insert(
+            deployer_bytecode_hash.to_ascii_lowercase(), 
+            result.clone()
+        );
+        result
     }
 
     /// getter method for the whole dotrain cache
@@ -667,10 +724,10 @@ impl Store {
                 self.cache.insert(hash.to_ascii_lowercase(), bytes.clone());
             }
         }
-        for (hash, bytes) in &other.authoring_cache {
-            if !self.authoring_cache.contains_key(hash) {
-                self.authoring_cache
-                    .insert(hash.to_ascii_lowercase(), bytes.clone());
+        for (hash, deployer) in &other.deployer_cache {
+            if !self.deployer_cache.contains_key(hash) {
+                self.deployer_cache
+                    .insert(hash.to_ascii_lowercase(), deployer.clone());
             }
         }
         for (uri, hash) in &other.dotrain_cache {
@@ -774,27 +831,10 @@ impl Store {
         if let Ok(meta_maps) = RainMetaDocumentV1Item::cbor_decode(bytes) {
             if bytes.starts_with(&KnownMagic::RainMetaDocumentV1.to_prefix_bytes()) {
                 for meta_map in &meta_maps {
-                    if meta_map.magic == KnownMagic::AuthoringMetaV1 {
-                        if let Ok(am_bytes) = meta_map.unpack() {
-                            self.authoring_cache.insert(
-                                hex::encode_prefixed(keccak256(&am_bytes)), 
-                                am_bytes
-                            );
-                        }
-                    }
                     if let Ok(encoded_bytes) = meta_map.cbor_encode() {
                         self.cache.insert(
                             hex::encode_prefixed(keccak256(&encoded_bytes)), 
                             encoded_bytes
-                        );
-                    }
-                }
-            } else {
-                if meta_maps.len() == 1 && meta_maps[0].magic == KnownMagic::AuthoringMetaV1 {
-                    if let Ok(am_bytes) = meta_maps[0].unpack() {
-                        self.authoring_cache.insert(
-                            hex::encode_prefixed(keccak256(&am_bytes)), 
-                            am_bytes
                         );
                     }
                 }

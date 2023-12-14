@@ -564,7 +564,7 @@ mod tests {
                         files_to_read.push(file.path());
                     }
                 }
-            } else if file.path().is_file() {
+            } else if file.path().is_file() && file.path().ends_with(".json") {
                 files_to_read.push(file.path());
             }
         }
@@ -585,6 +585,7 @@ mod tests {
             // since alloy JsonAbi doesn't keep the original order of abi items, we need to check item by item
             let json_abi_alloy: JsonAbi =
                 serde_json::from_str(original_json_abi.clone().to_string().as_str())?;
+
             for e in original_json_abi.as_array().unwrap().iter() {
                 if let None = json_abi_alloy
                     .items()

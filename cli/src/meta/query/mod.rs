@@ -32,7 +32,7 @@ pub struct MetaResponse {
 
 /// response data struct for a deployer meta
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub struct DeployerMetaResponse {
+pub struct DeployerNPResponse {
     pub meta_hash: String,
     pub meta_bytes: Vec<u8>,
     pub bytecode: Vec<u8>,
@@ -41,7 +41,7 @@ pub struct DeployerMetaResponse {
     pub interpreter: Vec<u8>
 }
 
-impl DeployerMetaResponse {
+impl DeployerNPResponse {
     /// get authoring meta bytes of this deployer meta
     pub fn get_authoring_meta(&self) -> Option<AuthoringMeta> {
         if let Ok(meta_maps) = RainMetaDocumentV1Item::cbor_decode(&self.meta_bytes) {
