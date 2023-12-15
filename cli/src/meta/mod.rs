@@ -435,6 +435,7 @@ pub async fn search_deployer(
 /// 
 /// Holds all the data required to redeploy the RainterpreterExpressionDeployerNPE2 into a local evm
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct NPE2Deployer {
     /// constructor meta hash
     pub meta_hash: String,
