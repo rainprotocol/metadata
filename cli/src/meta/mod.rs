@@ -704,7 +704,7 @@ impl Store {
     }
 
     /// sets deployer record from the deployer query response
-    pub fn set_deployer(&mut self, deployer_bytecode_hash: &str, deployer_query_response: DeployerNPResponse) -> NPE2Deployer {
+    pub fn set_deployer_from_query_response(&mut self, deployer_bytecode_hash: &str, deployer_query_response: DeployerNPResponse) -> NPE2Deployer {
         self.cache.insert(
             deployer_query_response.meta_hash.to_ascii_lowercase(), 
             deployer_query_response.meta_bytes.clone()
@@ -724,6 +724,18 @@ impl Store {
             result.clone()
         );
         result
+    }
+
+    /// sets deployer record
+    pub fn set_deployer(&mut self, deployer_bytecode_hash: &str, npe2_deployer: &NPE2Deployer) {
+        self.cache.insert(
+            npe2_deployer.meta_hash.to_ascii_lowercase(), 
+            npe2_deployer.meta_bytes.clone()
+        );
+        self.deployer_cache.insert(
+            deployer_bytecode_hash.to_ascii_lowercase(), 
+            npe2_deployer.clone()
+        );
     }
 
     /// getter method for the whole dotrain cache
