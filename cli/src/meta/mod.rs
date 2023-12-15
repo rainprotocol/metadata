@@ -452,6 +452,44 @@ pub struct NPE2Deployer {
     pub authoring_meta: Option<AuthoringMeta>
 }
 
+impl Default for NPE2Deployer {
+    fn default() -> Self {
+        NPE2Deployer { 
+            meta_hash: String::new(), 
+            meta_bytes: vec![], 
+            bytecode: vec![], 
+            parser: vec![], 
+            store: vec![], 
+            interpreter: vec![], 
+            authoring_meta: None
+        }
+    }
+}
+
+impl NPE2Deployer {
+    pub fn is_corrupt(&self) -> bool {
+        if self.meta_bytes.is_empty() {
+            return false;
+        }
+        if self.meta_bytes.is_empty() {
+            return false;
+        }
+        if self.bytecode.is_empty() {
+            return false;
+        }
+        if self.parser.is_empty() {
+            return false;
+        }
+        if self.store.is_empty() {
+            return false;
+        }
+        if self.interpreter.is_empty() {
+            return false;
+        }
+        true
+    }
+}
+
 /// # Meta Store(CAS)
 ///
 /// Reads, stores and simply manages k/v pairs of meta hash and meta bytes and provides the functionalities
