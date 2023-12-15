@@ -439,14 +439,19 @@ pub struct NPE2Deployer {
     /// constructor meta hash
     pub meta_hash: String,
     /// constructor meta bytes
+    #[serde(with = "serde_bytes")]
     pub meta_bytes: Vec<u8>,
     /// RainterpreterExpressionDeployerNPE2 contract bytecode
+    #[serde(with = "serde_bytes")]
     pub bytecode: Vec<u8>,
     /// RainterpreterParserNPE2 contract bytecode
+    #[serde(with = "serde_bytes")]
     pub parser: Vec<u8>,
     /// RainterpreterStoreNPE2 contract bytecode
+    #[serde(with = "serde_bytes")]
     pub store: Vec<u8>,
     /// RainterpreterNPE2 contract bytecode
+    #[serde(with = "serde_bytes")]
     pub interpreter: Vec<u8>,
     /// RainterpreterExpressionDeployerNPE2 authoring meta
     pub authoring_meta: Option<AuthoringMeta>
