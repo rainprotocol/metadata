@@ -42,7 +42,6 @@ pub fn dispatch(meta: Meta) -> anyhow::Result<()> {
 
 pub fn main() -> anyhow::Result<()> {
     tracing::subscriber::set_global_default(tracing_subscriber::fmt::Subscriber::new())?;
-
     let cli = Cli::parse();
     dispatch(cli.meta)
 }

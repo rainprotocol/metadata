@@ -6,13 +6,11 @@ description = "Tooling and utilities for RainProtocol metadata."
 license = "CAL-1.0"
 
 [features]
-cli = []
+cli = ["dep:tracing", "dep:tracing-subscriber"]
 tokio-full = ["tokio/full"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-tracing = "0.1.37"
-tracing-subscriber = "0.3.17"
 anyhow = "1.0.70"
 clap = { version = "4.2.5", features = ["cargo", "derive"] }
 graphql_client = "0.12.0"
@@ -35,9 +33,14 @@ alloy-primitives = "0.4.2"
 alloy-sol-types = "0.4.2"
 tokio = { version = "1.34.0", features = ["sync", "macros", "io-util", "rt", "time"] }
 
+# cli
+tracing = { version = "0.1.37", optional = true }
+tracing-subscriber = { version = "0.3.17", optional = true }
+
 [[bin]]
 name = "rain-meta"
 path = "src/main.rs"
+required-features = ["cli"]
 
 [lib]
 path = "src/lib.rs"
