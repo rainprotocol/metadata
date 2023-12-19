@@ -38,7 +38,7 @@ pub struct DeployerNPResponse {
     pub bytecode: Vec<u8>,
     pub parser: Vec<u8>,
     pub store: Vec<u8>,
-    pub interpreter: Vec<u8>
+    pub interpreter: Vec<u8>,
 }
 
 impl DeployerNPResponse {
@@ -50,7 +50,7 @@ impl DeployerNPResponse {
                     if let Ok(v) = meta_map.unpack() {
                         match AuthoringMeta::abi_decode_validate(&v) {
                             Ok(am) => return Some(am),
-                            Err(_) => return None
+                            Err(_) => return None,
                         }
                     }
                 }
@@ -68,18 +68,20 @@ pub(super) async fn process_meta_query(
     request_body: &QueryBody<meta_query::Variables>,
     url: &str,
 ) -> anyhow::Result<Vec<u8>> {
-    Ok(alloy_primitives::hex::decode(client
-        .post(Url::parse(url)?)
-        .json(request_body)
-        .send()
-        .await?
-        .json::<Response<meta_query::ResponseData>>()
-        .await?
-        .data
-        .ok_or(anyhow::anyhow!("found no matching record!"))?
-        .meta
-        .ok_or(anyhow::anyhow!("found no matching record!"))?
-        .raw_bytes)?)
+    Ok(alloy_primitives::hex::decode(
+        client
+            .post(Url::parse(url)?)
+            .json(request_body)
+            .send()
+            .await?
+            .json::<Response<meta_query::ResponseData>>()
+            .await?
+            .data
+            .ok_or(anyhow::anyhow!("found no matching record!"))?
+            .meta
+            .ok_or(anyhow::anyhow!("found no matching record!"))?
+            .raw_bytes,
+    )?)
 }
 
 /// process a response for a deployer meta
@@ -126,7 +128,7 @@ pub(super) async fn process_deployer_query(
             bytecode,
             parser,
             store,
-            interpreter
+            interpreter,
         ));
     } else {
         return Err(anyhow::anyhow!("found no matching record!"));
