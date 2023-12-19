@@ -27,6 +27,7 @@ pub(super) struct DeployerQuery;
 /// response data struct for a meta
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct MetaResponse {
+    #[serde(with = "serde_bytes")]
     pub bytes: Vec<u8>,
 }
 
