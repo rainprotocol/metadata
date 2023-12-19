@@ -8,21 +8,28 @@ query DeployerQuery($hash: String) {
   ) { 
     constructorMetaHash 
     constructorMeta
+    deployTransaction {
+      id
+    }
     bytecode
     parser {
       parser {
-        bytecode
+        deployedBytecode
       }
     }
     store {
       store {
-        bytecode
+        deployedBytecode
       }
     }
     interpreter {
       interpreter {
-        bytecode
+        deployedBytecode
       }
+    }
+    meta(first: 1 where: {magicNumber: "18436497220406627634"}) {
+      __typename
+      id
     }
   }
 }

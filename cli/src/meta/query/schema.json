@@ -2320,19 +2320,19 @@
             {
               "args": [],
               "deprecationReason": null,
-              "description": "Bytecode hash of this contract",
+              "description": "Deployed bytecode hash of the contract",
               "isDeprecated": false,
-              "name": "bytecodeHash",
+              "name": "deployedBytecodeHash",
               "type": {
                 "kind": "SCALAR",
-                "name": "String",
+                "name": "Bytes",
                 "ofType": null
               }
             },
             {
               "args": [],
               "deprecationReason": null,
-              "description": null,
+              "description": "Transaction where was deployed the contract",
               "isDeprecated": false,
               "name": "deployTransaction",
               "type": {
@@ -2680,67 +2680,67 @@
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecodeHash",
+              "name": "deployedBytecodeHash",
               "type": {
                 "kind": "SCALAR",
-                "name": "String",
+                "name": "Bytes",
                 "ofType": null
               }
             },
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecodeHash_not",
+              "name": "deployedBytecodeHash_not",
               "type": {
                 "kind": "SCALAR",
-                "name": "String",
+                "name": "Bytes",
                 "ofType": null
               }
             },
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecodeHash_gt",
+              "name": "deployedBytecodeHash_gt",
               "type": {
                 "kind": "SCALAR",
-                "name": "String",
+                "name": "Bytes",
                 "ofType": null
               }
             },
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecodeHash_lt",
+              "name": "deployedBytecodeHash_lt",
               "type": {
                 "kind": "SCALAR",
-                "name": "String",
+                "name": "Bytes",
                 "ofType": null
               }
             },
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecodeHash_gte",
+              "name": "deployedBytecodeHash_gte",
               "type": {
                 "kind": "SCALAR",
-                "name": "String",
+                "name": "Bytes",
                 "ofType": null
               }
             },
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecodeHash_lte",
+              "name": "deployedBytecodeHash_lte",
               "type": {
                 "kind": "SCALAR",
-                "name": "String",
+                "name": "Bytes",
                 "ofType": null
               }
             },
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecodeHash_in",
+              "name": "deployedBytecodeHash_in",
               "type": {
                 "kind": "LIST",
                 "name": null,
@@ -2749,7 +2749,7 @@
                   "name": null,
                   "ofType": {
                     "kind": "SCALAR",
-                    "name": "String",
+                    "name": "Bytes",
                     "ofType": null
                   }
                 }
@@ -2758,7 +2758,7 @@
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecodeHash_not_in",
+              "name": "deployedBytecodeHash_not_in",
               "type": {
                 "kind": "LIST",
                 "name": null,
@@ -2767,7 +2767,7 @@
                   "name": null,
                   "ofType": {
                     "kind": "SCALAR",
-                    "name": "String",
+                    "name": "Bytes",
                     "ofType": null
                   }
                 }
@@ -2776,120 +2776,20 @@
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecodeHash_contains",
+              "name": "deployedBytecodeHash_contains",
               "type": {
                 "kind": "SCALAR",
-                "name": "String",
+                "name": "Bytes",
                 "ofType": null
               }
             },
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecodeHash_contains_nocase",
+              "name": "deployedBytecodeHash_not_contains",
               "type": {
                 "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            {
-              "defaultValue": null,
-              "description": null,
-              "name": "bytecodeHash_not_contains",
-              "type": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            {
-              "defaultValue": null,
-              "description": null,
-              "name": "bytecodeHash_not_contains_nocase",
-              "type": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            {
-              "defaultValue": null,
-              "description": null,
-              "name": "bytecodeHash_starts_with",
-              "type": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            {
-              "defaultValue": null,
-              "description": null,
-              "name": "bytecodeHash_starts_with_nocase",
-              "type": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            {
-              "defaultValue": null,
-              "description": null,
-              "name": "bytecodeHash_not_starts_with",
-              "type": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            {
-              "defaultValue": null,
-              "description": null,
-              "name": "bytecodeHash_not_starts_with_nocase",
-              "type": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            {
-              "defaultValue": null,
-              "description": null,
-              "name": "bytecodeHash_ends_with",
-              "type": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            {
-              "defaultValue": null,
-              "description": null,
-              "name": "bytecodeHash_ends_with_nocase",
-              "type": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            {
-              "defaultValue": null,
-              "description": null,
-              "name": "bytecodeHash_not_ends_with",
-              "type": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            {
-              "defaultValue": null,
-              "description": null,
-              "name": "bytecodeHash_not_ends_with_nocase",
-              "type": {
-                "kind": "SCALAR",
-                "name": "String",
+                "name": "Bytes",
                 "ofType": null
               }
             },
@@ -4204,7 +4104,7 @@
               "deprecationReason": null,
               "description": null,
               "isDeprecated": false,
-              "name": "bytecodeHash"
+              "name": "deployedBytecodeHash"
             },
             {
               "deprecationReason": null,
@@ -4258,7 +4158,7 @@
               "deprecationReason": null,
               "description": null,
               "isDeprecated": false,
-              "name": "initialDeployer__bytecodeHash"
+              "name": "initialDeployer__deployedBytecodeHash"
             },
             {
               "deprecationReason": null,
@@ -4294,6 +4194,12 @@
               "deprecationReason": null,
               "description": null,
               "isDeprecated": false,
+              "name": "initialDeployer__bytecodeHash"
+            },
+            {
+              "deprecationReason": null,
+              "description": null,
+              "isDeprecated": false,
               "name": "constructorMeta"
             },
             {
@@ -4324,7 +4230,7 @@
               "deprecationReason": null,
               "description": null,
               "isDeprecated": false,
-              "name": "implementation__bytecodeHash"
+              "name": "implementation__deployedBytecodeHash"
             },
             {
               "deprecationReason": null,
@@ -7679,19 +7585,19 @@
             {
               "args": [],
               "deprecationReason": null,
-              "description": "Bytecode hash of this Deployer",
+              "description": "Deployed bytecode hash of the contract",
               "isDeprecated": false,
-              "name": "bytecodeHash",
+              "name": "deployedBytecodeHash",
               "type": {
                 "kind": "SCALAR",
-                "name": "String",
+                "name": "Bytes",
                 "ofType": null
               }
             },
             {
               "args": [],
               "deprecationReason": null,
-              "description": null,
+              "description": "Transaction where was deployed the contract",
               "isDeprecated": false,
               "name": "deployTransaction",
               "type": {
@@ -7945,7 +7851,7 @@
             {
               "args": [],
               "deprecationReason": null,
-              "description": "The deployed bytecode of the expressionDeployer contract that is being deployed",
+              "description": "The deployed bytecode of the expressionDeployer contract",
               "isDeprecated": false,
               "name": "deployedBytecode",
               "type": {
@@ -7960,6 +7866,18 @@
               "description": "The bytecode of the expressionDeployer",
               "isDeprecated": false,
               "name": "bytecode",
+              "type": {
+                "kind": "SCALAR",
+                "name": "Bytes",
+                "ofType": null
+              }
+            },
+            {
+              "args": [],
+              "deprecationReason": null,
+              "description": "Bytecode hash of the expressionDeployer",
+              "isDeprecated": false,
+              "name": "bytecodeHash",
               "type": {
                 "kind": "SCALAR",
                 "name": "Bytes",
@@ -8083,67 +8001,67 @@
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecodeHash",
+              "name": "deployedBytecodeHash",
               "type": {
                 "kind": "SCALAR",
-                "name": "String",
+                "name": "Bytes",
                 "ofType": null
               }
             },
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecodeHash_not",
+              "name": "deployedBytecodeHash_not",
               "type": {
                 "kind": "SCALAR",
-                "name": "String",
+                "name": "Bytes",
                 "ofType": null
               }
             },
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecodeHash_gt",
+              "name": "deployedBytecodeHash_gt",
               "type": {
                 "kind": "SCALAR",
-                "name": "String",
+                "name": "Bytes",
                 "ofType": null
               }
             },
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecodeHash_lt",
+              "name": "deployedBytecodeHash_lt",
               "type": {
                 "kind": "SCALAR",
-                "name": "String",
+                "name": "Bytes",
                 "ofType": null
               }
             },
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecodeHash_gte",
+              "name": "deployedBytecodeHash_gte",
               "type": {
                 "kind": "SCALAR",
-                "name": "String",
+                "name": "Bytes",
                 "ofType": null
               }
             },
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecodeHash_lte",
+              "name": "deployedBytecodeHash_lte",
               "type": {
                 "kind": "SCALAR",
-                "name": "String",
+                "name": "Bytes",
                 "ofType": null
               }
             },
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecodeHash_in",
+              "name": "deployedBytecodeHash_in",
               "type": {
                 "kind": "LIST",
                 "name": null,
@@ -8152,7 +8070,7 @@
                   "name": null,
                   "ofType": {
                     "kind": "SCALAR",
-                    "name": "String",
+                    "name": "Bytes",
                     "ofType": null
                   }
                 }
@@ -8161,7 +8079,7 @@
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecodeHash_not_in",
+              "name": "deployedBytecodeHash_not_in",
               "type": {
                 "kind": "LIST",
                 "name": null,
@@ -8170,7 +8088,7 @@
                   "name": null,
                   "ofType": {
                     "kind": "SCALAR",
-                    "name": "String",
+                    "name": "Bytes",
                     "ofType": null
                   }
                 }
@@ -8179,120 +8097,20 @@
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecodeHash_contains",
+              "name": "deployedBytecodeHash_contains",
               "type": {
                 "kind": "SCALAR",
-                "name": "String",
+                "name": "Bytes",
                 "ofType": null
               }
             },
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecodeHash_contains_nocase",
+              "name": "deployedBytecodeHash_not_contains",
               "type": {
                 "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            {
-              "defaultValue": null,
-              "description": null,
-              "name": "bytecodeHash_not_contains",
-              "type": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            {
-              "defaultValue": null,
-              "description": null,
-              "name": "bytecodeHash_not_contains_nocase",
-              "type": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            {
-              "defaultValue": null,
-              "description": null,
-              "name": "bytecodeHash_starts_with",
-              "type": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            {
-              "defaultValue": null,
-              "description": null,
-              "name": "bytecodeHash_starts_with_nocase",
-              "type": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            {
-              "defaultValue": null,
-              "description": null,
-              "name": "bytecodeHash_not_starts_with",
-              "type": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            {
-              "defaultValue": null,
-              "description": null,
-              "name": "bytecodeHash_not_starts_with_nocase",
-              "type": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            {
-              "defaultValue": null,
-              "description": null,
-              "name": "bytecodeHash_ends_with",
-              "type": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            {
-              "defaultValue": null,
-              "description": null,
-              "name": "bytecodeHash_ends_with_nocase",
-              "type": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            {
-              "defaultValue": null,
-              "description": null,
-              "name": "bytecodeHash_not_ends_with",
-              "type": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            {
-              "defaultValue": null,
-              "description": null,
-              "name": "bytecodeHash_not_ends_with_nocase",
-              "type": {
-                "kind": "SCALAR",
-                "name": "String",
+                "name": "Bytes",
                 "ofType": null
               }
             },
@@ -10236,6 +10054,122 @@
             },
             {
               "defaultValue": null,
+              "description": null,
+              "name": "bytecodeHash",
+              "type": {
+                "kind": "SCALAR",
+                "name": "Bytes",
+                "ofType": null
+              }
+            },
+            {
+              "defaultValue": null,
+              "description": null,
+              "name": "bytecodeHash_not",
+              "type": {
+                "kind": "SCALAR",
+                "name": "Bytes",
+                "ofType": null
+              }
+            },
+            {
+              "defaultValue": null,
+              "description": null,
+              "name": "bytecodeHash_gt",
+              "type": {
+                "kind": "SCALAR",
+                "name": "Bytes",
+                "ofType": null
+              }
+            },
+            {
+              "defaultValue": null,
+              "description": null,
+              "name": "bytecodeHash_lt",
+              "type": {
+                "kind": "SCALAR",
+                "name": "Bytes",
+                "ofType": null
+              }
+            },
+            {
+              "defaultValue": null,
+              "description": null,
+              "name": "bytecodeHash_gte",
+              "type": {
+                "kind": "SCALAR",
+                "name": "Bytes",
+                "ofType": null
+              }
+            },
+            {
+              "defaultValue": null,
+              "description": null,
+              "name": "bytecodeHash_lte",
+              "type": {
+                "kind": "SCALAR",
+                "name": "Bytes",
+                "ofType": null
+              }
+            },
+            {
+              "defaultValue": null,
+              "description": null,
+              "name": "bytecodeHash_in",
+              "type": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Bytes",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            {
+              "defaultValue": null,
+              "description": null,
+              "name": "bytecodeHash_not_in",
+              "type": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Bytes",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            {
+              "defaultValue": null,
+              "description": null,
+              "name": "bytecodeHash_contains",
+              "type": {
+                "kind": "SCALAR",
+                "name": "Bytes",
+                "ofType": null
+              }
+            },
+            {
+              "defaultValue": null,
+              "description": null,
+              "name": "bytecodeHash_not_contains",
+              "type": {
+                "kind": "SCALAR",
+                "name": "Bytes",
+                "ofType": null
+              }
+            },
+            {
+              "defaultValue": null,
               "description": "Filter for the block changed event.",
               "name": "_change_block",
               "type": {
@@ -10291,7 +10225,7 @@
               "deprecationReason": null,
               "description": null,
               "isDeprecated": false,
-              "name": "bytecodeHash"
+              "name": "deployedBytecodeHash"
             },
             {
               "deprecationReason": null,
@@ -10406,6 +10340,12 @@
               "description": null,
               "isDeprecated": false,
               "name": "bytecode"
+            },
+            {
+              "deprecationReason": null,
+              "description": null,
+              "isDeprecated": false,
+              "name": "bytecodeHash"
             }
           ],
           "fields": null,
@@ -12197,7 +12137,7 @@
               "deprecationReason": null,
               "description": null,
               "isDeprecated": false,
-              "name": "contract__bytecodeHash"
+              "name": "contract__deployedBytecodeHash"
             },
             {
               "deprecationReason": null,
@@ -12233,7 +12173,7 @@
               "deprecationReason": null,
               "description": null,
               "isDeprecated": false,
-              "name": "deployer__bytecodeHash"
+              "name": "deployer__deployedBytecodeHash"
             },
             {
               "deprecationReason": null,
@@ -12269,6 +12209,12 @@
               "deprecationReason": null,
               "description": null,
               "isDeprecated": false,
+              "name": "deployer__bytecodeHash"
+            },
+            {
+              "deprecationReason": null,
+              "description": null,
+              "isDeprecated": false,
               "name": "interpreter"
             },
             {
@@ -12281,7 +12227,7 @@
               "deprecationReason": null,
               "description": null,
               "isDeprecated": false,
-              "name": "interpreter__bytecode"
+              "name": "interpreter__deployedBytecode"
             },
             {
               "deprecationReason": null,
@@ -12384,9 +12330,9 @@
             {
               "args": [],
               "deprecationReason": null,
-              "description": "The bytecode of the contract",
+              "description": "The deployed bytecode of the contract",
               "isDeprecated": false,
-              "name": "bytecode",
+              "name": "deployedBytecode",
               "type": {
                 "kind": "NON_NULL",
                 "name": null,
@@ -13070,7 +13016,7 @@
               "deprecationReason": null,
               "description": null,
               "isDeprecated": false,
-              "name": "interpreter__bytecode"
+              "name": "interpreter__deployedBytecode"
             },
             {
               "deprecationReason": null,
@@ -13190,7 +13136,7 @@
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecode",
+              "name": "deployedBytecode",
               "type": {
                 "kind": "SCALAR",
                 "name": "Bytes",
@@ -13200,7 +13146,7 @@
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecode_not",
+              "name": "deployedBytecode_not",
               "type": {
                 "kind": "SCALAR",
                 "name": "Bytes",
@@ -13210,7 +13156,7 @@
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecode_gt",
+              "name": "deployedBytecode_gt",
               "type": {
                 "kind": "SCALAR",
                 "name": "Bytes",
@@ -13220,7 +13166,7 @@
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecode_lt",
+              "name": "deployedBytecode_lt",
               "type": {
                 "kind": "SCALAR",
                 "name": "Bytes",
@@ -13230,7 +13176,7 @@
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecode_gte",
+              "name": "deployedBytecode_gte",
               "type": {
                 "kind": "SCALAR",
                 "name": "Bytes",
@@ -13240,7 +13186,7 @@
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecode_lte",
+              "name": "deployedBytecode_lte",
               "type": {
                 "kind": "SCALAR",
                 "name": "Bytes",
@@ -13250,7 +13196,7 @@
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecode_in",
+              "name": "deployedBytecode_in",
               "type": {
                 "kind": "LIST",
                 "name": null,
@@ -13268,7 +13214,7 @@
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecode_not_in",
+              "name": "deployedBytecode_not_in",
               "type": {
                 "kind": "LIST",
                 "name": null,
@@ -13286,7 +13232,7 @@
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecode_contains",
+              "name": "deployedBytecode_contains",
               "type": {
                 "kind": "SCALAR",
                 "name": "Bytes",
@@ -13296,7 +13242,7 @@
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecode_not_contains",
+              "name": "deployedBytecode_not_contains",
               "type": {
                 "kind": "SCALAR",
                 "name": "Bytes",
@@ -13380,7 +13326,7 @@
               "deprecationReason": null,
               "description": null,
               "isDeprecated": false,
-              "name": "bytecode"
+              "name": "deployedBytecode"
             },
             {
               "deprecationReason": null,
@@ -17012,19 +16958,19 @@
             {
               "args": [],
               "deprecationReason": null,
-              "description": "Bytecode hash of this contract",
+              "description": "Deployed bytecode hash of the contract",
               "isDeprecated": false,
-              "name": "bytecodeHash",
+              "name": "deployedBytecodeHash",
               "type": {
                 "kind": "SCALAR",
-                "name": "String",
+                "name": "Bytes",
                 "ofType": null
               }
             },
             {
               "args": [],
               "deprecationReason": null,
-              "description": null,
+              "description": "Transaction where was deployed the contract",
               "isDeprecated": false,
               "name": "deployTransaction",
               "type": {
@@ -17230,67 +17176,67 @@
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecodeHash",
+              "name": "deployedBytecodeHash",
               "type": {
                 "kind": "SCALAR",
-                "name": "String",
+                "name": "Bytes",
                 "ofType": null
               }
             },
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecodeHash_not",
+              "name": "deployedBytecodeHash_not",
               "type": {
                 "kind": "SCALAR",
-                "name": "String",
+                "name": "Bytes",
                 "ofType": null
               }
             },
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecodeHash_gt",
+              "name": "deployedBytecodeHash_gt",
               "type": {
                 "kind": "SCALAR",
-                "name": "String",
+                "name": "Bytes",
                 "ofType": null
               }
             },
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecodeHash_lt",
+              "name": "deployedBytecodeHash_lt",
               "type": {
                 "kind": "SCALAR",
-                "name": "String",
+                "name": "Bytes",
                 "ofType": null
               }
             },
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecodeHash_gte",
+              "name": "deployedBytecodeHash_gte",
               "type": {
                 "kind": "SCALAR",
-                "name": "String",
+                "name": "Bytes",
                 "ofType": null
               }
             },
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecodeHash_lte",
+              "name": "deployedBytecodeHash_lte",
               "type": {
                 "kind": "SCALAR",
-                "name": "String",
+                "name": "Bytes",
                 "ofType": null
               }
             },
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecodeHash_in",
+              "name": "deployedBytecodeHash_in",
               "type": {
                 "kind": "LIST",
                 "name": null,
@@ -17299,7 +17245,7 @@
                   "name": null,
                   "ofType": {
                     "kind": "SCALAR",
-                    "name": "String",
+                    "name": "Bytes",
                     "ofType": null
                   }
                 }
@@ -17308,7 +17254,7 @@
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecodeHash_not_in",
+              "name": "deployedBytecodeHash_not_in",
               "type": {
                 "kind": "LIST",
                 "name": null,
@@ -17317,7 +17263,7 @@
                   "name": null,
                   "ofType": {
                     "kind": "SCALAR",
-                    "name": "String",
+                    "name": "Bytes",
                     "ofType": null
                   }
                 }
@@ -17326,120 +17272,20 @@
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecodeHash_contains",
+              "name": "deployedBytecodeHash_contains",
               "type": {
                 "kind": "SCALAR",
-                "name": "String",
+                "name": "Bytes",
                 "ofType": null
               }
             },
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecodeHash_contains_nocase",
+              "name": "deployedBytecodeHash_not_contains",
               "type": {
                 "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            {
-              "defaultValue": null,
-              "description": null,
-              "name": "bytecodeHash_not_contains",
-              "type": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            {
-              "defaultValue": null,
-              "description": null,
-              "name": "bytecodeHash_not_contains_nocase",
-              "type": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            {
-              "defaultValue": null,
-              "description": null,
-              "name": "bytecodeHash_starts_with",
-              "type": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            {
-              "defaultValue": null,
-              "description": null,
-              "name": "bytecodeHash_starts_with_nocase",
-              "type": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            {
-              "defaultValue": null,
-              "description": null,
-              "name": "bytecodeHash_not_starts_with",
-              "type": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            {
-              "defaultValue": null,
-              "description": null,
-              "name": "bytecodeHash_not_starts_with_nocase",
-              "type": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            {
-              "defaultValue": null,
-              "description": null,
-              "name": "bytecodeHash_ends_with",
-              "type": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            {
-              "defaultValue": null,
-              "description": null,
-              "name": "bytecodeHash_ends_with_nocase",
-              "type": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            {
-              "defaultValue": null,
-              "description": null,
-              "name": "bytecodeHash_not_ends_with",
-              "type": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            {
-              "defaultValue": null,
-              "description": null,
-              "name": "bytecodeHash_not_ends_with_nocase",
-              "type": {
-                "kind": "SCALAR",
-                "name": "String",
+                "name": "Bytes",
                 "ofType": null
               }
             },
@@ -17844,7 +17690,7 @@
               "deprecationReason": null,
               "description": null,
               "isDeprecated": false,
-              "name": "bytecodeHash"
+              "name": "deployedBytecodeHash"
             },
             {
               "deprecationReason": null,
@@ -18776,9 +18622,9 @@
             {
               "args": [],
               "deprecationReason": null,
-              "description": "The bytecode of the contract",
+              "description": "The deployed bytecode of the contract",
               "isDeprecated": false,
-              "name": "bytecode",
+              "name": "deployedBytecode",
               "type": {
                 "kind": "NON_NULL",
                 "name": null,
@@ -19391,7 +19237,7 @@
               "deprecationReason": null,
               "description": null,
               "isDeprecated": false,
-              "name": "parser__bytecode"
+              "name": "parser__deployedBytecode"
             },
             {
               "deprecationReason": null,
@@ -19511,7 +19357,7 @@
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecode",
+              "name": "deployedBytecode",
               "type": {
                 "kind": "SCALAR",
                 "name": "Bytes",
@@ -19521,7 +19367,7 @@
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecode_not",
+              "name": "deployedBytecode_not",
               "type": {
                 "kind": "SCALAR",
                 "name": "Bytes",
@@ -19531,7 +19377,7 @@
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecode_gt",
+              "name": "deployedBytecode_gt",
               "type": {
                 "kind": "SCALAR",
                 "name": "Bytes",
@@ -19541,7 +19387,7 @@
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecode_lt",
+              "name": "deployedBytecode_lt",
               "type": {
                 "kind": "SCALAR",
                 "name": "Bytes",
@@ -19551,7 +19397,7 @@
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecode_gte",
+              "name": "deployedBytecode_gte",
               "type": {
                 "kind": "SCALAR",
                 "name": "Bytes",
@@ -19561,7 +19407,7 @@
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecode_lte",
+              "name": "deployedBytecode_lte",
               "type": {
                 "kind": "SCALAR",
                 "name": "Bytes",
@@ -19571,7 +19417,7 @@
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecode_in",
+              "name": "deployedBytecode_in",
               "type": {
                 "kind": "LIST",
                 "name": null,
@@ -19589,7 +19435,7 @@
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecode_not_in",
+              "name": "deployedBytecode_not_in",
               "type": {
                 "kind": "LIST",
                 "name": null,
@@ -19607,7 +19453,7 @@
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecode_contains",
+              "name": "deployedBytecode_contains",
               "type": {
                 "kind": "SCALAR",
                 "name": "Bytes",
@@ -19617,7 +19463,7 @@
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecode_not_contains",
+              "name": "deployedBytecode_not_contains",
               "type": {
                 "kind": "SCALAR",
                 "name": "Bytes",
@@ -19691,7 +19537,7 @@
               "deprecationReason": null,
               "description": null,
               "isDeprecated": false,
-              "name": "bytecode"
+              "name": "deployedBytecode"
             },
             {
               "deprecationReason": null,
@@ -19730,9 +19576,9 @@
             {
               "args": [],
               "deprecationReason": null,
-              "description": "The bytecode of the contract",
+              "description": "The deployed bytecode of the contract",
               "isDeprecated": false,
-              "name": "bytecode",
+              "name": "deployedBytecode",
               "type": {
                 "kind": "NON_NULL",
                 "name": null,
@@ -20345,7 +20191,7 @@
               "deprecationReason": null,
               "description": null,
               "isDeprecated": false,
-              "name": "store__bytecode"
+              "name": "store__deployedBytecode"
             },
             {
               "deprecationReason": null,
@@ -20465,7 +20311,7 @@
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecode",
+              "name": "deployedBytecode",
               "type": {
                 "kind": "SCALAR",
                 "name": "Bytes",
@@ -20475,7 +20321,7 @@
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecode_not",
+              "name": "deployedBytecode_not",
               "type": {
                 "kind": "SCALAR",
                 "name": "Bytes",
@@ -20485,7 +20331,7 @@
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecode_gt",
+              "name": "deployedBytecode_gt",
               "type": {
                 "kind": "SCALAR",
                 "name": "Bytes",
@@ -20495,7 +20341,7 @@
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecode_lt",
+              "name": "deployedBytecode_lt",
               "type": {
                 "kind": "SCALAR",
                 "name": "Bytes",
@@ -20505,7 +20351,7 @@
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecode_gte",
+              "name": "deployedBytecode_gte",
               "type": {
                 "kind": "SCALAR",
                 "name": "Bytes",
@@ -20515,7 +20361,7 @@
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecode_lte",
+              "name": "deployedBytecode_lte",
               "type": {
                 "kind": "SCALAR",
                 "name": "Bytes",
@@ -20525,7 +20371,7 @@
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecode_in",
+              "name": "deployedBytecode_in",
               "type": {
                 "kind": "LIST",
                 "name": null,
@@ -20543,7 +20389,7 @@
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecode_not_in",
+              "name": "deployedBytecode_not_in",
               "type": {
                 "kind": "LIST",
                 "name": null,
@@ -20561,7 +20407,7 @@
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecode_contains",
+              "name": "deployedBytecode_contains",
               "type": {
                 "kind": "SCALAR",
                 "name": "Bytes",
@@ -20571,7 +20417,7 @@
             {
               "defaultValue": null,
               "description": null,
-              "name": "bytecode_not_contains",
+              "name": "deployedBytecode_not_contains",
               "type": {
                 "kind": "SCALAR",
                 "name": "Bytes",
@@ -20645,7 +20491,7 @@
               "deprecationReason": null,
               "description": null,
               "isDeprecated": false,
-              "name": "bytecode"
+              "name": "deployedBytecode"
             },
             {
               "deprecationReason": null,

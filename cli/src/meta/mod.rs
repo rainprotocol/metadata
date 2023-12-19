@@ -393,7 +393,7 @@ pub async fn search(hash: &str, subgraphs: &Vec<String>) -> anyhow::Result<query
 pub async fn search_deployer(
     hash: &str,
     subgraphs: &Vec<String>,
-) -> anyhow::Result<query::DeployerNPResponse> {
+) -> anyhow::Result<DeployerNPResponse> {
     if !types::common::v1::HASH_PATTERN.is_match(hash) {
         return Err(anyhow::anyhow!("invalid hash"));
     }
@@ -414,13 +414,15 @@ pub async fn search_deployer(
         )));
     }
     let response_value = future::select_ok(promises.drain(..)).await?.0;
-    Ok(query::DeployerNPResponse {
+    Ok(DeployerNPResponse {
         meta_hash: response_value.0,
         meta_bytes: response_value.1,
         bytecode: response_value.2,
         parser: response_value.3,
         store: response_value.4,
         interpreter: response_value.5,
+        bytecode_meta_hash: response_value.6,
+        tx_hash: response_value.7
     })
 }
 
@@ -468,24 +470,21 @@ impl Default for NPE2Deployer {
 impl NPE2Deployer {
     pub fn is_corrupt(&self) -> bool {
         if self.meta_bytes.is_empty() {
-            return false;
-        }
-        if self.meta_bytes.is_empty() {
-            return false;
+            return true;
         }
         if self.bytecode.is_empty() {
-            return false;
+            return true;
         }
         if self.parser.is_empty() {
-            return false;
+            return true;
         }
         if self.store.is_empty() {
-            return false;
+            return true;
         }
         if self.interpreter.is_empty() {
-            return false;
+            return true;
         }
-        true
+        false
     }
 }
 
@@ -563,6 +562,7 @@ pub struct Store {
     cache: HashMap<String, Vec<u8>>,
     dotrain_cache: HashMap<String, String>,
     deployer_cache: HashMap<String, NPE2Deployer>,
+    deployer_hash_map: HashMap<String, String>
 }
 
 impl Default for Store {
@@ -571,7 +571,8 @@ impl Default for Store {
             cache: HashMap::new(),
             dotrain_cache: HashMap::new(),
             deployer_cache: HashMap::new(),
-            subgraphs: KnownSubgraphs::NP.map(|url| url.to_string()).to_vec(),
+            subgraphs: KnownSubgraphs::NPE2.map(|url| url.to_string()).to_vec(),
+            deployer_hash_map: HashMap::new()
         }
     }
 }
@@ -585,6 +586,7 @@ impl Store {
             cache: HashMap::new(),
             dotrain_cache: HashMap::new(),
             deployer_cache: HashMap::new(),
+            deployer_hash_map: HashMap::new()
         }
     }
 
@@ -657,20 +659,20 @@ impl Store {
     }
 
     /// get the corresponding DeployerNPRecord of the given deployer hash if it exists
-    pub fn get_deployer(&self, deployer_bytecode_hash: &str) -> Option<&NPE2Deployer> {
+    pub fn get_deployer(&self, deployer_hash: &str) -> Option<&NPE2Deployer> {
         self.deployer_cache
-            .get(&deployer_bytecode_hash.to_ascii_lowercase())
+            .get(&deployer_hash.to_ascii_lowercase())
     }
 
     /// searches for DeployerNPRecord in the subgraphs given the deployer hash
-    pub async fn search_deployer(&mut self, deployer_bytecode_hash: &str) -> Option<&NPE2Deployer> {
-        match search_deployer(deployer_bytecode_hash, &self.subgraphs).await {
+    pub async fn search_deployer(&mut self, hash: &str) -> Option<&NPE2Deployer> {
+        match search_deployer(hash, &self.subgraphs).await {
             Ok(res) => {
                 self.cache
                     .insert(res.meta_hash.to_ascii_lowercase(), res.meta_bytes.clone());
                 let authoring_meta = res.get_authoring_meta();
                 self.deployer_cache.insert(
-                    deployer_bytecode_hash.to_ascii_lowercase(),
+                    res.bytecode_meta_hash.to_ascii_lowercase(),
                     NPE2Deployer {
                         meta_hash: res.meta_hash.to_ascii_lowercase(),
                         meta_bytes: res.meta_bytes,
@@ -681,36 +683,40 @@ impl Store {
                         authoring_meta,
                     },
                 );
-                self.deployer_cache.get(deployer_bytecode_hash)
+                self.deployer_hash_map.insert(res.tx_hash, res.meta_hash.to_ascii_lowercase());
+                self.deployer_cache.get(hash)
             }
             Err(_e) => None,
         }
     }
 
-    /// if the DeployerNPRecord already is cached it returns it immediately else
-    /// searches for DeployerNPRecord in the subgraphs given the deployer hash
+    /// if the NPE2Deployer record already is cached it returns it immediately else
+    /// searches for NPE2Deployer in the subgraphs given the deployer hash
     pub async fn search_deployer_check(
         &mut self,
-        deployer_bytecode_hash: &str,
+        hash: &str,
     ) -> Option<&NPE2Deployer> {
-        if self
-            .deployer_cache
-            .contains_key(&deployer_bytecode_hash.to_ascii_lowercase())
-        {
-            self.get_deployer(deployer_bytecode_hash)
+        let h = hash.to_ascii_lowercase();
+        if self.deployer_cache.contains_key(&h) {
+            self.get_deployer(&h)
         } else {
-            self.search_deployer(deployer_bytecode_hash).await
+            if self.deployer_hash_map.contains_key(&h) {
+                let b_hash = self.deployer_hash_map.get(&h).unwrap();
+                self.get_deployer(b_hash)
+            } else {
+                self.search_deployer(hash).await
+            }
         }
     }
 
     /// sets deployer record from the deployer query response
-    /// if the the provided hash is invalid it wont be set in the cache
     pub fn set_deployer_from_query_response(
         &mut self,
-        deployer_bytecode_hash: &str,
         deployer_query_response: DeployerNPResponse,
     ) -> NPE2Deployer {
         let authoring_meta = deployer_query_response.get_authoring_meta();
+        let tx_hash = deployer_query_response.tx_hash.to_ascii_lowercase();
+        let bytecode_meta_hash = deployer_query_response.bytecode_meta_hash.to_ascii_lowercase();
         let result = NPE2Deployer {
             meta_hash: deployer_query_response.meta_hash.to_ascii_lowercase(),
             meta_bytes: deployer_query_response.meta_bytes,
@@ -720,29 +726,35 @@ impl Store {
             interpreter: deployer_query_response.interpreter,
             authoring_meta,
         };
-        if types::common::v1::HASH_PATTERN.is_match(deployer_bytecode_hash) {
-            self.cache.insert(
-                deployer_query_response.meta_hash.to_ascii_lowercase(),
-                result.meta_bytes.clone(),
-            );
-            self.deployer_cache
-                .insert(deployer_bytecode_hash.to_ascii_lowercase(), result.clone());
-        }
+        self.cache.insert(
+            deployer_query_response.meta_hash.to_ascii_lowercase(),
+            result.meta_bytes.clone(),
+        );
+        self.deployer_hash_map.insert(tx_hash, bytecode_meta_hash.clone());
+        self.deployer_cache.insert(bytecode_meta_hash, result.clone());
         result
     }
 
-    /// sets deployer record
+    /// sets NPE2Deployer record
     /// skips if the given hash is invalid
-    pub fn set_deployer(&mut self, deployer_bytecode_hash: &str, npe2_deployer: &NPE2Deployer) {
-        if types::common::v1::HASH_PATTERN.is_match(deployer_bytecode_hash) {
+    pub fn set_deployer(&mut self, hash: &str, npe2_deployer: &NPE2Deployer, tx_hash: Option<&str>) {
+        if types::common::v1::HASH_PATTERN.is_match(hash) {
             self.cache.insert(
                 npe2_deployer.meta_hash.to_ascii_lowercase(),
                 npe2_deployer.meta_bytes.clone(),
             );
             self.deployer_cache.insert(
-                deployer_bytecode_hash.to_ascii_lowercase(),
+                hash.to_ascii_lowercase(),
                 npe2_deployer.clone(),
             );
+            if let Some(v) = tx_hash {
+                if types::common::v1::HASH_PATTERN.is_match(v) {
+                    self.deployer_hash_map.insert(
+                        v.to_ascii_lowercase(), 
+                        hash.to_ascii_lowercase()
+                    );
+                }
+            }
         }
     }
 
@@ -763,7 +775,7 @@ impl Store {
                 return Some(uri);
             }
         }
-        return None;
+        None
     }
 
     /// get the corresponding meta bytes of the given dotrain uri if it exists

@@ -39,6 +39,8 @@ pub struct DeployerNPResponse {
     pub parser: Vec<u8>,
     pub store: Vec<u8>,
     pub interpreter: Vec<u8>,
+    pub bytecode_meta_hash: String,
+    pub tx_hash: String
 }
 
 impl DeployerNPResponse {
@@ -89,7 +91,7 @@ pub(super) async fn process_deployer_query(
     client: Arc<Client>,
     request_body: &QueryBody<deployer_query::Variables>,
     url: &str,
-) -> anyhow::Result<(String, Vec<u8>, Vec<u8>, Vec<u8>, Vec<u8>, Vec<u8>)> {
+) -> anyhow::Result<(String, Vec<u8>, Vec<u8>, Vec<u8>, Vec<u8>, Vec<u8>, String, String)> {
     let res = client
         .post(Url::parse(url)?)
         .json(request_body)
@@ -108,27 +110,39 @@ pub(super) async fn process_deployer_query(
             return Err(anyhow::anyhow!("found no matching record!"));
         };
         let parser = if let Some(v) = &res[0].parser {
-            alloy_primitives::hex::decode(&v.parser.bytecode)?
+            alloy_primitives::hex::decode(&v.parser.deployed_bytecode)?
         } else {
             return Err(anyhow::anyhow!("found no matching record!"));
         };
         let store = if let Some(v) = &res[0].store {
-            alloy_primitives::hex::decode(&v.store.bytecode)?
+            alloy_primitives::hex::decode(&v.store.deployed_bytecode)?
         } else {
             return Err(anyhow::anyhow!("found no matching record!"));
         };
         let interpreter = if let Some(v) = &res[0].interpreter {
-            alloy_primitives::hex::decode(&v.interpreter.bytecode)?
+            alloy_primitives::hex::decode(&v.interpreter.deployed_bytecode)?
+        } else {
+            return Err(anyhow::anyhow!("found no matching record!"));
+        };
+        let bytecode_meta_hash = if res[0].meta.len() == 1 {
+            res[0].meta[0].id.to_ascii_lowercase()
+        } else {
+            return Err(anyhow::anyhow!("found no matching record!"));
+        };
+        let tx_hash = if let Some(v) = &res[0].deploy_transaction {
+            v.id.to_ascii_lowercase()
         } else {
             return Err(anyhow::anyhow!("found no matching record!"));
         };
         return Ok((
-            res[0].constructor_meta_hash.clone(),
+            res[0].constructor_meta_hash.to_ascii_lowercase(),
             alloy_primitives::hex::decode(&res[0].constructor_meta)?,
             bytecode,
             parser,
             store,
             interpreter,
+            bytecode_meta_hash,
+            tx_hash
         ));
     } else {
         return Err(anyhow::anyhow!("found no matching record!"));
