@@ -32,15 +32,21 @@ pub struct MetaResponse {
 
 /// response data struct for a deployer meta
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct DeployerNPResponse {
-    pub meta_hash: String,
-    pub meta_bytes: Vec<u8>,
-    pub bytecode: Vec<u8>,
-    pub parser: Vec<u8>,
-    pub store: Vec<u8>,
-    pub interpreter: Vec<u8>,
+    pub tx_hash: String,
     pub bytecode_meta_hash: String,
-    pub tx_hash: String
+    pub meta_hash: String,
+    #[serde(with = "serde_bytes")]
+    pub meta_bytes: Vec<u8>,
+    #[serde(with = "serde_bytes")]
+    pub bytecode: Vec<u8>,
+    #[serde(with = "serde_bytes")]
+    pub parser: Vec<u8>,
+    #[serde(with = "serde_bytes")]
+    pub store: Vec<u8>,
+    #[serde(with = "serde_bytes")]
+    pub interpreter: Vec<u8>
 }
 
 impl DeployerNPResponse {
