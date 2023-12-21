@@ -1,14 +1,17 @@
 use validator::Validate;
-use schemars::JsonSchema;
 use alloy_json_abi::JsonAbi;
 use super::super::super::RainMetaDocumentV1Item;
 use validator::{ValidationErrors, ValidationError};
 use serde::{Serialize, Serializer, Deserialize, Deserializer, de::Error, ser::SerializeStruct};
 
+#[cfg(feature = "json-schema")]
+use schemars::JsonSchema;
+
 /// # SolidityABI
 /// JSON representation of a Solidity ABI interface. can be switched to ethers ABI struct using TryFrom trait
 /// https://docs.soliditylang.org/en/latest/abi-spec.html#json
-#[derive(JsonSchema, Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 pub struct SolidityAbiMeta(Vec<SolidityAbiItem>);
 
 impl SolidityAbiMeta {
@@ -92,7 +95,8 @@ impl TryFrom<JsonAbi> for SolidityAbiMeta {
     }
 }
 
-#[derive(Validate, JsonSchema, Debug, Clone, PartialEq)]
+#[derive(Validate, Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 pub struct SolidityAbiItemFn {
     inputs: Vec<SolidityAbiFnIO>,
     name: String,
@@ -115,7 +119,8 @@ impl Serialize for SolidityAbiItemFn {
     }
 }
 
-#[derive(Validate, JsonSchema, Debug, Clone, PartialEq)]
+#[derive(Validate, Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 pub struct SolidityAbiItemConstructor {
     inputs: Vec<SolidityAbiFnIO>,
     state_mutability: SolidityAbiFnMutability,
@@ -134,7 +139,8 @@ impl Serialize for SolidityAbiItemConstructor {
     }
 }
 
-#[derive(Validate, JsonSchema, Debug, Clone, PartialEq)]
+#[derive(Validate, Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 pub struct SolidityAbiItemReceive {
     state_mutability: SolidityAbiFnMutability,
 }
@@ -151,7 +157,8 @@ impl Serialize for SolidityAbiItemReceive {
     }
 }
 
-#[derive(Validate, JsonSchema, Debug, Clone, PartialEq)]
+#[derive(Validate, Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 pub struct SolidityAbiItemFallback {
     state_mutability: SolidityAbiFnMutability,
 }
@@ -168,7 +175,8 @@ impl Serialize for SolidityAbiItemFallback {
     }
 }
 
-#[derive(Validate, JsonSchema, Debug, Clone, PartialEq)]
+#[derive(Validate, Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 pub struct SolidityAbiItemEvent {
     anonymous: bool,
     inputs: Vec<SolidityAbiEventInput>,
@@ -189,7 +197,8 @@ impl Serialize for SolidityAbiItemEvent {
     }
 }
 
-#[derive(Validate, JsonSchema, Debug, Clone, PartialEq)]
+#[derive(Validate, Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 pub struct SolidityAbiItemError {
     inputs: Vec<SolidityAbiErrorInput>,
     name: String,
@@ -208,7 +217,8 @@ impl Serialize for SolidityAbiItemError {
     }
 }
 
-#[derive(JsonSchema, Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 pub enum SolidityAbiItem {
     Function(SolidityAbiItemFn),
     Constructor(SolidityAbiItemConstructor),
@@ -249,7 +259,8 @@ impl Validate for SolidityAbiItem {
     }
 }
 
-#[derive(JsonSchema, Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 #[serde(rename_all = "lowercase")]
 pub enum SolidityAbiFnMutability {
     Pure,
@@ -258,7 +269,8 @@ pub enum SolidityAbiFnMutability {
     Payable,
 }
 
-#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Validate, Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct SolidityAbiFnIO {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -269,7 +281,8 @@ pub struct SolidityAbiFnIO {
     typ: String,
 }
 
-#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Validate, Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct SolidityAbiErrorInput {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -280,7 +293,8 @@ pub struct SolidityAbiErrorInput {
     typ: String,
 }
 
-#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Validate, Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct SolidityAbiEventInput {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -292,7 +306,8 @@ pub struct SolidityAbiEventInput {
     typ: String,
 }
 
-#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Validate, Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct SolidityAbiEventInputComponent {
     #[serde(skip_serializing_if = "Option::is_none")]

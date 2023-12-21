@@ -1,10 +1,12 @@
 use validator::Validate;
-use schemars::JsonSchema;
 use serde::{Serialize, Deserialize};
 use super::super::{
     super::RainMetaDocumentV1Item,
     common::v1::{RainTitle, RainSymbol, RainString, Description, SolidityIdentifier},
 };
+
+#[cfg(feature = "json-schema")]
+use schemars::JsonSchema;
 
 type AbiPath = RainString;
 
@@ -13,7 +15,8 @@ type AbiPath = RainString;
 /// Supports `IInterpreterCallerV2` Solidity contracts.
 /// Required info about a contract that receives expression in at least one of
 /// its methods.
-#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize)]
+#[derive(Validate, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct InterpreterCallerMeta {
@@ -80,7 +83,8 @@ impl TryFrom<RainMetaDocumentV1Item> for InterpreterCallerMeta {
     }
 }
 
-#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize)]
+#[derive(Validate, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct Method {
@@ -99,7 +103,8 @@ pub struct Method {
     pub expressions: Vec<Expression>,
 }
 
-#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize)]
+#[derive(Validate, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct MethodInput {
@@ -114,7 +119,8 @@ pub struct MethodInput {
     pub path: AbiPath,
 }
 
-#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize)]
+#[derive(Validate, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct Expression {
@@ -137,7 +143,8 @@ pub struct Expression {
     pub context_columns: Vec<ContextColumn>,
 }
 
-#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize)]
+#[derive(Validate, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 #[serde(deny_unknown_fields)]
 pub struct ContextColumn {
     #[validate]
@@ -153,7 +160,8 @@ pub struct ContextColumn {
     pub cells: Vec<ContextCell>,
 }
 
-#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize)]
+#[derive(Validate, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 #[serde(deny_unknown_fields)]
 pub struct ContextCell {
     #[validate]

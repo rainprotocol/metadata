@@ -1,8 +1,10 @@
 use regex::Regex;
 use validator::Validate;
-use schemars::JsonSchema;
 use once_cell::sync::Lazy;
 use serde::{Serialize, Deserialize};
+
+#[cfg(feature = "json-schema")]
+use schemars::JsonSchema;
 
 /// Valid symbols in Rainlang are alpha prefixed alphanumeric kebab case.
 pub const REGEX_RAIN_SYMBOL: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[a-z][0-9a-z-]*$").unwrap());
@@ -25,7 +27,8 @@ pub const REGEX_RAIN_TITLE: Lazy<Regex> =
 pub const HASH_PATTERN: Lazy<Regex> = Lazy::new(|| Regex::new(r"^0x[a-fA-F0-9]{64}$").unwrap());
 
 /// Rain symbols are a subset of kebab case.
-#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Validate, Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 #[serde(transparent)]
 #[repr(transparent)]
 pub struct RainSymbol {
@@ -36,7 +39,8 @@ pub struct RainSymbol {
     pub value: String,
 }
 
-#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Validate, Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 #[serde(transparent)]
 #[repr(transparent)]
 pub struct RainTitle {
@@ -47,7 +51,8 @@ pub struct RainTitle {
     pub value: String,
 }
 
-#[derive(Validate, JsonSchema, Debug, Default, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Validate, Debug, Default, Serialize, Deserialize, Clone, PartialEq)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 #[serde(transparent)]
 #[repr(transparent)]
 pub struct RainString {
@@ -60,7 +65,8 @@ pub struct RainString {
 
 pub type Description = RainString;
 
-#[derive(Validate, JsonSchema, Debug, Default, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Validate, Debug, Default, Serialize, Deserialize, Clone, PartialEq)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 #[serde(transparent)]
 #[repr(transparent)]
 pub struct SolidityIdentifier {

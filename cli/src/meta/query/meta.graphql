@@ -1,6 +1,0 @@
-query MetaQuery($hash: String) { 
-  meta( id: $hash ) { 
-    __typename
-    rawBytes 
-  }
-}

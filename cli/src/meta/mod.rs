@@ -6,7 +6,6 @@ pub mod normalize;
 use reqwest::Client;
 use futures::future;
 use magic::KnownMagic;
-use graphql_client::GraphQLQuery;
 use strum::{EnumIter, EnumString};
 use alloy_primitives::{keccak256, hex};
 use serde::de::{Deserialize, Deserializer, Visitor};
@@ -14,6 +13,7 @@ use serde::ser::{Serialize, Serializer, SerializeMap};
 use std::{sync::Arc, fmt::Debug, convert::TryFrom, collections::HashMap};
 
 use self::types::authoring::v1::AuthoringMeta;
+use self::query::{get_meta_query, get_deployer_query};
 
 pub use super::subgraph::KnownSubgraphs;
 pub use query::{MetaResponse, DeployerNPResponse};
@@ -366,20 +366,18 @@ pub async fn search(hash: &str, subgraphs: &Vec<String>) -> anyhow::Result<query
     if !types::common::v1::HASH_PATTERN.is_match(hash) {
         return Err(anyhow::anyhow!("invalid hash"));
     }
-    let request_body = query::MetaQuery::build_query(query::meta_query::Variables {
-        hash: Some(hash.to_ascii_lowercase()),
-    });
+    let query_string = get_meta_query(hash);
     let mut promises = vec![];
     let client = Arc::new(
         Client::builder()
             // .timeout(std::time::Duration::from_secs(timeout as u64))
             .build()?,
     );
-    for sg in subgraphs {
+    for url in subgraphs {
         promises.push(Box::pin(query::process_meta_query(
             client.clone(),
-            &request_body,
-            sg,
+            &query_string,
+            url,
         )));
     }
     let response_value = future::select_ok(promises.drain(..)).await?.0;
@@ -397,20 +395,18 @@ pub async fn search_deployer(
     if !types::common::v1::HASH_PATTERN.is_match(hash) {
         return Err(anyhow::anyhow!("invalid hash"));
     }
-    let request_body = query::DeployerQuery::build_query(query::deployer_query::Variables {
-        hash: Some(hash.to_ascii_lowercase()),
-    });
+    let query_string = get_deployer_query(hash);
     let mut promises = vec![];
     let client = Arc::new(
         Client::builder()
             // .timeout(std::time::Duration::from_secs(timeout as u64))
             .build()?,
     );
-    for sg in subgraphs {
+    for url in subgraphs {
         promises.push(Box::pin(query::process_deployer_query(
             client.clone(),
-            &request_body,
-            sg,
+            &query_string,
+            url,
         )));
     }
     let response_value = future::select_ok(promises.drain(..)).await?.0;
@@ -422,7 +418,7 @@ pub async fn search_deployer(
         store: response_value.4,
         interpreter: response_value.5,
         bytecode_meta_hash: response_value.6,
-        tx_hash: response_value.7
+        tx_hash: response_value.7,
     })
 }
 
@@ -562,7 +558,7 @@ pub struct Store {
     cache: HashMap<String, Vec<u8>>,
     dotrain_cache: HashMap<String, String>,
     deployer_cache: HashMap<String, NPE2Deployer>,
-    deployer_hash_map: HashMap<String, String>
+    deployer_hash_map: HashMap<String, String>,
 }
 
 impl Default for Store {
@@ -572,7 +568,7 @@ impl Default for Store {
             dotrain_cache: HashMap::new(),
             deployer_cache: HashMap::new(),
             subgraphs: KnownSubgraphs::NPE2.map(|url| url.to_string()).to_vec(),
-            deployer_hash_map: HashMap::new()
+            deployer_hash_map: HashMap::new(),
         }
     }
 }
@@ -586,7 +582,7 @@ impl Store {
             cache: HashMap::new(),
             dotrain_cache: HashMap::new(),
             deployer_cache: HashMap::new(),
-            deployer_hash_map: HashMap::new()
+            deployer_hash_map: HashMap::new(),
         }
     }
 
@@ -660,8 +656,7 @@ impl Store {
 
     /// get the corresponding DeployerNPRecord of the given deployer hash if it exists
     pub fn get_deployer(&self, deployer_hash: &str) -> Option<&NPE2Deployer> {
-        self.deployer_cache
-            .get(&deployer_hash.to_ascii_lowercase())
+        self.deployer_cache.get(&deployer_hash.to_ascii_lowercase())
     }
 
     /// searches for DeployerNPRecord in the subgraphs given the deployer hash
@@ -683,7 +678,8 @@ impl Store {
                         authoring_meta,
                     },
                 );
-                self.deployer_hash_map.insert(res.tx_hash, res.meta_hash.to_ascii_lowercase());
+                self.deployer_hash_map
+                    .insert(res.tx_hash, res.meta_hash.to_ascii_lowercase());
                 self.deployer_cache.get(hash)
             }
             Err(_e) => None,
@@ -692,10 +688,7 @@ impl Store {
 
     /// if the NPE2Deployer record already is cached it returns it immediately else
     /// searches for NPE2Deployer in the subgraphs given the deployer hash
-    pub async fn search_deployer_check(
-        &mut self,
-        hash: &str,
-    ) -> Option<&NPE2Deployer> {
+    pub async fn search_deployer_check(&mut self, hash: &str) -> Option<&NPE2Deployer> {
         let h = hash.to_ascii_lowercase();
         if self.deployer_cache.contains_key(&h) {
             self.get_deployer(&h)
@@ -716,7 +709,9 @@ impl Store {
     ) -> NPE2Deployer {
         let authoring_meta = deployer_query_response.get_authoring_meta();
         let tx_hash = deployer_query_response.tx_hash.to_ascii_lowercase();
-        let bytecode_meta_hash = deployer_query_response.bytecode_meta_hash.to_ascii_lowercase();
+        let bytecode_meta_hash = deployer_query_response
+            .bytecode_meta_hash
+            .to_ascii_lowercase();
         let result = NPE2Deployer {
             meta_hash: deployer_query_response.meta_hash.to_ascii_lowercase(),
             meta_bytes: deployer_query_response.meta_bytes,
@@ -730,29 +725,32 @@ impl Store {
             deployer_query_response.meta_hash.to_ascii_lowercase(),
             result.meta_bytes.clone(),
         );
-        self.deployer_hash_map.insert(tx_hash, bytecode_meta_hash.clone());
-        self.deployer_cache.insert(bytecode_meta_hash, result.clone());
+        self.deployer_hash_map
+            .insert(tx_hash, bytecode_meta_hash.clone());
+        self.deployer_cache
+            .insert(bytecode_meta_hash, result.clone());
         result
     }
 
     /// sets NPE2Deployer record
     /// skips if the given hash is invalid
-    pub fn set_deployer(&mut self, hash: &str, npe2_deployer: &NPE2Deployer, tx_hash: Option<&str>) {
+    pub fn set_deployer(
+        &mut self,
+        hash: &str,
+        npe2_deployer: &NPE2Deployer,
+        tx_hash: Option<&str>,
+    ) {
         if types::common::v1::HASH_PATTERN.is_match(hash) {
             self.cache.insert(
                 npe2_deployer.meta_hash.to_ascii_lowercase(),
                 npe2_deployer.meta_bytes.clone(),
             );
-            self.deployer_cache.insert(
-                hash.to_ascii_lowercase(),
-                npe2_deployer.clone(),
-            );
+            self.deployer_cache
+                .insert(hash.to_ascii_lowercase(), npe2_deployer.clone());
             if let Some(v) = tx_hash {
                 if types::common::v1::HASH_PATTERN.is_match(v) {
-                    self.deployer_hash_map.insert(
-                        v.to_ascii_lowercase(), 
-                        hash.to_ascii_lowercase()
-                    );
+                    self.deployer_hash_map
+                        .insert(v.to_ascii_lowercase(), hash.to_ascii_lowercase());
                 }
             }
         }

@@ -1,4 +1,3 @@
-use schemars::JsonSchema;
 use alloy_sol_types::{SolType, sol};
 use serde::{Serialize, Deserialize};
 use validator::{Validate, ValidationErrors, ValidationError};
@@ -6,6 +5,9 @@ use super::super::{
     super::{RainMetaDocumentV1Item, str_to_bytes32, bytes32_to_str},
     common::v1::{REGEX_RAIN_SYMBOL, REGEX_RAIN_STRING},
 };
+
+#[cfg(feature = "json-schema")]
+use schemars::JsonSchema;
 
 /// authoring meta struct
 pub type AuthoringMetaStruct = sol!((bytes32, uint8, string));
@@ -15,12 +17,14 @@ pub type AuthoringMetaStructArray = sol!((bytes32, uint8, string)[]);
 
 /// # Authoring Meta
 /// array of native parser opcode metadata
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, JsonSchema)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 pub struct AuthoringMeta(pub Vec<AuthoringMetaItem>);
 
 /// AuthoringMeta single item
-#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Validate, Debug, Serialize, Deserialize, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 pub struct AuthoringMetaItem {
     /// # Word
     /// Primary word used to identify the opcode.

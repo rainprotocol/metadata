@@ -5,42 +5,48 @@ edition = "2021"
 description = "Tooling and utilities for RainProtocol metadata."
 license = "CAL-1.0"
 
-[features]
-cli = ["dep:tracing", "dep:tracing-subscriber"]
-tokio-full = ["tokio/full"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+cli = ["json-schema", "dep:tracing", "dep:tracing-subscriber", "dep:clap"]
+json-schema = ["dep:schemars"]
+tokio-full = ["bin-deps", "tokio/full"]
+bin-deps = ["json-schema", "dep:tokio", "dep:tracing", "dep:tracing-subscriber", "dep:clap"]
+
 [dependencies]
-anyhow = "1.0.70"
-clap = { version = "4.2.5", features = ["cargo", "derive"] }
-graphql_client = "0.12.0"
-serde_json = "1.0.96"
-schemars = "0.8.12"
-once_cell = "1.17.2"
-regex = "1.8.3"
+regex = "1.10.2"
+anyhow = "1.0.75"
+futures = "0.3.29"
+once_cell = "1.18.0"
 strum = { version = "0.24", features = ["derive"] }
-serde = "1.0.163"
-validator = { version = "0.16", features = ["derive"] }
+serde = "1.0.192"
+serde_json = "1.0.108"
 itertools = "0.10.5"
-serde_bytes = "0.11.9"
+serde_bytes = "0.11.12"
 deflate = "1.0.0"
 inflate = "0.4.5"
 serde_cbor = "0.11.2"
+validator = { version = "0.16", features = ["derive"] }
 reqwest = { version = "0.11.22", features = ["json"] }
-futures = "0.3.29"
-alloy-json-abi = { version = "0.4.2", features = ["serde_json"] }
-alloy-primitives = "0.4.2"
-alloy-sol-types = "0.4.2"
-tokio = { version = "1.34.0", features = ["sync", "macros", "io-util", "rt", "time"] }
+alloy-json-abi = { version = "0.5.0", features = ["serde_json"] }
+alloy-primitives = "0.5.0"
+alloy-sol-types = "0.5.0"
+
+# json-schema
+schemars = { version = "0.8.12", optional = true }
 
 # cli
 tracing = { version = "0.1.37", optional = true }
 tracing-subscriber = { version = "0.3.17", optional = true }
+clap = { version = "4.4.8", features = ["cargo", "derive"], optional = true }
+
+# binary
+tokio = { version = "1.34.0", features = ["sync", "macros", "io-util", "rt", "time"], optional = true }
 
 [[bin]]
 name = "rain-meta"
 path = "src/main.rs"
-required-features = ["cli"]
+required-features = ["bin-deps"]
 
 [lib]
 path = "src/lib.rs"
