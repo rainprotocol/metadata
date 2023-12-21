@@ -381,9 +381,7 @@ pub async fn search(hash: &str, subgraphs: &Vec<String>) -> anyhow::Result<query
         )));
     }
     let response_value = future::select_ok(promises.drain(..)).await?.0;
-    Ok(query::MetaResponse {
-        bytes: response_value,
-    })
+    Ok(response_value)
 }
 
 /// # Search Deployer Meta
@@ -410,16 +408,7 @@ pub async fn search_deployer(
         )));
     }
     let response_value = future::select_ok(promises.drain(..)).await?.0;
-    Ok(DeployerNPResponse {
-        meta_hash: response_value.0,
-        meta_bytes: response_value.1,
-        bytecode: response_value.2,
-        parser: response_value.3,
-        store: response_value.4,
-        interpreter: response_value.5,
-        bytecode_meta_hash: response_value.6,
-        tx_hash: response_value.7,
-    })
+    Ok(response_value)
 }
 
 /// # DeployerNPRecord

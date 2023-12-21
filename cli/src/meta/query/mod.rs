@@ -102,7 +102,7 @@ pub(super) async fn process_meta_query(
     client: Arc<Client>,
     query_string: &str,
     url: &str,
-) -> anyhow::Result<Vec<u8>> {
+) -> anyhow::Result<MetaResponse> {
     let mut query = HashMap::new();
     query.insert("query", query_string);
     let result = &client
@@ -114,8 +114,10 @@ pub(super) async fn process_meta_query(
         .await?["data"]["meta"]["rawBytes"];
 
     if result.is_string() {
-        Ok(alloy_primitives::hex::decode(result.as_str().unwrap())
-            .or(Err(anyhow::anyhow!("found no matching record!")))?)
+        Ok(MetaResponse {
+            bytes: alloy_primitives::hex::decode(result.as_str().unwrap())
+            .or(Err(anyhow::anyhow!("found no matching record!")))?
+        })
     } else {
         Err(anyhow::anyhow!("found no record"))
     }
@@ -126,16 +128,7 @@ pub(super) async fn process_deployer_query(
     client: Arc<Client>,
     query_string: &str,
     url: &str,
-) -> anyhow::Result<(
-    String,
-    Vec<u8>,
-    Vec<u8>,
-    Vec<u8>,
-    Vec<u8>,
-    Vec<u8>,
-    String,
-    String,
-)> {
+) -> anyhow::Result<DeployerNPResponse> {
     let mut query = HashMap::new();
     query.insert("query", query_string);
     let res = &client
@@ -182,27 +175,27 @@ pub(super) async fn process_deployer_query(
         } else {
             return Err(anyhow::anyhow!("found no matching record!"));
         };
-        let const_hash = if let Some(v) = res["constructorMetaHash"].as_str() {
+        let meta_hash = if let Some(v) = res["constructorMetaHash"].as_str() {
             v.to_ascii_lowercase()
         } else {
             return Err(anyhow::anyhow!("found no matching record!"));
         };
-        let const_bytes = if let Some(v) = res["constructorMeta"].as_str() {
+        let meta_bytes = if let Some(v) = res["constructorMeta"].as_str() {
             alloy_primitives::hex::decode(v)
                 .or(Err(anyhow::anyhow!("found no matching record!")))?
         } else {
             return Err(anyhow::anyhow!("found no matching record!"));
         };
-        Ok((
-            const_hash,
-            const_bytes,
+        Ok(DeployerNPResponse {
+            meta_hash,
+            meta_bytes,
             bytecode,
             parser,
             store,
             interpreter,
             bytecode_meta_hash,
             tx_hash,
-        ))
+    })
     } else {
         return Err(anyhow::anyhow!("found no matching record!"));
     }
