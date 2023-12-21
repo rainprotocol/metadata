@@ -8,10 +8,9 @@ license = "CAL-1.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-cli = ["json-schema", "dep:tracing", "dep:tracing-subscriber", "dep:clap"]
+cli = ["json-schema", "dep:tracing", "dep:tracing-subscriber", "dep:clap", "dep:tokio"]
 json-schema = ["dep:schemars"]
-tokio-full = ["bin-deps", "tokio/full"]
-bin-deps = ["json-schema", "dep:tokio", "dep:tracing", "dep:tracing-subscriber", "dep:clap"]
+tokio-full = ["tokio/full"]
 
 [dependencies]
 regex = "1.10.2"
@@ -31,6 +30,7 @@ reqwest = { version = "0.11.22", features = ["json"] }
 alloy-json-abi = { version = "0.5.0", features = ["serde_json"] }
 alloy-primitives = "0.5.0"
 alloy-sol-types = "0.5.0"
+tokio = { version = "1.34.0", features = ["sync", "macros", "io-util", "rt", "time"], optional = true }
 
 # json-schema
 schemars = { version = "0.8.12", optional = true }
@@ -40,13 +40,10 @@ tracing = { version = "0.1.37", optional = true }
 tracing-subscriber = { version = "0.3.17", optional = true }
 clap = { version = "4.4.8", features = ["cargo", "derive"], optional = true }
 
-# binary
-tokio = { version = "1.34.0", features = ["sync", "macros", "io-util", "rt", "time"], optional = true }
-
 [[bin]]
 name = "rain-meta"
 path = "src/main.rs"
-required-features = ["bin-deps"]
+required-features = ["cli"]
 
 [lib]
 path = "src/lib.rs"
