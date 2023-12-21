@@ -2,7 +2,7 @@
 name = "rain-meta"
 version = "1.0.0"
 edition = "2021"
-description = "Tooling and utilities for RainProtocol metadata."
+description = "Tooling and utilities for RainLanguage metadata."
 license = "CAL-1.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
