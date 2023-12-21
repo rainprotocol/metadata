@@ -116,7 +116,7 @@ pub(super) async fn process_meta_query(
     if result.is_string() {
         Ok(MetaResponse {
             bytes: alloy_primitives::hex::decode(result.as_str().unwrap())
-            .or(Err(anyhow::anyhow!("found no matching record!")))?
+                .or(Err(anyhow::anyhow!("found no matching record!")))?,
         })
     } else {
         Err(anyhow::anyhow!("found no record"))
@@ -195,7 +195,7 @@ pub(super) async fn process_deployer_query(
             interpreter,
             bytecode_meta_hash,
             tx_hash,
-    })
+        })
     } else {
         return Err(anyhow::anyhow!("found no matching record!"));
     }
