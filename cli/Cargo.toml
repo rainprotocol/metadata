@@ -30,6 +30,7 @@ reqwest = { version = "0.11.22", features = ["json"] }
 alloy-json-abi = { version = "0.5.0", features = ["serde_json"] }
 alloy-primitives = "0.5.0"
 alloy-sol-types = "0.5.0"
+graphql_client = "0.13.0"
 
 # json-schema
 schemars = { version = "0.8.12", optional = true }
@@ -39,7 +40,6 @@ tracing = { version = "0.1.37", optional = true }
 tracing-subscriber = { version = "0.3.17", optional = true }
 clap = { version = "4.4.8", features = ["cargo", "derive"], optional = true }
 tokio = { version = "1.34.0", features = ["sync", "macros", "io-util", "rt", "time"], optional = true }
-graphql_client = "0.13.0"
 
 [[bin]]
 name = "rain-meta"
