@@ -47,3 +47,6 @@ required-features = ["cli"]
 
 [lib]
 path = "src/lib.rs"
+
+[package.metadata.docs.rs]
+all-features = true

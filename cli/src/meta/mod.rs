@@ -483,7 +483,7 @@ impl NPE2Deployer {
 /// ## Examples
 ///
 /// ```rust
-/// use rain_meta::meta::Store;
+/// use rain_meta::Store;
 /// use std::collections::HashMap;
 ///
 ///
