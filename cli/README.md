@@ -7,7 +7,7 @@ Also provides CLI app (executable binary) to generate desireable Rain cbor encod
 ## Features
 In most cases non of the features are needed for using the lib crate, but `cli` feature is required for building the binary.
 
-- `cli`: A [clap](https://docs.rs/clap/latest/clap/) based CLI crate for functionalities of this library, this is features has [tokio](https://docs.rs/tokio/latest/tokio/) dependency with features enabled that are compatible for `wasm` family target builds.
+- `cli`: A [clap](https://docs.rs/clap/latest/clap/) based CLI crate for functionalities of this library, this feature has [tokio](https://docs.rs/tokio/latest/tokio/) dependency with features enabled that are compatible for `wasm` family target builds.
 - `json-schema`: Enables implementation of Json Schema for different types of Rain meta.
 - `tokio-full`: Installs [tokio](https://docs.rs/tokio/latest/tokio/) with full features which is a dependency of `cli` feature, this allows for multithreating of the CLI app, however it results in erroneous builds for `wasm` target family as explained in tokio docs.
 <br>
