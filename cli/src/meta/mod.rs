@@ -6,6 +6,7 @@ pub(crate) mod normalize;
 use reqwest::Client;
 use futures::future;
 use strum::{EnumIter, EnumString};
+use graphql_client::GraphQLQuery;
 use super::subgraph::KnownSubgraphs;
 use alloy_primitives::{keccak256, hex};
 use types::authoring::v1::AuthoringMeta;
@@ -134,7 +135,7 @@ pub enum ContentLanguage {
 }
 
 /// # Rain Meta Document v1 Item (meta map)
-/// 
+///
 /// represents a rain meta data and configuration that can be cbor encoded or unpacked back to the meta types
 #[derive(PartialEq, Debug, Clone)]
 pub struct RainMetaDocumentV1Item {
@@ -366,17 +367,20 @@ pub async fn search(hash: &str, subgraphs: &Vec<String>) -> anyhow::Result<query
     if !types::common::v1::HASH_PATTERN.is_match(hash) {
         return Err(anyhow::anyhow!("invalid hash"));
     }
-    let query_string = get_meta_query(hash);
+    let request_body = query::MetaQuery::build_query(query::meta_query::Variables {
+        hash: Some(hash.to_ascii_lowercase()),
+    });
     let mut promises = vec![];
     let client = Arc::new(
         Client::builder()
-            // .timeout(std::time::Duration::from_secs(timeout as u64))
+            // @TODO add timeout when reqwest supports them with following
+            // .timeout(std::time::Duration::from_secs(timeout))
             .build()?,
     );
     for url in subgraphs {
         promises.push(Box::pin(query::process_meta_query(
             client.clone(),
-            &query_string,
+            &request_body,
             url,
         )));
     }
@@ -392,17 +396,20 @@ pub async fn search_deployer(
     if !types::common::v1::HASH_PATTERN.is_match(hash) {
         return Err(anyhow::anyhow!("invalid hash"));
     }
-    let query_string = get_deployer_query(hash);
+    let request_body = query::DeployerQuery::build_query(query::deployer_query::Variables {
+        hash: Some(hash.to_ascii_lowercase()),
+    });
     let mut promises = vec![];
     let client = Arc::new(
         Client::builder()
-            // .timeout(std::time::Duration::from_secs(timeout as u64))
+            // @TODO add timeout when reqwest supports them with following
+            // .timeout(std::time::Duration::from_secs(timeout))
             .build()?,
     );
     for url in subgraphs {
         promises.push(Box::pin(query::process_deployer_query(
             client.clone(),
-            &query_string,
+            &request_body,
             url,
         )));
     }
@@ -472,10 +479,10 @@ impl NPE2Deployer {
 
 /// # Meta Storage(CAS)
 ///
-/// In-memory CAS (content addressed storage) for Rain metadata which basically stores 
-/// k/v pairs of meta hash, meta bytes and ExpressionDeployer reproducible data as well 
+/// In-memory CAS (content addressed storage) for Rain metadata which basically stores
+/// k/v pairs of meta hash, meta bytes and ExpressionDeployer reproducible data as well
 /// as providing functionalities to easliy read/write to the CAS.
-/// 
+///
 /// Hashes are 32 bytes (in hex string format) and will be stored as lower case and
 /// meta bytes are valid cbor encoded as Uint8Array. ExpressionDeployers data are in
 /// form of js object mapped to deployedBytecode meta hash and deploy transaction hash.
@@ -827,7 +834,6 @@ impl Store {
     /// updates the meta cache by the given hash and meta bytes, checks the hash to bytes
     /// validity returns the reference to the bytes if the updated meta bytes contained any
     pub fn update_with(&mut self, hash: &str, bytes: &[u8]) -> Option<&Vec<u8>> {
-        // let mut am_bytes: Option<&Vec<u8>> = None;
         if types::common::v1::HASH_PATTERN.is_match(hash) {
             let h = hash.to_ascii_lowercase();
             if !self.cache.contains_key(&h) {
