@@ -1,5 +1,4 @@
-/// # Rain Subgraphs
-/// all known subgraph endpoints
+/// All known subgraph endpoints
 #[derive(Debug, Clone)]
 pub struct KnownSubgraphs;
 

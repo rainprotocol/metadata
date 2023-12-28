@@ -1,2 +1,2 @@
-/// # Expression Deployer v2 Deployed Bytecode Meta
+/// ExpressionDeployer v2 deployed bytecode meta implementations
 pub type ExpressionDeployerV2BytecodeMeta = Vec<u8>;

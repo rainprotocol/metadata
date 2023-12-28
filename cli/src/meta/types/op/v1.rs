@@ -255,8 +255,8 @@ pub struct OperandArg {
     /// # Operand Argument Range
     /// Determines the valid range of the operand argument after computation
     /// applied. For example an operand argument can be any value between range
-    /// of 1 - 10: [[1, 10]] or an operand argument can only be certain exact
-    /// values: [[2], [3], [9]], meaning it can only be 2 or 3 or 9.
+    /// of 1 - 10: \[\[1, 10\]\] or an operand argument can only be certain exact
+    /// values: \[\[2\], \[3\], \[9\]\], meaning it can only be 2 or 3 or 9.
     #[serde(default)]
     #[validate]
     pub valid_range: Option<Vec<OperandArgRange>>,

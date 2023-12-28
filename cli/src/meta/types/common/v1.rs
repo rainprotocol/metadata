@@ -9,9 +9,10 @@ use schemars::JsonSchema;
 /// Valid symbols in Rainlang are alpha prefixed alphanumeric kebab case.
 pub const REGEX_RAIN_SYMBOL: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[a-z][0-9a-z-]*$").unwrap());
 
-/// > An identifier in solidity has to start with a letter, a dollar-sign or an
-/// > underscore and may additionally contain numbers after the first symbol.
-/// https://docs.soliditylang.org/en/latest/grammar.html#a4.SolidityLexer.Identifier
+/// An identifier in solidity has to start with a letter, a dollar-sign or an
+/// sunderscore and may additionally contain numbers after the first symbol.
+/// 
+/// <https://docs.soliditylang.org/en/latest/grammar.html#a4.SolidityLexer.Identifier>
 pub const REGEX_SOLIDITY_IDENTIFIER: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"^[a-zA-Z$_][a-zA-Z0-9$_]*$").unwrap());
 

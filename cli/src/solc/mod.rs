@@ -1,7 +1,7 @@
 use serde_json::Value;
-use strum::{EnumIter, EnumString};
+use strum::EnumString;
 
-#[derive(Copy, Clone, EnumString, EnumIter, strum::Display)]
+#[derive(Copy, Clone, EnumString, strum::Display)]
 #[strum(serialize_all = "kebab-case")]
 pub enum ArtifactComponent {
     Abi,

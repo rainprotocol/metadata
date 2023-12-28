@@ -1,5 +1,4 @@
-/// # Rain Magic Numbers
-/// all known magic numbers
+/// All known Rain magic numbers
 #[derive(
     serde::Serialize,
     Clone,

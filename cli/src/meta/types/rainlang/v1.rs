@@ -1,2 +1,2 @@
-/// # Rainlang Meta
+/// Rainlang meta
 pub type RainlangMeta = String;

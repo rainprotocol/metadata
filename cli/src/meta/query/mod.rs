@@ -11,10 +11,10 @@ pub struct MetaResponse {
     pub bytes: Vec<u8>,
 }
 
-/// response data struct for a deployer meta
+/// response data struct for an ExpressionDeployer
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
-pub struct DeployerNPResponse {
+pub struct DeployerResponse {
     pub tx_hash: String,
     pub bytecode_meta_hash: String,
     pub meta_hash: String,
@@ -30,7 +30,7 @@ pub struct DeployerNPResponse {
     pub interpreter: Vec<u8>,
 }
 
-impl DeployerNPResponse {
+impl DeployerResponse {
     /// get authoring meta bytes of this deployer meta
     pub fn get_authoring_meta(&self) -> Option<AuthoringMeta> {
         if let Ok(meta_maps) = RainMetaDocumentV1Item::cbor_decode(&self.meta_bytes) {
@@ -97,8 +97,9 @@ pub fn get_meta_query(hash: &str) -> String {
     )
 }
 
-/// process a response for a meta
-pub(super) async fn process_meta_query(
+/// Process a response for a meta by resolving if a record was found or reject if nothing found or rejected with error
+/// This is because graphql responses are not rejected even if there was no record found for the request
+pub async fn process_meta_query(
     client: Arc<Client>,
     query_string: &str,
     url: &str,
@@ -123,12 +124,13 @@ pub(super) async fn process_meta_query(
     }
 }
 
-/// process a response for a deployer meta
-pub(super) async fn process_deployer_query(
+/// process a response for a deployer by resolving if a record was found or reject if nothing found or rejected with error
+/// This is because graphql responses are not rejected even if there was no record found for the request
+pub async fn process_deployer_query(
     client: Arc<Client>,
     query_string: &str,
     url: &str,
-) -> anyhow::Result<DeployerNPResponse> {
+) -> anyhow::Result<DeployerResponse> {
     let mut query = HashMap::new();
     query.insert("query", query_string);
     let res = &client
@@ -186,7 +188,7 @@ pub(super) async fn process_deployer_query(
         } else {
             return Err(anyhow::anyhow!("found no matching record!"));
         };
-        Ok(DeployerNPResponse {
+        Ok(DeployerResponse {
             meta_hash,
             meta_bytes,
             bytecode,

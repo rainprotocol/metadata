@@ -18,15 +18,33 @@
         # For `nix build` & `nix run`:
         defaultPackage = naersk'.buildPackage {
           src = ./.;
-          nativeBuildInputs = with pkgs; [ pkg-config openssl gmp ];
+          nativeBuildInputs = with pkgs; [ 
+            gmp 
+            iconv 
+            openssl 
+            pkg-config
+          ] ++ (pkgs.lib.optionals pkgs.stdenv.isDarwin [
+            pkgs.libiconv
+            pkgs.darwin.apple_sdk.frameworks.Security
+            pkgs.darwin.apple_sdk.frameworks.CoreServices
+            pkgs.darwin.apple_sdk.frameworks.CoreFoundation
+            pkgs.darwin.apple_sdk.frameworks.SystemConfiguration
+          ]);
+          cargoBuildOptions = (prev: prev ++ [ "--all-features" ]);
         };
 
         # For `nix develop`:
         devShell = pkgs.mkShell {
-          nativeBuildInputs = with pkgs; [ rustc cargo gmp iconv ] ++ (pkgs.lib.optionals pkgs.stdenv.isDarwin [
+          nativeBuildInputs = with pkgs; [ 
+            gmp 
+            iconv 
+            rustup 
+          ] ++ (pkgs.lib.optionals pkgs.stdenv.isDarwin [
+            pkgs.libiconv
             pkgs.darwin.apple_sdk.frameworks.Security
-            pkgs.darwin.apple_sdk.frameworks.CoreFoundation
             pkgs.darwin.apple_sdk.frameworks.CoreServices
+            pkgs.darwin.apple_sdk.frameworks.CoreFoundation
+            pkgs.darwin.apple_sdk.frameworks.SystemConfiguration
           ]);
         };
       }

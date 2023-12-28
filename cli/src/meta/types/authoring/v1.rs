@@ -15,8 +15,7 @@ pub type AuthoringMetaStruct = sol!((bytes32, uint8, string));
 /// array of authoring meta struct
 pub type AuthoringMetaStructArray = sol!((bytes32, uint8, string)[]);
 
-/// # Authoring Meta
-/// array of native parser opcode metadata
+/// Array of native parser opcode metadata
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 #[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 pub struct AuthoringMeta(pub Vec<AuthoringMetaItem>);
@@ -26,16 +25,14 @@ pub struct AuthoringMeta(pub Vec<AuthoringMetaItem>);
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 pub struct AuthoringMetaItem {
-    /// # Word
     /// Primary word used to identify the opcode.
     #[validate(regex(
         path = "REGEX_RAIN_SYMBOL",
         message = "Must be alphanumeric lower-kebab-case beginning with a letter.\n"
     ))]
     pub word: String,
-    /// # Operand Offest
+    /// Operand offest
     pub operand_parser_offset: u8,
-    /// # Description
     /// Brief description of the opcode.
     #[serde(default)]
     #[validate(regex(

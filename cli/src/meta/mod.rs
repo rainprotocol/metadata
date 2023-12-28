@@ -1,25 +1,22 @@
-pub mod magic;
 pub mod types;
-pub mod query;
-pub mod normalize;
+pub(crate) mod magic;
+pub(crate) mod query;
+pub(crate) mod normalize;
 
 use reqwest::Client;
 use futures::future;
-use magic::KnownMagic;
 use strum::{EnumIter, EnumString};
+use super::subgraph::KnownSubgraphs;
 use alloy_primitives::{keccak256, hex};
+use types::authoring::v1::AuthoringMeta;
 use serde::de::{Deserialize, Deserializer, Visitor};
 use serde::ser::{Serialize, Serializer, SerializeMap};
 use std::{sync::Arc, fmt::Debug, convert::TryFrom, collections::HashMap};
 
-use self::types::authoring::v1::AuthoringMeta;
-use self::query::{get_meta_query, get_deployer_query};
+pub use magic::*;
+pub use query::*;
 
-pub use super::subgraph::KnownSubgraphs;
-pub use query::{MetaResponse, DeployerNPResponse};
-
-/// # Known Meta
-/// all known meta identifiers
+/// All known meta identifiers
 #[derive(Copy, Clone, EnumString, EnumIter, strum::Display, Debug, PartialEq)]
 #[strum(serialize_all = "kebab-case")]
 pub enum KnownMeta {
@@ -50,6 +47,7 @@ impl TryFrom<KnownMagic> for KnownMeta {
     }
 }
 
+/// Content type of a cbor meta map
 #[derive(
     Copy,
     Clone,
@@ -72,6 +70,7 @@ pub enum ContentType {
     OctetStream,
 }
 
+/// Content encoding of a cbor meta map
 #[derive(
     Copy,
     Clone,
@@ -115,6 +114,7 @@ impl ContentEncoding {
     }
 }
 
+/// Content language of a cbor meta map
 #[derive(
     Copy,
     Clone,
@@ -134,6 +134,7 @@ pub enum ContentLanguage {
 }
 
 /// # Rain Meta Document v1 Item (meta map)
+/// 
 /// represents a rain meta data and configuration that can be cbor encoded or unpacked back to the meta types
 #[derive(PartialEq, Debug, Clone)]
 pub struct RainMetaDocumentV1Item {
@@ -360,7 +361,6 @@ impl<'de> Deserialize<'de> for RainMetaDocumentV1Item {
     }
 }
 
-/// # Search Meta
 /// searches for a meta matching the given hash in given subgraphs urls
 pub async fn search(hash: &str, subgraphs: &Vec<String>) -> anyhow::Result<query::MetaResponse> {
     if !types::common::v1::HASH_PATTERN.is_match(hash) {
@@ -384,12 +384,11 @@ pub async fn search(hash: &str, subgraphs: &Vec<String>) -> anyhow::Result<query
     Ok(response_value)
 }
 
-/// # Search Deployer Meta
-/// searches for a deployer meta matching the given hash in given subgraphs urls
+/// searches for an ExpressionDeployer meta matching the given hash in given subgraphs urls
 pub async fn search_deployer(
     hash: &str,
     subgraphs: &Vec<String>,
-) -> anyhow::Result<DeployerNPResponse> {
+) -> anyhow::Result<DeployerResponse> {
     if !types::common::v1::HASH_PATTERN.is_match(hash) {
         return Err(anyhow::anyhow!("invalid hash"));
     }
@@ -411,9 +410,7 @@ pub async fn search_deployer(
     Ok(response_value)
 }
 
-/// # DeployerNPRecord
-///
-/// Holds all the data required to redeploy the RainterpreterExpressionDeployerNPE2 into a local evm
+/// All required NPE2 ExpressionDeployer data for reproducing it on a local evm
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NPE2Deployer {
@@ -473,15 +470,15 @@ impl NPE2Deployer {
     }
 }
 
-/// # Meta Store(CAS)
+/// # Meta Storage(CAS)
 ///
-/// Reads, stores and simply manages k/v pairs of meta hash and meta bytes and provides the functionalities
-/// to easliy utilize them. a hash is a 32 bytes data in hex string format and will be stored as lower case.
-/// Meta items are stored as cbor encoded raw bytes.
-///
-/// Given a k/v pair of meta hash and meta bytes when using `update_with()` or `create()`,
-/// it regenrates the hash from the corresponding bytes to check the validity of the given k/v pair and ignores
-/// those that fail the check
+/// In-memory CAS (content addressed storage) for Rain metadata which basically stores 
+/// k/v pairs of meta hash, meta bytes and ExpressionDeployer reproducible data as well 
+/// as providing functionalities to easliy read/write to the CAS.
+/// 
+/// Hashes are 32 bytes (in hex string format) and will be stored as lower case and
+/// meta bytes are valid cbor encoded as Uint8Array. ExpressionDeployers data are in
+/// form of js object mapped to deployedBytecode meta hash and deploy transaction hash.
 ///
 /// ## Examples
 ///
@@ -523,7 +520,7 @@ impl NPE2Deployer {
 /// // to get a record from store
 /// let meta = store.get_meta(&hash);
 ///
-/// // to get a authoring meta record from store
+/// // to get a deployer record from store
 /// let deployer_record = store.get_deployer(&hash);
 ///
 /// // path to a .rain file
@@ -694,7 +691,7 @@ impl Store {
     /// sets deployer record from the deployer query response
     pub fn set_deployer_from_query_response(
         &mut self,
-        deployer_query_response: DeployerNPResponse,
+        deployer_query_response: DeployerResponse,
     ) -> NPE2Deployer {
         let authoring_meta = deployer_query_response.get_authoring_meta();
         let tx_hash = deployer_query_response.tx_hash.to_ascii_lowercase();

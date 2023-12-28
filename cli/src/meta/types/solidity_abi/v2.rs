@@ -7,9 +7,9 @@ use serde::{Serialize, Serializer, Deserialize, Deserializer, de::Error, ser::Se
 #[cfg(feature = "json-schema")]
 use schemars::JsonSchema;
 
-/// # SolidityABI
 /// JSON representation of a Solidity ABI interface. can be switched to ethers ABI struct using TryFrom trait
-/// https://docs.soliditylang.org/en/latest/abi-spec.html#json
+/// 
+/// <https://docs.soliditylang.org/en/latest/abi-spec.html#json>
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 #[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 pub struct SolidityAbiMeta(Vec<SolidityAbiItem>);

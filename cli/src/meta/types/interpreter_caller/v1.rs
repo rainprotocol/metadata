@@ -10,7 +10,6 @@ use schemars::JsonSchema;
 
 type AbiPath = RainString;
 
-/// # InterpreterCallerMeta
 /// InterpreterCaller metadata used by Rainlang.
 /// Supports `IInterpreterCallerV2` Solidity contracts.
 /// Required info about a contract that receives expression in at least one of
@@ -20,29 +19,23 @@ type AbiPath = RainString;
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct InterpreterCallerMeta {
-    /// # Name
     #[validate]
     pub name: RainTitle,
-    /// # Contract ABI name
     /// Name of the contract corresponding to `contractName` feild in the abi.
     #[validate]
     pub abi_name: SolidityIdentifier,
-    /// # Caller Description
     /// Name of the caller corresponding to `contractName` feild in the abi.
     #[serde(default)]
     #[validate]
     pub desc: Description,
-    /// # Source
     /// Determines the repository source
     #[serde(default)]
     #[validate]
     pub source: Description,
-    /// # Alias
     /// Alias of the caller used by Rainlang.
     #[serde(default)]
     #[validate]
     pub alias: Option<RainSymbol>,
-    /// # Methods
     ///  Methods of the contract that receive at least one expression
     /// (EvaluableConfig) from arguments.
     #[validate(length(min = 1))]
@@ -88,7 +81,6 @@ impl TryFrom<RainMetaDocumentV1Item> for InterpreterCallerMeta {
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct Method {
-    /// # Method name
     #[validate]
     pub name: RainTitle,
     #[validate]
