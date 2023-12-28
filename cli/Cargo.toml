@@ -8,6 +8,7 @@ license = "CAL-1.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
+default = ["cli"]
 cli = ["json-schema", "dep:tracing", "dep:tracing-subscriber", "dep:clap", "dep:tokio"]
 json-schema = ["dep:schemars"]
 tokio-full = ["cli", "tokio/full"]

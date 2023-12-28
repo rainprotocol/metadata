@@ -1,6 +1,7 @@
 use serde_json::Value;
 use strum::EnumString;
 
+/// Represent section of a solidity artifact to extract
 #[derive(Copy, Clone, EnumString, strum::Display)]
 #[strum(serialize_all = "kebab-case")]
 pub enum ArtifactComponent {
@@ -9,6 +10,11 @@ pub enum ArtifactComponent {
     DeployedBytecode,
 }
 
+/// extracts the given section of a solidity artifact as [Value]
+/// 
+/// does not perform any checks on the returned [Value] such as if 
+/// it is null or not.
+/// The given data should be utf8 encoded json string bytes
 pub fn extract_artifact_component_json(
     component: ArtifactComponent,
     data: &[u8],

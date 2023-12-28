@@ -5,11 +5,11 @@ Also provides CLI app (executable binary) to generate desireable Rain cbor encod
 <br>
 
 ## Features
-In most cases non of the features are needed for using the lib crate, but `cli` feature is required for building the binary.
+`cli` and `json-schema` features are default however, in most cases non of the features are needed for using the lib crate, so they can be disabled by using `default-features = false`, just be aware that `cli` feature is required for building the binary.
 
-- `cli`: A [clap](https://docs.rs/clap/latest/clap/) based CLI crate for functionalities of this library, this feature has [tokio](https://docs.rs/tokio/latest/tokio/) dependency with features enabled that are compatible for `wasm` family target builds.
+- `cli`: A [clap](https://docs.rs/clap/latest/clap/) based CLI crate for functionalities of this library, this feature has [tokio](https://docs.rs/tokio/latest/tokio/) dependency with features enabled that are compatible for `wasm` family target builds. Enabling this feature will also enable `json-schema` feature, This feature is required for building the binary crate.
 - `json-schema`: Enables implementation of Json Schema for different types of Rain meta.
-- `tokio-full`: Installs [tokio](https://docs.rs/tokio/latest/tokio/) with full features which is a dependency of `cli` feature, this allows for multithreating of the CLI app, however it results in erroneous builds for `wasm` target family as explained in tokio docs.
+- `tokio-full`: Installs [tokio](https://docs.rs/tokio/latest/tokio/) with full features which is a dependency of `cli` feature, this allows for multi-threading of the CLI app, however it results in erroneous builds for `wasm` target family as explained in [tokio docs](https://docs.rs/tokio/latest/tokio/#wasm-support), this feature is only effective for binary crate and using it for lib crate just installs [tokio](https://docs.rs/tokio/latest/tokio/) with its full features as a dependency as the entire lib crate doesn't depend on [tokio](https://docs.rs/tokio/latest/tokio/). This is because [tokio](https://docs.rs/tokio/latest/tokio/) is only used as a runtime for binray crate.
 <br>
 
 ## CLI (Binary Crate)
