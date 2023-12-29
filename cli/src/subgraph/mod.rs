@@ -24,13 +24,13 @@ impl KnownSubgraphs {
         "https://api.thegraph.com/subgraphs/name/rainlanguage/interpreter-registry-npe2", // npe2 endpoint
     ];
 
-    /// Rain NPE2 subgraphs of all suppoerted networks
+    /// Rain NPE2 subgraphs of all supported networks
     pub const NPE2: [&'static str; 3] = [Self::ETHEREUM[2], Self::POLYGON[2], Self::MUMBAI[2]];
 
-    /// Rain NativeParser subgraphs of all suppoerted networks
+    /// Rain NativeParser subgraphs of all supported networks
     pub const NP: [&'static str; 3] = [Self::ETHEREUM[1], Self::POLYGON[1], Self::MUMBAI[1]];
 
-    /// Rain legacy(non NativeParser) subgraphs of all suppoerted networks
+    /// Rain legacy(non NativeParser) subgraphs of all supported networks
     pub const LEGACY: [&'static str; 3] = [Self::ETHEREUM[0], Self::POLYGON[0], Self::MUMBAI[0]];
 
     /// All Rain known subgraph endpoint URLs

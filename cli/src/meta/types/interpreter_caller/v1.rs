@@ -46,12 +46,12 @@ pub struct InterpreterCallerMeta {
 impl TryFrom<Vec<u8>> for InterpreterCallerMeta {
     type Error = anyhow::Error;
     fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
-        match serde_json::from_slice::<Self>(&value).map_err(anyhow::Error::from) {
-            Ok(t) => match t.validate().map_err(anyhow::Error::from) {
+        match serde_json::from_slice::<Self>(&value) {
+            Ok(t) => match t.validate() {
                 Ok(()) => Ok(t),
-                Err(e) => Err(e),
+                Err(e) => Err(anyhow::Error::from(e)),
             },
-            Err(e) => Err(e),
+            Err(e) => Err(anyhow::Error::from(e)),
         }
     }
 }
@@ -59,12 +59,12 @@ impl TryFrom<Vec<u8>> for InterpreterCallerMeta {
 impl TryFrom<&[u8]> for InterpreterCallerMeta {
     type Error = anyhow::Error;
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
-        match serde_json::from_slice::<Self>(value).map_err(anyhow::Error::from) {
-            Ok(t) => match t.validate().map_err(anyhow::Error::from) {
+        match serde_json::from_slice::<Self>(value) {
+            Ok(t) => match t.validate() {
                 Ok(()) => Ok(t),
-                Err(e) => Err(e),
+                Err(e) => Err(anyhow::Error::from(e)),
             },
-            Err(e) => Err(e),
+            Err(e) => Err(anyhow::Error::from(e)),
         }
     }
 }

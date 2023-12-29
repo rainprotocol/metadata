@@ -3,7 +3,7 @@ use crate::meta::magic::KnownMagic;
 
 pub fn ls() -> anyhow::Result<()> {
     for magic in KnownMagic::iter() {
-        println!("{:#x} {}", magic as u64, magic.to_string());
+        println!("{:#x} {}", magic as u64, magic);
     }
     Ok(())
 }

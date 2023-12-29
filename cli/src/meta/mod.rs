@@ -247,10 +247,10 @@ impl RainMetaDocumentV1Item {
             }
         } {}
 
-        if metas.len() == 0
-            || track.len() == 0
+        if metas.is_empty()
+            || track.is_empty()
             || track.len() != metas.len()
-            || len as usize != track[track.len() - 1]
+            || len != track[track.len() - 1]
         {
             return Err(anyhow::anyhow!("corrupt meta"));
         }
@@ -259,7 +259,7 @@ impl RainMetaDocumentV1Item {
 
     // unpack the payload based on the configuration
     pub fn unpack(&self) -> anyhow::Result<Vec<u8>> {
-        ContentEncoding::decode(&self.content_encoding, &self.payload.to_vec())
+        ContentEncoding::decode(&self.content_encoding, self.payload.as_ref())
     }
 
     // unpacks the payload to given meta type based on configuration
@@ -345,9 +345,9 @@ impl<'de> Deserialize<'de> for RainMetaDocumentV1Item {
                     Ok(m) => m,
                     _ => Err(serde::de::Error::custom("unknown magic number"))?,
                 };
-                let content_type = content_type.or(Some(ContentType::None)).unwrap();
-                let content_encoding = content_encoding.or(Some(ContentEncoding::None)).unwrap();
-                let content_language = content_language.or(Some(ContentLanguage::None)).unwrap();
+                let content_type = content_type.unwrap_or(ContentType::None);
+                let content_encoding = content_encoding.unwrap_or(ContentEncoding::None);
+                let content_language = content_language.unwrap_or(ContentLanguage::None);
 
                 Ok(RainMetaDocumentV1Item {
                     payload,
@@ -410,7 +410,7 @@ pub async fn search_deployer(
 }
 
 /// All required NPE2 ExpressionDeployer data for reproducing it on a local evm
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct NPE2Deployer {
     /// constructor meta hash
@@ -432,20 +432,6 @@ pub struct NPE2Deployer {
     pub interpreter: Vec<u8>,
     /// RainterpreterExpressionDeployerNPE2 authoring meta
     pub authoring_meta: Option<AuthoringMeta>,
-}
-
-impl Default for NPE2Deployer {
-    fn default() -> Self {
-        NPE2Deployer {
-            meta_hash: String::new(),
-            meta_bytes: vec![],
-            bytecode: vec![],
-            parser: vec![],
-            store: vec![],
-            interpreter: vec![],
-            authoring_meta: None,
-        }
-    }
 }
 
 impl NPE2Deployer {
@@ -586,7 +572,7 @@ impl Store {
         } else {
             store = Store::new();
         }
-        store.add_subgraphs(&subgraphs);
+        store.add_subgraphs(subgraphs);
         for (hash, bytes) in cache {
             store.update_with(hash, bytes);
         }
@@ -600,10 +586,8 @@ impl Store {
         for (uri, hash) in dotrain_cache {
             if types::common::v1::HASH_PATTERN.is_match(hash) {
                 let _h = hash.to_ascii_lowercase();
-                if !store.dotrain_cache.contains_key(uri) {
-                    if store.cache.contains_key(&_h) {
-                        store.dotrain_cache.insert(uri.clone(), _h);
-                    }
+                if !store.dotrain_cache.contains_key(uri) && store.cache.contains_key(&_h) {
+                    store.dotrain_cache.insert(uri.clone(), _h);
                 }
             }
         }
@@ -677,13 +661,11 @@ impl Store {
         let h = hash.to_ascii_lowercase();
         if self.deployer_cache.contains_key(&h) {
             self.get_deployer(&h)
+        } else if self.deployer_hash_map.contains_key(&h) {
+            let b_hash = self.deployer_hash_map.get(&h).unwrap();
+            self.get_deployer(b_hash)
         } else {
-            if self.deployer_hash_map.contains_key(&h) {
-                let b_hash = self.deployer_hash_map.get(&h).unwrap();
-                self.get_deployer(b_hash)
-            } else {
-                self.search_deployer(hash).await
-            }
+            self.search_deployer(hash).await
         }
     }
 
@@ -805,7 +787,7 @@ impl Store {
             self.cache.insert(hash.to_ascii_lowercase(), meta.bytes);
             return self.get_meta(hash);
         } else {
-            return None;
+            None
         }
     }
 
@@ -819,7 +801,7 @@ impl Store {
                 return self.get_meta(hash);
             }
         } else {
-            return None;
+            None
         }
     }
 
@@ -834,13 +816,13 @@ impl Store {
                     self.cache.insert(h.clone(), bytes.to_vec());
                     return self.cache.get(&h);
                 } else {
-                    return None;
+                    None
                 }
             } else {
                 return self.get_meta(hash);
             }
         } else {
-            return None;
+            None
         }
     }
 
@@ -867,20 +849,20 @@ impl Store {
             let old_hash = h.clone();
             if new_hash.eq_ignore_ascii_case(&old_hash) {
                 self.cache.insert(new_hash.clone(), bytes);
-                return Ok((new_hash, String::new()));
+                Ok((new_hash, String::new()))
             } else {
                 self.cache.insert(new_hash.clone(), bytes);
                 self.dotrain_cache.insert(uri.to_string(), new_hash.clone());
                 if !keep_old {
                     self.cache.remove(&old_hash);
                 }
-                return Ok((new_hash, old_hash));
+                Ok((new_hash, old_hash))
             }
         } else {
             self.dotrain_cache.insert(uri.to_string(), new_hash.clone());
             self.cache.insert(new_hash.clone(), bytes);
-            return Ok((new_hash, String::new()));
-        };
+            Ok((new_hash, String::new()))
+        }
     }
 
     /// decodes each meta and stores the inner meta items into the cache

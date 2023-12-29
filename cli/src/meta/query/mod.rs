@@ -113,7 +113,7 @@ pub(super) async fn process_deployer_query(
         .ok_or(anyhow::anyhow!("found no matching record!"))?
         .expression_deployers;
 
-    if res.len() > 0 {
+    if !res.is_empty() {
         let bytecode = if let Some(v) = &res[0].bytecode {
             alloy_primitives::hex::decode(v)
                 .or(Err(anyhow::anyhow!("found no matching record!")))?
@@ -151,7 +151,7 @@ pub(super) async fn process_deployer_query(
         let meta_hash = res[0].constructor_meta_hash.to_ascii_lowercase();
         let meta_bytes = alloy_primitives::hex::decode(&res[0].constructor_meta)
             .or(Err(anyhow::anyhow!("found no matching record!")))?;
-        return Ok(DeployerResponse {
+        Ok(DeployerResponse {
             meta_hash,
             meta_bytes,
             bytecode,
@@ -160,8 +160,8 @@ pub(super) async fn process_deployer_query(
             interpreter,
             bytecode_meta_hash,
             tx_hash,
-        });
+        })
     } else {
-        return Err(anyhow::anyhow!("found no matching record!"));
+        Err(anyhow::anyhow!("found no matching record!"))
     }
 }

@@ -7,25 +7,25 @@ use serde::{Serialize, Deserialize};
 use schemars::JsonSchema;
 
 /// Valid symbols in Rainlang are alpha prefixed alphanumeric kebab case.
-pub const REGEX_RAIN_SYMBOL: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[a-z][0-9a-z-]*$").unwrap());
+pub static REGEX_RAIN_SYMBOL: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[a-z][0-9a-z-]*$").unwrap());
 
 /// An identifier in solidity has to start with a letter, a dollar-sign or an
 /// sunderscore and may additionally contain numbers after the first symbol.
 ///
 /// <https://docs.soliditylang.org/en/latest/grammar.html#a4.SolidityLexer.Identifier>
-pub const REGEX_SOLIDITY_IDENTIFIER: Lazy<Regex> =
+pub static REGEX_SOLIDITY_IDENTIFIER: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"^[a-zA-Z$_][a-zA-Z0-9$_]*$").unwrap());
 
 /// Strings in Rain are limited to printable ASCII chars and whitespace.
-pub const REGEX_RAIN_STRING: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[\s!-~]*$").unwrap());
+pub static REGEX_RAIN_STRING: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[\s!-~]*$").unwrap());
 
 /// Titles in Rain are limited to printable ASCII chars and the space character.
 /// The title MUST NOT begin or end with a space.
-pub const REGEX_RAIN_TITLE: Lazy<Regex> =
+pub static REGEX_RAIN_TITLE: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"^[!-~]([ -~]*[!-~]|[!-~]*)$").unwrap());
 
 /// keccak256 hash pattern
-pub const HASH_PATTERN: Lazy<Regex> = Lazy::new(|| Regex::new(r"^0x[a-fA-F0-9]{64}$").unwrap());
+pub static HASH_PATTERN: Lazy<Regex> = Lazy::new(|| Regex::new(r"^0x[a-fA-F0-9]{64}$").unwrap());
 
 /// Rain symbols are a subset of kebab case.
 #[derive(Validate, Debug, Serialize, Deserialize, Clone, PartialEq)]

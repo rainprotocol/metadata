@@ -16,7 +16,7 @@ pub struct SolidityAbiMeta(Vec<SolidityAbiItem>);
 
 impl SolidityAbiMeta {
     // extracts abi from a solc json artifact, errors if abi section is not found
-    pub fn from_artifact(artifact: &Vec<u8>) -> anyhow::Result<SolidityAbiMeta> {
+    pub fn from_artifact(artifact: &[u8]) -> anyhow::Result<SolidityAbiMeta> {
         serde_json::from_value(
             serde_json::from_slice::<serde_json::Value>(artifact)?["abi"].clone(),
         )
@@ -42,12 +42,12 @@ impl Validate for SolidityAbiMeta {
 impl TryFrom<Vec<u8>> for SolidityAbiMeta {
     type Error = anyhow::Error;
     fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
-        match serde_json::from_slice::<Self>(&value).map_err(anyhow::Error::from) {
-            Ok(t) => match t.validate().map_err(anyhow::Error::from) {
+        match serde_json::from_slice::<Self>(&value){
+            Ok(t) => match t.validate() {
                 Ok(()) => Ok(t),
-                Err(e) => Err(e),
+                Err(e) => Err(anyhow::Error::from(e)),
             },
-            Err(e) => Err(e),
+            Err(e) => Err(anyhow::Error::from(e)),
         }
     }
 }
@@ -55,12 +55,12 @@ impl TryFrom<Vec<u8>> for SolidityAbiMeta {
 impl TryFrom<&[u8]> for SolidityAbiMeta {
     type Error = anyhow::Error;
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
-        match serde_json::from_slice::<Self>(value).map_err(anyhow::Error::from) {
-            Ok(t) => match t.validate().map_err(anyhow::Error::from) {
+        match serde_json::from_slice::<Self>(value) {
+            Ok(t) => match t.validate() {
                 Ok(()) => Ok(t),
-                Err(e) => Err(e),
+                Err(e) => Err(anyhow::Error::from(e)),
             },
-            Err(e) => Err(e),
+            Err(e) => Err(anyhow::Error::from(e)),
         }
     }
 }
@@ -457,7 +457,7 @@ impl<'de> Deserialize<'de> for SolidityAbiItem {
                     Some(is) => {
                         let result: Result<Vec<SolidityAbiFnIO>, String> =
                             is.iter().map(map_item_fn_io).collect();
-                        result.map_err(|e| D::Error::custom(e))?
+                        result.map_err(D::Error::custom)?
                     }
                     None => vec![],
                 };
@@ -465,7 +465,7 @@ impl<'de> Deserialize<'de> for SolidityAbiItem {
                     Some(os) => {
                         let result: Result<Vec<SolidityAbiFnIO>, String> =
                             os.iter().map(map_item_fn_io).collect();
-                        result.map_err(|e| D::Error::custom(e))?
+                        result.map_err(D::Error::custom)?
                     }
                     None => vec![],
                 };
@@ -485,7 +485,7 @@ impl<'de> Deserialize<'de> for SolidityAbiItem {
                     Some(is) => {
                         let result: Result<Vec<SolidityAbiFnIO>, String> =
                             is.iter().map(map_item_fn_io).collect();
-                        result.map_err(|e| D::Error::custom(e))?
+                        result.map_err(D::Error::custom)?
                     }
                     None => vec![],
                 };
@@ -511,7 +511,7 @@ impl<'de> Deserialize<'de> for SolidityAbiItem {
                     Some(is) => {
                         let result: Result<Vec<SolidityAbiEventInput>, String> =
                             is.iter().map(map_item_event_input).collect();
-                        result.map_err(|e| D::Error::custom(e))?
+                        result.map_err(D::Error::custom)?
                     }
                     None => vec![],
                 };
@@ -530,7 +530,7 @@ impl<'de> Deserialize<'de> for SolidityAbiItem {
                     Some(is) => {
                         let result: Result<Vec<SolidityAbiErrorInput>, String> =
                             is.iter().map(map_item_error_input).collect();
-                        result.map_err(|e| D::Error::custom(e))?
+                        result.map_err(D::Error::custom)?
                     }
                     None => vec![],
                 };
@@ -602,9 +602,8 @@ mod tests {
                 serde_json::from_str(original_json_abi.clone().to_string().as_str())?;
 
             for e in original_json_abi.as_array().unwrap().iter() {
-                if let None = json_abi_alloy
-                    .items()
-                    .find(|item| &serde_json::to_value(item).unwrap() == e)
+                if !json_abi_alloy
+                    .items().any(|item| &serde_json::to_value(item).unwrap() == e)
                 {
                     return Err(anyhow::anyhow!("roundtrip failed!"));
                 }
@@ -632,7 +631,7 @@ mod tests {
             // since alloy JsonAbi doesn't keep the original order of abi items, we need to check item by item
             let converted_abi_meta: SolidityAbiMeta = json_abi_alloy.clone().try_into()?;
             for item in solidity_abi_meta.0.iter() {
-                if let None = converted_abi_meta.0.iter().find(|e| *e == item) {
+                if !converted_abi_meta.0.iter().any(|e| e == item) {
                     return Err(anyhow::anyhow!("wrong conversion!"));
                 }
             }
