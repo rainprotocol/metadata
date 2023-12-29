@@ -50,5 +50,8 @@ required-features = ["cli"]
 [lib]
 path = "src/lib.rs"
 
+[lints.clippy]
+all = "warn"
+
 [package.metadata.docs.rs]
 all-features = true

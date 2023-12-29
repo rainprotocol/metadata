@@ -42,7 +42,7 @@ impl Validate for SolidityAbiMeta {
 impl TryFrom<Vec<u8>> for SolidityAbiMeta {
     type Error = anyhow::Error;
     fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
-        match serde_json::from_slice::<Self>(&value){
+        match serde_json::from_slice::<Self>(&value) {
             Ok(t) => match t.validate() {
                 Ok(()) => Ok(t),
                 Err(e) => Err(anyhow::Error::from(e)),
@@ -603,7 +603,8 @@ mod tests {
 
             for e in original_json_abi.as_array().unwrap().iter() {
                 if !json_abi_alloy
-                    .items().any(|item| &serde_json::to_value(item).unwrap() == e)
+                    .items()
+                    .any(|item| &serde_json::to_value(item).unwrap() == e)
                 {
                     return Err(anyhow::anyhow!("roundtrip failed!"));
                 }

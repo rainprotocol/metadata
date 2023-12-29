@@ -11,8 +11,8 @@ pub enum ArtifactComponent {
 }
 
 /// extracts the given section of a solidity artifact as [Value]
-/// 
-/// does not perform any checks on the returned [Value] such as if 
+///
+/// does not perform any checks on the returned [Value] such as if
 /// it is null or not.
 /// The given data should be utf8 encoded json string bytes
 pub fn extract_artifact_component_json(
