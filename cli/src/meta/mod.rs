@@ -372,7 +372,6 @@ pub async fn search(hash: &str, subgraphs: &Vec<String>) -> anyhow::Result<query
     });
     let mut promises = vec![];
 
-    // @TODO add timeout when reqwest supports it
     let client = Arc::new(Client::builder().build()?);
     for url in subgraphs {
         promises.push(Box::pin(query::process_meta_query(
@@ -397,7 +396,7 @@ pub async fn search_deployer(
         hash: Some(hash.to_ascii_lowercase()),
     });
     let mut promises = vec![];
-    // @TODO add timeout when reqwest supports it
+
     let client = Arc::new(Client::builder().build()?);
     for url in subgraphs {
         promises.push(Box::pin(query::process_deployer_query(
