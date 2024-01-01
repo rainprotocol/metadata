@@ -1,7 +1,7 @@
 use serde::{Serialize, Deserialize};
 use validator::{Validate, ValidationError, ValidationErrors};
 use super::super::{
-    super::RainMetaDocumentV1Item,
+    super::{RainMetaDocumentV1Item, Error},
     common::v1::{RainSymbol, RainString, Description},
 };
 
@@ -131,20 +131,20 @@ pub struct OpMeta {
 }
 
 impl TryFrom<Vec<u8>> for OpMeta {
-    type Error = anyhow::Error;
+    type Error = Error;
     fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
-        match serde_json::from_slice::<Self>(&value).map_err(anyhow::Error::from) {
-            Ok(t) => match t.validate().map_err(anyhow::Error::from) {
+        match serde_json::from_slice::<Self>(&value) {
+            Ok(t) => match t.validate() {
                 Ok(()) => Ok(t),
-                Err(e) => Err(e),
+                Err(e) => Err(e)?,
             },
-            Err(e) => Err(e),
+            Err(e) => Err(e)?,
         }
     }
 }
 
 impl TryFrom<RainMetaDocumentV1Item> for OpMeta {
-    type Error = anyhow::Error;
+    type Error = Error;
     fn try_from(value: RainMetaDocumentV1Item) -> Result<Self, Self::Error> {
         Self::try_from(value.unpack()?)
     }

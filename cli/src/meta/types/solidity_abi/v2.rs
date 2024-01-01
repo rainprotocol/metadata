@@ -1,7 +1,7 @@
 use validator::Validate;
 use alloy_json_abi::JsonAbi;
-use super::super::super::RainMetaDocumentV1Item;
 use validator::{ValidationErrors, ValidationError};
+use super::super::super::{RainMetaDocumentV1Item, Error as MetaError};
 use serde::{Serialize, Serializer, Deserialize, Deserializer, de::Error, ser::SerializeStruct};
 
 #[cfg(feature = "json-schema")]
@@ -16,11 +16,10 @@ pub struct SolidityAbiMeta(Vec<SolidityAbiItem>);
 
 impl SolidityAbiMeta {
     // extracts abi from a solc json artifact, errors if abi section is not found
-    pub fn from_artifact(artifact: &[u8]) -> anyhow::Result<SolidityAbiMeta> {
-        serde_json::from_value(
+    pub fn from_artifact(artifact: &[u8]) -> Result<SolidityAbiMeta, MetaError> {
+        Ok(serde_json::from_value(
             serde_json::from_slice::<serde_json::Value>(artifact)?["abi"].clone(),
-        )
-        .map_err(anyhow::Error::from)
+        )?)
     }
 }
 
@@ -40,47 +39,47 @@ impl Validate for SolidityAbiMeta {
 }
 
 impl TryFrom<Vec<u8>> for SolidityAbiMeta {
-    type Error = anyhow::Error;
+    type Error = MetaError;
     fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
         match serde_json::from_slice::<Self>(&value) {
             Ok(t) => match t.validate() {
                 Ok(()) => Ok(t),
-                Err(e) => Err(anyhow::Error::from(e)),
+                Err(e) => Err(e)?,
             },
-            Err(e) => Err(anyhow::Error::from(e)),
+            Err(e) => Err(e)?,
         }
     }
 }
 
 impl TryFrom<&[u8]> for SolidityAbiMeta {
-    type Error = anyhow::Error;
+    type Error = MetaError;
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
         match serde_json::from_slice::<Self>(value) {
             Ok(t) => match t.validate() {
                 Ok(()) => Ok(t),
-                Err(e) => Err(anyhow::Error::from(e)),
+                Err(e) => Err(e)?,
             },
-            Err(e) => Err(anyhow::Error::from(e)),
+            Err(e) => Err(e)?,
         }
     }
 }
 
 impl TryFrom<RainMetaDocumentV1Item> for SolidityAbiMeta {
-    type Error = anyhow::Error;
+    type Error = MetaError;
     fn try_from(value: RainMetaDocumentV1Item) -> Result<Self, Self::Error> {
         Self::try_from(value.unpack()?)
     }
 }
 
 impl TryFrom<RainMetaDocumentV1Item> for JsonAbi {
-    type Error = anyhow::Error;
+    type Error = MetaError;
     fn try_from(value: RainMetaDocumentV1Item) -> Result<Self, Self::Error> {
         Ok(serde_json::from_slice(value.unpack()?.as_slice())?)
     }
 }
 
 impl TryFrom<SolidityAbiMeta> for JsonAbi {
-    type Error = anyhow::Error;
+    type Error = MetaError;
     fn try_from(value: SolidityAbiMeta) -> Result<Self, Self::Error> {
         Ok(serde_json::from_str(
             serde_json::to_string(&value)?.as_str(),
@@ -89,7 +88,7 @@ impl TryFrom<SolidityAbiMeta> for JsonAbi {
 }
 
 impl TryFrom<JsonAbi> for SolidityAbiMeta {
-    type Error = anyhow::Error;
+    type Error = MetaError;
     fn try_from(value: JsonAbi) -> Result<Self, Self::Error> {
         Ok(serde_json::from_value(serde_json::to_value(value)?)?)
     }
@@ -550,6 +549,7 @@ mod tests {
     use std::path::PathBuf;
     use alloy_json_abi::JsonAbi;
     use super::SolidityAbiMeta;
+    use crate::error::Error;
 
     #[test]
     fn test_all() -> anyhow::Result<()> {
@@ -651,7 +651,7 @@ mod tests {
         let data = serde_json::to_vec(&v)?;
         assert!(matches!(
             SolidityAbiMeta::from_artifact(&data).unwrap_err(),
-            anyhow::Error { .. }
+            Error::SerdeJsonError(_)
         ));
         Ok(())
     }

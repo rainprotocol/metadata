@@ -69,6 +69,7 @@
 
 pub(crate) mod solc;
 pub(crate) mod meta;
+pub(crate) mod error;
 pub(crate) mod subgraph;
 
 #[cfg(feature = "cli")]
@@ -77,4 +78,5 @@ pub mod cli;
 // re-export main types and functionalities
 pub use solc::*;
 pub use meta::*;
+pub use error::*;
 pub use subgraph::*;

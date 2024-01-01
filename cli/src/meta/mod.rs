@@ -1,18 +1,19 @@
-pub mod types;
-pub(crate) mod magic;
-pub(crate) mod query;
-pub(crate) mod normalize;
-
 use reqwest::Client;
 use futures::future;
-use strum::{EnumIter, EnumString};
+use super::error::Error;
 use graphql_client::GraphQLQuery;
+use strum::{EnumIter, EnumString};
 use super::subgraph::KnownSubgraphs;
 use alloy_primitives::{keccak256, hex};
 use types::authoring::v1::AuthoringMeta;
 use serde::de::{Deserialize, Deserializer, Visitor};
 use serde::ser::{Serialize, Serializer, SerializeMap};
 use std::{sync::Arc, fmt::Debug, convert::TryFrom, collections::HashMap};
+
+pub mod types;
+pub(crate) mod magic;
+pub(crate) mod query;
+pub(crate) mod normalize;
 
 pub use magic::*;
 pub use query::*;
@@ -31,9 +32,9 @@ pub enum KnownMeta {
 }
 
 impl TryFrom<KnownMagic> for KnownMeta {
-    type Error = anyhow::Error;
-    fn try_from(magic: KnownMagic) -> anyhow::Result<Self> {
-        match magic {
+    type Error = Error;
+    fn try_from(value: KnownMagic) -> Result<Self, Self::Error> {
+        match value {
             KnownMagic::OpMetaV1 => Ok(KnownMeta::OpV1),
             KnownMagic::DotrainV1 => Ok(KnownMeta::DotrainV1),
             KnownMagic::RainlangV1 => Ok(KnownMeta::RainlangV1),
@@ -43,7 +44,7 @@ impl TryFrom<KnownMagic> for KnownMeta {
             KnownMagic::ExpressionDeployerV2BytecodeV1 => {
                 Ok(KnownMeta::ExpressionDeployerV2BytecodeV1)
             }
-            _ => Err(anyhow::anyhow!("Unsupported meta {}", magic)),
+            _ => Err(Error::UnsupportedMeta),
         }
     }
 }
@@ -93,22 +94,22 @@ pub enum ContentEncoding {
 
 impl ContentEncoding {
     /// encode the data based on the variant
-    pub fn encode(&self, data: &[u8]) -> anyhow::Result<Vec<u8>> {
-        Ok(match self {
+    pub fn encode(&self, data: &[u8]) -> Vec<u8> {
+        match self {
             ContentEncoding::None | ContentEncoding::Identity => data.to_vec(),
             ContentEncoding::Deflate => deflate::deflate_bytes_zlib(data),
-        })
+        }
     }
 
     /// decode the data based on the variant
-    pub fn decode(&self, data: &[u8]) -> anyhow::Result<Vec<u8>> {
+    pub fn decode(&self, data: &[u8]) -> Result<Vec<u8>, Error> {
         Ok(match self {
             ContentEncoding::None | ContentEncoding::Identity => data.to_vec(),
-            ContentEncoding::Deflate => match inflate::inflate_bytes(data) {
+            ContentEncoding::Deflate => match inflate::inflate_bytes_zlib(data) {
                 Ok(v) => v,
-                Err(_) => match inflate::inflate_bytes_zlib(data) {
+                Err(error) => match inflate::inflate_bytes(data) {
                     Ok(v) => v,
-                    Err(error) => Err(anyhow::anyhow!(error))?,
+                    Err(_) => Err(Error::InflateError(error))?,
                 },
             },
         })
@@ -148,15 +149,15 @@ pub struct RainMetaDocumentV1Item {
 
 // this implementation is mainly used by Rainlang and Dotrain metas as they are aliased type for String
 impl TryFrom<RainMetaDocumentV1Item> for String {
-    type Error = anyhow::Error;
+    type Error = Error;
     fn try_from(value: RainMetaDocumentV1Item) -> Result<Self, Self::Error> {
-        String::from_utf8(value.unpack()?).map_err(anyhow::Error::from)
+        Ok(String::from_utf8(value.unpack()?)?)
     }
 }
 
 // this implementation is mainly used by ExpressionDeployerV2Bytecode meta as it is aliased type for Vec<u8>
 impl TryFrom<RainMetaDocumentV1Item> for Vec<u8> {
-    type Error = anyhow::Error;
+    type Error = Error;
     fn try_from(value: RainMetaDocumentV1Item) -> Result<Self, Self::Error> {
         value.unpack()
     }
@@ -178,7 +179,7 @@ impl RainMetaDocumentV1Item {
     }
 
     /// method to hash(keccak256) the cbor encoded bytes of this instance
-    pub fn hash(&self, as_rain_meta_document: bool) -> anyhow::Result<[u8; 32]> {
+    pub fn hash(&self, as_rain_meta_document: bool) -> Result<[u8; 32], Error> {
         if as_rain_meta_document {
             Ok(keccak256(Self::cbor_encode_seq(
                 &vec![self.clone()],
@@ -191,7 +192,7 @@ impl RainMetaDocumentV1Item {
     }
 
     /// method to cbor encode
-    pub fn cbor_encode(&self) -> anyhow::Result<Vec<u8>> {
+    pub fn cbor_encode(&self) -> Result<Vec<u8>, Error> {
         let mut bytes: Vec<u8> = vec![];
         match serde_cbor::to_writer(&mut bytes, &self) {
             Ok(()) => Ok(bytes),
@@ -203,7 +204,7 @@ impl RainMetaDocumentV1Item {
     pub fn cbor_encode_seq(
         seq: &Vec<RainMetaDocumentV1Item>,
         magic: KnownMagic,
-    ) -> anyhow::Result<Vec<u8>> {
+    ) -> Result<Vec<u8>, Error> {
         let mut bytes: Vec<u8> = magic.to_prefix_bytes().to_vec();
         for item in seq {
             serde_cbor::to_writer(&mut bytes, &item)?;
@@ -212,7 +213,7 @@ impl RainMetaDocumentV1Item {
     }
 
     /// method to cbor decode from given bytes
-    pub fn cbor_decode(data: &[u8]) -> anyhow::Result<Vec<RainMetaDocumentV1Item>> {
+    pub fn cbor_decode(data: &[u8]) -> Result<Vec<RainMetaDocumentV1Item>, Error> {
         let mut track: Vec<usize> = vec![];
         let mut metas: Vec<RainMetaDocumentV1Item> = vec![];
         let mut is_rain_document_meta = false;
@@ -230,7 +231,7 @@ impl RainMetaDocumentV1Item {
                 track.push(deserializer.byte_offset());
                 match serde_cbor::value::from_value(cbor_map) {
                     Ok(meta) => metas.push(meta),
-                    Err(error) => Err(error)?,
+                    Err(error) => Err(Error::SerdeCborError(error))?,
                 };
                 true
             }
@@ -239,10 +240,10 @@ impl RainMetaDocumentV1Item {
                     if error.offset() == len as u64 {
                         false
                     } else {
-                        Err(error)?
+                        Err(Error::SerdeCborError(error))?
                     }
                 } else {
-                    Err(error)?
+                    Err(Error::SerdeCborError(error))?
                 }
             }
         } {}
@@ -252,19 +253,18 @@ impl RainMetaDocumentV1Item {
             || track.len() != metas.len()
             || len != track[track.len() - 1]
         {
-            return Err(anyhow::anyhow!("corrupt meta"));
+            Err(Error::CorruptMeta)?
         }
         Ok(metas)
     }
 
     // unpack the payload based on the configuration
-    pub fn unpack(&self) -> anyhow::Result<Vec<u8>> {
+    pub fn unpack(&self) -> Result<Vec<u8>, Error> {
         ContentEncoding::decode(&self.content_encoding, self.payload.as_ref())
     }
 
     // unpacks the payload to given meta type based on configuration
-    pub fn unpack_into<T: TryFrom<Self, Error = anyhow::Error>>(self) -> anyhow::Result<T> {
-        // let data = self.unpack()?;
+    pub fn unpack_into<T: TryFrom<Self, Error = Error>>(self) -> Result<T, Error> {
         match self.magic {
             KnownMagic::OpMetaV1
             | KnownMagic::DotrainV1
@@ -272,10 +272,8 @@ impl RainMetaDocumentV1Item {
             | KnownMagic::SolidityAbiV2
             | KnownMagic::AuthoringMetaV1
             | KnownMagic::InterpreterCallerMetaV1
-            | KnownMagic::ExpressionDeployerV2BytecodeV1 => {
-                T::try_from(self).map_err(anyhow::Error::from)
-            }
-            _ => Err(anyhow::anyhow!("unsupproted magic number")),
+            | KnownMagic::ExpressionDeployerV2BytecodeV1 => T::try_from(self),
+            _ => Err(Error::UnsupportedMeta)?,
         }
     }
 }
@@ -363,16 +361,16 @@ impl<'de> Deserialize<'de> for RainMetaDocumentV1Item {
 }
 
 /// searches for a meta matching the given hash in given subgraphs urls
-pub async fn search(hash: &str, subgraphs: &Vec<String>) -> anyhow::Result<query::MetaResponse> {
+pub async fn search(hash: &str, subgraphs: &Vec<String>) -> Result<query::MetaResponse, Error> {
     if !types::common::v1::HASH_PATTERN.is_match(hash) {
-        return Err(anyhow::anyhow!("invalid hash"));
+        return Err(Error::InvalidHash);
     }
     let request_body = query::MetaQuery::build_query(query::meta_query::Variables {
         hash: Some(hash.to_ascii_lowercase()),
     });
     let mut promises = vec![];
 
-    let client = Arc::new(Client::builder().build()?);
+    let client = Arc::new(Client::builder().build().map_err(Error::ReqwestError)?);
     for url in subgraphs {
         promises.push(Box::pin(query::process_meta_query(
             client.clone(),
@@ -384,20 +382,20 @@ pub async fn search(hash: &str, subgraphs: &Vec<String>) -> anyhow::Result<query
     Ok(response_value)
 }
 
-/// searches for an ExpressionDeployer meta matching the given hash in given subgraphs urls
+/// searches for an ExpressionDeployer matching the given hash in given subgraphs urls
 pub async fn search_deployer(
     hash: &str,
     subgraphs: &Vec<String>,
-) -> anyhow::Result<DeployerResponse> {
+) -> Result<DeployerResponse, Error> {
     if !types::common::v1::HASH_PATTERN.is_match(hash) {
-        return Err(anyhow::anyhow!("invalid hash"));
+        return Err(Error::InvalidHash);
     }
     let request_body = query::DeployerQuery::build_query(query::deployer_query::Variables {
         hash: Some(hash.to_ascii_lowercase()),
     });
     let mut promises = vec![];
 
-    let client = Arc::new(Client::builder().build()?);
+    let client = Arc::new(Client::builder().build().map_err(Error::ReqwestError)?);
     for url in subgraphs {
         promises.push(Box::pin(query::process_deployer_query(
             client.clone(),
@@ -835,7 +833,7 @@ impl Store {
         text: &str,
         uri: &str,
         keep_old: bool,
-    ) -> anyhow::Result<(String, String)> {
+    ) -> Result<(String, String), Error> {
         let bytes = RainMetaDocumentV1Item {
             payload: serde_bytes::ByteBuf::from(text.as_bytes()),
             magic: KnownMagic::DotrainV1,
@@ -885,12 +883,10 @@ impl Store {
 }
 
 /// converts string to bytes32
-pub fn str_to_bytes32(text: &str) -> anyhow::Result<[u8; 32]> {
+pub fn str_to_bytes32(text: &str) -> Result<[u8; 32], Error> {
     let bytes: &[u8] = text.as_bytes();
     if bytes.len() > 32 {
-        return Err(anyhow::anyhow!(
-            "unexpected length, must be 32 bytes or less"
-        ));
+        return Err(Error::BiggerThan32Bytes);
     }
     let mut b32 = [0u8; 32];
     b32[..bytes.len()].copy_from_slice(bytes);
@@ -898,7 +894,7 @@ pub fn str_to_bytes32(text: &str) -> anyhow::Result<[u8; 32]> {
 }
 
 /// converts bytes32 to string
-pub fn bytes32_to_str(bytes: &[u8; 32]) -> anyhow::Result<&str> {
+pub fn bytes32_to_str(bytes: &[u8; 32]) -> Result<&str, Error> {
     let mut len = 32;
     if let Some((pos, _)) = itertools::Itertools::find_position(&mut bytes.iter(), |b| **b == 0u8) {
         len = pos;
@@ -913,14 +909,14 @@ mod tests {
     use super::{
         str_to_bytes32, bytes32_to_str,
         magic::KnownMagic,
-        RainMetaDocumentV1Item, ContentType, ContentEncoding, ContentLanguage,
+        RainMetaDocumentV1Item, ContentType, ContentEncoding, ContentLanguage, Error,
         types::{dotrain::v1::DotrainMeta, authoring::v1::AuthoringMeta},
     };
 
     /// Roundtrip test for an authoring meta
     /// original content -> pack -> MetaMap -> cbor encode -> cbor decode -> MetaMap -> unpack -> original content,
     #[test]
-    fn authoring_meta_roundtrip() -> anyhow::Result<()> {
+    fn authoring_meta_roundtrip() -> Result<(), Error> {
         let authoring_meta_content = r#"[
             {
                 "word": "stack",
@@ -1006,12 +1002,12 @@ mod tests {
     /// Roundtrip test for a dotrain meta
     /// original content -> pack -> MetaMap -> cbor encode -> cbor decode -> MetaMap -> unpack -> original content,
     #[test]
-    fn dotrain_meta_roundtrip() -> anyhow::Result<()> {
+    fn dotrain_meta_roundtrip() -> Result<(), Error> {
         let dotrain_content = "#main _ _: int-add(1 2) int-add(2 3)";
         let dotrain_content_bytes = dotrain_content.as_bytes().to_vec();
 
         let content_encoding = ContentEncoding::Deflate;
-        let deflated_payload = content_encoding.encode(&dotrain_content_bytes)?;
+        let deflated_payload = content_encoding.encode(&dotrain_content_bytes);
 
         let meta_map = RainMetaDocumentV1Item {
             payload: serde_bytes::ByteBuf::from(deflated_payload.clone()),
@@ -1079,7 +1075,7 @@ mod tests {
     /// Roundtrip test for a meta sequence
     /// original content -> pack -> MetaMap -> cbor encode -> cbor decode -> MetaMap -> unpack -> original content,
     #[test]
-    fn meta_seq_roundtrip() -> anyhow::Result<()> {
+    fn meta_seq_roundtrip() -> Result<(), Error> {
         let authoring_meta_content = r#"[
             {
                 "word": "stack",
@@ -1105,7 +1101,7 @@ mod tests {
         let dotrain_content = "#main _ _: int-add(1 2) int-add(2 3)";
         let dotrain_content_bytes = dotrain_content.as_bytes().to_vec();
         let content_encoding = ContentEncoding::Deflate;
-        let deflated_payload = content_encoding.encode(&dotrain_content_bytes)?;
+        let deflated_payload = content_encoding.encode(&dotrain_content_bytes);
         let meta_map_2 = RainMetaDocumentV1Item {
             payload: serde_bytes::ByteBuf::from(deflated_payload.clone()),
             magic: KnownMagic::DotrainV1,
@@ -1275,7 +1271,7 @@ mod tests {
     fn test_str_to_bytes32_long() {
         assert!(matches!(
             str_to_bytes32("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456").unwrap_err(),
-            anyhow::Error { .. }
+            Error::BiggerThan32Bytes
         ));
     }
 }

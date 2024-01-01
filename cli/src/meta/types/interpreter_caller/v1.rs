@@ -1,7 +1,7 @@
 use validator::Validate;
 use serde::{Serialize, Deserialize};
 use super::super::{
-    super::RainMetaDocumentV1Item,
+    super::{RainMetaDocumentV1Item, Error},
     common::v1::{RainTitle, RainSymbol, RainString, Description, SolidityIdentifier},
 };
 
@@ -44,33 +44,33 @@ pub struct InterpreterCallerMeta {
 }
 
 impl TryFrom<Vec<u8>> for InterpreterCallerMeta {
-    type Error = anyhow::Error;
+    type Error = Error;
     fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
         match serde_json::from_slice::<Self>(&value) {
             Ok(t) => match t.validate() {
                 Ok(()) => Ok(t),
-                Err(e) => Err(anyhow::Error::from(e)),
+                Err(e) => Err(e)?,
             },
-            Err(e) => Err(anyhow::Error::from(e)),
+            Err(e) => Err(e)?,
         }
     }
 }
 
 impl TryFrom<&[u8]> for InterpreterCallerMeta {
-    type Error = anyhow::Error;
+    type Error = Error;
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
         match serde_json::from_slice::<Self>(value) {
             Ok(t) => match t.validate() {
                 Ok(()) => Ok(t),
-                Err(e) => Err(anyhow::Error::from(e)),
+                Err(e) => Err(e)?,
             },
-            Err(e) => Err(anyhow::Error::from(e)),
+            Err(e) => Err(e)?,
         }
     }
 }
 
 impl TryFrom<RainMetaDocumentV1Item> for InterpreterCallerMeta {
-    type Error = anyhow::Error;
+    type Error = Error;
     fn try_from(value: RainMetaDocumentV1Item) -> Result<Self, Self::Error> {
         Self::try_from(value.unpack()?)
     }

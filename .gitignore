@@ -12,4 +12,4 @@ subgraph/generated
 subgraph/node_modules
 subgraph/typechain
 subgraph/subgraph.yaml
-.vscode/
+.vscode

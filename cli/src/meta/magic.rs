@@ -41,7 +41,7 @@ impl KnownMagic {
 }
 
 impl TryFrom<u64> for KnownMagic {
-    type Error = anyhow::Error;
+    type Error = crate::error::Error;
     fn try_from(value: u64) -> Result<Self, Self::Error> {
         match value {
             v if v == KnownMagic::OpMetaV1 as u64 => Ok(KnownMagic::OpMetaV1),
@@ -56,7 +56,7 @@ impl TryFrom<u64> for KnownMagic {
             v if v == KnownMagic::ExpressionDeployerV2BytecodeV1 as u64 => {
                 Ok(KnownMagic::ExpressionDeployerV2BytecodeV1)
             }
-            _ => Err(anyhow::anyhow!("unknown magic number")),
+            _ => Err(crate::error::Error::UnknownMagic),
         }
     }
 }

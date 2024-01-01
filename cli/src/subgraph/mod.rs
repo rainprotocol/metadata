@@ -1,3 +1,5 @@
+use crate::error::Error;
+
 /// All known subgraph endpoints
 #[derive(Debug, Clone)]
 pub struct KnownSubgraphs;
@@ -47,14 +49,12 @@ impl KnownSubgraphs {
     ];
 
     /// get the subgraph endpoint from a chain id
-    pub fn of_chain(chain_id: u64) -> anyhow::Result<[&'static str; 3]> {
+    pub fn of_chain(chain_id: u64) -> Result<[&'static str; 3], Error> {
         match chain_id {
             1 => Ok(Self::ETHEREUM),
             137 => Ok(Self::POLYGON),
             80001 => Ok(Self::MUMBAI),
-            _ => Err(anyhow::anyhow!(
-                "no rain subgraph is deployed for this network"
-            )),
+            _ => Err(Error::UnsupportedNetwork),
         }
     }
 }

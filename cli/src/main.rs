@@ -1,4 +1,5 @@
 pub mod meta;
+pub mod error;
 pub(crate) mod cli;
 pub(crate) mod solc;
 pub(crate) mod subgraph;

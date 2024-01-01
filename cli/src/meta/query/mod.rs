@@ -1,8 +1,10 @@
 use std::sync::Arc;
-use reqwest::{Client, Url};
+use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use graphql_client::{GraphQLQuery, Response, QueryBody};
-use super::{RainMetaDocumentV1Item, KnownMagic, types::authoring::v1::AuthoringMeta};
+use super::{
+    RainMetaDocumentV1Item, KnownMagic, types::authoring::v1::AuthoringMeta, super::error::Error,
+};
 
 type Bytes = String;
 
@@ -75,23 +77,25 @@ pub(super) async fn process_meta_query(
     client: Arc<Client>,
     request_body: &QueryBody<meta_query::Variables>,
     url: &str,
-) -> anyhow::Result<MetaResponse> {
+) -> Result<MetaResponse, Error> {
     Ok(MetaResponse {
         bytes: alloy_primitives::hex::decode(
             client
-                .post(Url::parse(url)?)
+                .post(url)
                 .json(request_body)
                 .send()
-                .await?
+                .await
+                .map_err(Error::ReqwestError)?
                 .json::<Response<meta_query::ResponseData>>()
-                .await?
+                .await
+                .map_err(Error::ReqwestError)?
                 .data
-                .ok_or(anyhow::anyhow!("found no matching record!"))?
+                .ok_or(Error::NoRecordFound)?
                 .meta
-                .ok_or(anyhow::anyhow!("found no matching record!"))?
+                .ok_or(Error::NoRecordFound)?
                 .raw_bytes,
         )
-        .or(Err(anyhow::anyhow!("found no matching record!")))?,
+        .or(Err(Error::NoRecordFound))?,
     })
 }
 
@@ -101,56 +105,57 @@ pub(super) async fn process_deployer_query(
     client: Arc<Client>,
     request_body: &QueryBody<deployer_query::Variables>,
     url: &str,
-) -> anyhow::Result<DeployerResponse> {
+) -> Result<DeployerResponse, Error> {
     let res = client
-        .post(Url::parse(url)?)
+        .post(url)
         .json(request_body)
         .send()
-        .await?
+        .await
+        .map_err(Error::ReqwestError)?
         .json::<Response<deployer_query::ResponseData>>()
-        .await?
+        .await
+        .map_err(Error::ReqwestError)?
         .data
-        .ok_or(anyhow::anyhow!("found no matching record!"))?
+        .ok_or(Error::NoRecordFound)?
         .expression_deployers;
 
     if !res.is_empty() {
         let bytecode = if let Some(v) = &res[0].bytecode {
-            alloy_primitives::hex::decode(v)
-                .or(Err(anyhow::anyhow!("found no matching record!")))?
+            alloy_primitives::hex::decode(v).or(Err(Error::NoRecordFound))?
         } else {
-            return Err(anyhow::anyhow!("found no matching record!"));
+            return Err(Error::NoRecordFound);
         };
         let parser = if let Some(v) = &res[0].parser {
             alloy_primitives::hex::decode(&v.parser.deployed_bytecode)
-                .or(Err(anyhow::anyhow!("found no matching record!")))?
+                .or(Err(Error::NoRecordFound))?
         } else {
-            return Err(anyhow::anyhow!("found no matching record!"));
+            return Err(Error::NoRecordFound);
         };
         let store = if let Some(v) = &res[0].store {
             alloy_primitives::hex::decode(&v.store.deployed_bytecode)
-                .or(Err(anyhow::anyhow!("found no matching record!")))?
+                .or(Err(Error::NoRecordFound))?
         } else {
-            return Err(anyhow::anyhow!("found no matching record!"));
+            return Err(Error::NoRecordFound);
         };
         let interpreter = if let Some(v) = &res[0].interpreter {
             alloy_primitives::hex::decode(&v.interpreter.deployed_bytecode)
-                .or(Err(anyhow::anyhow!("found no matching record!")))?
+                .or(Err(Error::NoRecordFound))?
         } else {
-            return Err(anyhow::anyhow!("found no matching record!"));
+            return Err(Error::NoRecordFound);
         };
         let bytecode_meta_hash = if res[0].meta.len() == 1 {
             res[0].meta[0].id.to_ascii_lowercase()
         } else {
-            return Err(anyhow::anyhow!("found no matching record!"));
+            return Err(Error::NoRecordFound);
         };
         let tx_hash = if let Some(v) = &res[0].deploy_transaction {
             v.id.to_ascii_lowercase()
         } else {
-            return Err(anyhow::anyhow!("found no matching record!"));
+            return Err(Error::NoRecordFound);
         };
         let meta_hash = res[0].constructor_meta_hash.to_ascii_lowercase();
         let meta_bytes = alloy_primitives::hex::decode(&res[0].constructor_meta)
-            .or(Err(anyhow::anyhow!("found no matching record!")))?;
+            .or(Err(Error::NoRecordFound))?;
         Ok(DeployerResponse {
             meta_hash,
             meta_bytes,
@@ -162,6 +167,6 @@ pub(super) async fn process_deployer_query(
             tx_hash,
         })
     } else {
-        Err(anyhow::anyhow!("found no matching record!"))
+        Err(Error::NoRecordFound)
     }
 }
