@@ -3,73 +3,54 @@
     flake-utils.url = "github:numtide/flake-utils";
     naersk.url = "github:nix-community/naersk";
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    rust-overlay.url = "github:oxalica/rust-overlay";
+    foundry.url = "github:shazow/foundry.nix/monthly";
   };
 
-  outputs = { self, flake-utils, naersk, nixpkgs }:
-    flake-utils.lib.eachDefaultSystem (system:
-      let
-        pkgs = (import nixpkgs) {
-          inherit system;
-        };
+  outputs = { self, flake-utils, naersk, nixpkgs, rust-overlay, foundry }:
 
-        naersk' = pkgs.callPackage naersk {};
+  flake-utils.lib.eachDefaultSystem (system:
+    let
+      overlays = [ (import rust-overlay) foundry.overlay ];
 
-      in rec {
-        packages = rec {
-          test = pkgs.writeShellScriptBin "test" ''
-            cargo test --all-features
-          '';
+      pkgs = (import nixpkgs) {
+        inherit system overlays;
+      };
 
-          docgen = pkgs.writeShellScriptBin "docgen" ''
-            cargo doc --all-features
-          '';
+      rust-version = "1.75.0";
 
-          lint-check = pkgs.writeShellScriptBin "lint-check" ''
-            cargo fmt --check && cargo clippy
-          '';
+      rust-toolchain = pkgs.rust-bin.stable.${rust-version}.default;
 
-          lint-fix = pkgs.writeShellScriptBin "lint-fix" ''
-            cargo fmt && cargo clippy --fix
-          '';
-        };
+      forge-bin = "${foundry.defaultPackage.${system}}/bin/forge";
 
-        # For `nix build` & `nix run`:
-        defaultPackage = naersk'.buildPackage {
-          src = ./.;
-          nativeBuildInputs = with pkgs; [ 
-            gmp 
-            iconv 
-            openssl 
-            pkg-config
-          ] ++ (pkgs.lib.optionals pkgs.stdenv.isDarwin [
-            pkgs.libiconv
-            pkgs.darwin.apple_sdk.frameworks.Security
-            pkgs.darwin.apple_sdk.frameworks.CoreServices
-            pkgs.darwin.apple_sdk.frameworks.CoreFoundation
-            pkgs.darwin.apple_sdk.frameworks.SystemConfiguration
-          ]);
-          cargoBuildOptions = (prev: prev ++ [ "--all-features" ]);
-        };
+      naersk' = pkgs.callPackage naersk {
+        rustc = rust-toolchain;
+        cargo = rust-toolchain;
+      };
 
-        # For `nix develop`:
-        devShell = pkgs.mkShell {
-          nativeBuildInputs = with pkgs; [ 
-            gmp 
-            iconv 
-            rustup 
-          ] ++ (with packages; [
-            test
-            docgen
-            lint-fix
-            lint-check
-          ]) ++ (pkgs.lib.optionals pkgs.stdenv.isDarwin [
-            pkgs.libiconv
-            pkgs.darwin.apple_sdk.frameworks.Security
-            pkgs.darwin.apple_sdk.frameworks.CoreServices
-            pkgs.darwin.apple_sdk.frameworks.CoreFoundation
-            pkgs.darwin.apple_sdk.frameworks.SystemConfiguration
-          ]);
-        };
-      }
-    );
+    in rec {
+      # For `nix build` & `nix run`:
+      defaultPackage = naersk'.buildPackage {
+        src = ./.;
+        nativeBuildInputs = (with pkgs; [ 
+          openssl 
+          pkg-config
+        ] ++ lib.optionals stdenv.isDarwin [
+          darwin.apple_sdk.frameworks.SystemConfiguration
+        ]);
+        cargoBuildOptions = (prev: prev ++ [ "--all-features" ]);
+      };
+
+      # For `nix develop`:
+      devShell = pkgs.mkShell {
+        nativeBuildInputs = (with pkgs; [ 
+          foundry-bin
+          rust-toolchain
+          slither-analyzer 
+        ] ++ lib.optionals stdenv.isDarwin [
+          darwin.apple_sdk.frameworks.SystemConfiguration
+        ]);
+      };
+    }
+  );
 }
