@@ -33,6 +33,7 @@
       defaultPackage = naersk'.buildPackage {
         src = ./.;
         nativeBuildInputs = (with pkgs; [ 
+          gmp
           openssl 
           pkg-config
         ] ++ lib.optionals stdenv.isDarwin [
