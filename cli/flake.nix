@@ -33,7 +33,6 @@
       defaultPackage = naersk'.buildPackage {
         src = ./.;
         nativeBuildInputs = (with pkgs; [ 
-          gmp
           openssl 
           pkg-config
         ] ++ lib.optionals stdenv.isDarwin [
@@ -45,6 +44,8 @@
       # For `nix develop`:
       devShell = pkgs.mkShell {
         nativeBuildInputs = (with pkgs; [ 
+          openssl 
+          pkg-config
           foundry-bin
           rust-toolchain
           slither-analyzer 
