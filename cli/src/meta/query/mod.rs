@@ -1,5 +1,6 @@
 use std::sync::Arc;
 use reqwest::Client;
+use alloy_primitives::hex::decode;
 use serde::{Deserialize, Serialize};
 use graphql_client::{GraphQLQuery, Response, QueryBody};
 use super::{
@@ -35,9 +36,12 @@ pub struct MetaResponse {
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct DeployerResponse {
-    pub tx_hash: String,
-    pub bytecode_meta_hash: String,
-    pub meta_hash: String,
+    #[serde(with = "serde_bytes")]
+    pub tx_hash: Vec<u8>,
+    #[serde(with = "serde_bytes")]
+    pub bytecode_meta_hash: Vec<u8>,
+    #[serde(with = "serde_bytes")]
+    pub meta_hash: Vec<u8>,
     #[serde(with = "serde_bytes")]
     pub meta_bytes: Vec<u8>,
     #[serde(with = "serde_bytes")]
@@ -79,7 +83,7 @@ pub(super) async fn process_meta_query(
     url: &str,
 ) -> Result<MetaResponse, Error> {
     Ok(MetaResponse {
-        bytes: alloy_primitives::hex::decode(
+        bytes: decode(
             client
                 .post(url)
                 .json(request_body)
@@ -121,41 +125,37 @@ pub(super) async fn process_deployer_query(
 
     if !res.is_empty() {
         let bytecode = if let Some(v) = &res[0].bytecode {
-            alloy_primitives::hex::decode(v).or(Err(Error::NoRecordFound))?
+            decode(v).or(Err(Error::NoRecordFound))?
         } else {
             return Err(Error::NoRecordFound);
         };
         let parser = if let Some(v) = &res[0].parser {
-            alloy_primitives::hex::decode(&v.parser.deployed_bytecode)
-                .or(Err(Error::NoRecordFound))?
+            decode(&v.parser.deployed_bytecode).or(Err(Error::NoRecordFound))?
         } else {
             return Err(Error::NoRecordFound);
         };
         let store = if let Some(v) = &res[0].store {
-            alloy_primitives::hex::decode(&v.store.deployed_bytecode)
-                .or(Err(Error::NoRecordFound))?
+            decode(&v.store.deployed_bytecode).or(Err(Error::NoRecordFound))?
         } else {
             return Err(Error::NoRecordFound);
         };
         let interpreter = if let Some(v) = &res[0].interpreter {
-            alloy_primitives::hex::decode(&v.interpreter.deployed_bytecode)
-                .or(Err(Error::NoRecordFound))?
+            decode(&v.interpreter.deployed_bytecode).or(Err(Error::NoRecordFound))?
         } else {
             return Err(Error::NoRecordFound);
         };
         let bytecode_meta_hash = if res[0].meta.len() == 1 {
-            res[0].meta[0].id.to_ascii_lowercase()
+            decode(&res[0].meta[0].id).or(Err(Error::NoRecordFound))?
         } else {
             return Err(Error::NoRecordFound);
         };
         let tx_hash = if let Some(v) = &res[0].deploy_transaction {
-            v.id.to_ascii_lowercase()
+            decode(&v.id).or(Err(Error::NoRecordFound))?
         } else {
             return Err(Error::NoRecordFound);
         };
-        let meta_hash = res[0].constructor_meta_hash.to_ascii_lowercase();
-        let meta_bytes = alloy_primitives::hex::decode(&res[0].constructor_meta)
-            .or(Err(Error::NoRecordFound))?;
+        let meta_hash = decode(&res[0].constructor_meta_hash).or(Err(Error::NoRecordFound))?;
+        let meta_bytes = decode(&res[0].constructor_meta).or(Err(Error::NoRecordFound))?;
         Ok(DeployerResponse {
             meta_hash,
             meta_bytes,

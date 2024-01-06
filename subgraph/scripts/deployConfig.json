@@ -1,0 +1,7 @@
+{
+  "configPath": "config/network.json",
+  "subgraphName": "username/subgraph_name",
+  "versionLabel": "default",
+  "endpoint": "default",
+  "ipfsEndpoint": "default"
+}
