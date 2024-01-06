@@ -194,10 +194,7 @@ impl RainMetaDocumentV1Item {
     /// method to cbor encode
     pub fn cbor_encode(&self) -> Result<Vec<u8>, Error> {
         let mut bytes: Vec<u8> = vec![];
-        match serde_cbor::to_writer(&mut bytes, &self) {
-            Ok(()) => Ok(bytes),
-            Err(error) => Err(error)?,
-        }
+        Ok(serde_cbor::to_writer(&mut bytes, &self).map(|_| bytes)?)
     }
 
     /// builds a cbor sequence from given MetaMaps

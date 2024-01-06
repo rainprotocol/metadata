@@ -134,10 +134,7 @@ impl TryFrom<Vec<u8>> for OpMeta {
     type Error = Error;
     fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
         match serde_json::from_slice::<Self>(&value) {
-            Ok(t) => match t.validate() {
-                Ok(()) => Ok(t),
-                Err(e) => Err(e)?,
-            },
+            Ok(t) => Ok(t.validate().map(|_| t)?),
             Err(e) => Err(e)?,
         }
     }
