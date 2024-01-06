@@ -745,6 +745,9 @@ impl Store {
                 self.deployer_cache.insert(hash.clone(), deployer.clone());
             }
         }
+        for (hash, tx_hash) in &other.deployer_hash_map {
+            self.deployer_hash_map.insert(hash.clone(), tx_hash.clone());
+        }
         for (uri, hash) in &other.dotrain_cache {
             if !self.dotrain_cache.contains_key(uri) {
                 self.dotrain_cache.insert(uri.clone(), hash.clone());
