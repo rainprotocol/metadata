@@ -1,13 +1,12 @@
 {
   inputs = {
     flake-utils.url = "github:numtide/flake-utils";
-    naersk.url = "github:nix-community/naersk";
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     rust-overlay.url = "github:oxalica/rust-overlay";
-    foundry.url = "github:shazow/foundry.nix/monthly";
+    foundry.url = "github:shazow/foundry.nix/main";
   };
 
-  outputs = { self, flake-utils, naersk, nixpkgs, rust-overlay, foundry }:
+  outputs = { self, flake-utils, nixpkgs, rust-overlay, foundry }:
 
   flake-utils.lib.eachDefaultSystem (system:
     let
@@ -21,24 +20,33 @@
 
       rust-toolchain = pkgs.rust-bin.stable.${rust-version}.default;
 
-      forge-bin = "${foundry.defaultPackage.${system}}/bin/forge";
-
-      naersk' = pkgs.callPackage naersk {
-        rustc = rust-toolchain;
-        cargo = rust-toolchain;
-      };
-
     in rec {
       # For `nix build` & `nix run`:
-      defaultPackage = naersk'.buildPackage {
+      defaultPackage = (pkgs.makeRustPlatform{
+        rustc = rust-toolchain;
+        cargo = rust-toolchain;
+      }).buildRustPackage {
         src = ./.;
-        nativeBuildInputs = (with pkgs; [ 
+        doCheck = false;
+        name = "rain-meta";
+        cargoLock.lockFile = ./Cargo.lock;
+        # allows for git deps to be resolved without the need to specify their outputHash
+        cargoLock.allowBuiltinFetchGit = true;
+        buildPhase = ''
+          cargo build --release --bin rain-meta --all-features
+        '';
+        installPhase = ''
+          mkdir -p $out/bin
+          cp target/release/rain-meta $out/bin/
+        '';
+        buildInputs = with pkgs; [ 
           openssl 
+        ];
+        nativeBuildInputs = with pkgs; [ 
           pkg-config
         ] ++ lib.optionals stdenv.isDarwin [
           darwin.apple_sdk.frameworks.SystemConfiguration
-        ]);
-        cargoBuildOptions = (prev: prev ++ [ "--all-features" ]);
+        ];
       };
 
       # For `nix develop`:
