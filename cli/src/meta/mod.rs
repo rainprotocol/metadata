@@ -610,8 +610,14 @@ impl Store {
     }
 
     /// get the corresponding DeployerNPRecord of the given deployer hash if it exists
-    pub fn get_deployer(&self, deployer_hash: &[u8]) -> Option<&NPE2Deployer> {
-        self.deployer_cache.get(deployer_hash)
+    pub fn get_deployer(&self, hash: &[u8]) -> Option<&NPE2Deployer> {
+        if self.deployer_cache.contains_key(hash) {
+            self.deployer_cache.get(hash)
+        } else if let Some(h) = self.deployer_hash_map.get(hash) {
+            self.deployer_cache.get(h)
+        } else {
+            None
+        }
     }
 
     /// searches for DeployerNPRecord in the subgraphs given the deployer hash
