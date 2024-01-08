@@ -1,40 +1,41 @@
 use validator::Validate;
-use schemars::JsonSchema;
 use serde::{Serialize, Deserialize};
 use super::super::{
-    super::RainMetaDocumentV1Item,
+    super::{RainMetaDocumentV1Item, Error},
     common::v1::{RainTitle, RainSymbol, RainString, Description, SolidityIdentifier},
 };
 
+#[cfg(feature = "json-schema")]
+use schemars::JsonSchema;
+
 type AbiPath = RainString;
 
-/// # InterpreterCallerMeta
 /// InterpreterCaller metadata used by Rainlang.
 /// Supports `IInterpreterCallerV2` Solidity contracts.
 /// Required info about a contract that receives expression in at least one of
 /// its methods.
-#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize)]
+#[derive(Validate, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct InterpreterCallerMeta {
-    /// # Name
     #[validate]
     pub name: RainTitle,
-    /// # Contract ABI name
     /// Name of the contract corresponding to `contractName` feild in the abi.
     #[validate]
     pub abi_name: SolidityIdentifier,
-    /// # Caller Description
     /// Name of the caller corresponding to `contractName` feild in the abi.
     #[serde(default)]
     #[validate]
     pub desc: Description,
-    /// # Alias
+    /// Determines the repository source
+    #[serde(default)]
+    #[validate]
+    pub source: Description,
     /// Alias of the caller used by Rainlang.
     #[serde(default)]
     #[validate]
     pub alias: Option<RainSymbol>,
-    /// # Methods
     ///  Methods of the contract that receive at least one expression
     /// (EvaluableConfig) from arguments.
     #[validate(length(min = 1))]
@@ -43,30 +44,37 @@ pub struct InterpreterCallerMeta {
 }
 
 impl TryFrom<Vec<u8>> for InterpreterCallerMeta {
-    type Error = anyhow::Error;
+    type Error = Error;
     fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
-        match serde_json::from_slice::<Self>(&value).map_err(anyhow::Error::from) {
-            Ok(t) => match t.validate().map_err(anyhow::Error::from) {
-                Ok(()) => Ok(t),
-                Err(e) => Err(e),
-            },
-            Err(e) => Err(e),
+        match serde_json::from_slice::<Self>(&value) {
+            Ok(t) => Ok(t.validate().map(|_| t)?),
+            Err(e) => Err(e)?,
+        }
+    }
+}
+
+impl TryFrom<&[u8]> for InterpreterCallerMeta {
+    type Error = Error;
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+        match serde_json::from_slice::<Self>(value) {
+            Ok(t) => Ok(t.validate().map(|_| t)?),
+            Err(e) => Err(e)?,
         }
     }
 }
 
 impl TryFrom<RainMetaDocumentV1Item> for InterpreterCallerMeta {
-    type Error = anyhow::Error;
+    type Error = Error;
     fn try_from(value: RainMetaDocumentV1Item) -> Result<Self, Self::Error> {
         Self::try_from(value.unpack()?)
     }
 }
 
-#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize)]
+#[derive(Validate, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct Method {
-    /// # Method name
     #[validate]
     pub name: RainTitle,
     #[validate]
@@ -81,7 +89,8 @@ pub struct Method {
     pub expressions: Vec<Expression>,
 }
 
-#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize)]
+#[derive(Validate, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct MethodInput {
@@ -96,7 +105,8 @@ pub struct MethodInput {
     pub path: AbiPath,
 }
 
-#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize)]
+#[derive(Validate, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct Expression {
@@ -119,7 +129,8 @@ pub struct Expression {
     pub context_columns: Vec<ContextColumn>,
 }
 
-#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize)]
+#[derive(Validate, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 #[serde(deny_unknown_fields)]
 pub struct ContextColumn {
     #[validate]
@@ -135,7 +146,8 @@ pub struct ContextColumn {
     pub cells: Vec<ContextCell>,
 }
 
-#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize)]
+#[derive(Validate, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 #[serde(deny_unknown_fields)]
 pub struct ContextCell {
     #[validate]

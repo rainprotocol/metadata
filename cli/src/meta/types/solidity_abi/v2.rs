@@ -1,23 +1,25 @@
 use validator::Validate;
-use schemars::JsonSchema;
 use alloy_json_abi::JsonAbi;
-use super::super::super::RainMetaDocumentV1Item;
 use validator::{ValidationErrors, ValidationError};
+use super::super::super::{RainMetaDocumentV1Item, Error as MetaError};
 use serde::{Serialize, Serializer, Deserialize, Deserializer, de::Error, ser::SerializeStruct};
 
-/// # SolidityABI
+#[cfg(feature = "json-schema")]
+use schemars::JsonSchema;
+
 /// JSON representation of a Solidity ABI interface. can be switched to ethers ABI struct using TryFrom trait
-/// https://docs.soliditylang.org/en/latest/abi-spec.html#json
-#[derive(JsonSchema, Debug, Serialize, Deserialize, Clone, PartialEq)]
+///
+/// <https://docs.soliditylang.org/en/latest/abi-spec.html#json>
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 pub struct SolidityAbiMeta(Vec<SolidityAbiItem>);
 
 impl SolidityAbiMeta {
     // extracts abi from a solc json artifact, errors if abi section is not found
-    pub fn from_artifact(artifact: &Vec<u8>) -> anyhow::Result<SolidityAbiMeta> {
-        serde_json::from_value(
+    pub fn from_artifact(artifact: &[u8]) -> Result<SolidityAbiMeta, MetaError> {
+        Ok(serde_json::from_value(
             serde_json::from_slice::<serde_json::Value>(artifact)?["abi"].clone(),
-        )
-        .map_err(anyhow::Error::from)
+        )?)
     }
 }
 
@@ -37,34 +39,41 @@ impl Validate for SolidityAbiMeta {
 }
 
 impl TryFrom<Vec<u8>> for SolidityAbiMeta {
-    type Error = anyhow::Error;
+    type Error = MetaError;
     fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
-        match serde_json::from_slice::<Self>(&value).map_err(anyhow::Error::from) {
-            Ok(t) => match t.validate().map_err(anyhow::Error::from) {
-                Ok(()) => Ok(t),
-                Err(e) => Err(e),
-            },
-            Err(e) => Err(e),
+        match serde_json::from_slice::<Self>(&value) {
+            Ok(t) => Ok(t.validate().map(|_| t)?),
+            Err(e) => Err(e)?,
+        }
+    }
+}
+
+impl TryFrom<&[u8]> for SolidityAbiMeta {
+    type Error = MetaError;
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+        match serde_json::from_slice::<Self>(value) {
+            Ok(t) => Ok(t.validate().map(|_| t)?),
+            Err(e) => Err(e)?,
         }
     }
 }
 
 impl TryFrom<RainMetaDocumentV1Item> for SolidityAbiMeta {
-    type Error = anyhow::Error;
+    type Error = MetaError;
     fn try_from(value: RainMetaDocumentV1Item) -> Result<Self, Self::Error> {
         Self::try_from(value.unpack()?)
     }
 }
 
 impl TryFrom<RainMetaDocumentV1Item> for JsonAbi {
-    type Error = anyhow::Error;
+    type Error = MetaError;
     fn try_from(value: RainMetaDocumentV1Item) -> Result<Self, Self::Error> {
         Ok(serde_json::from_slice(value.unpack()?.as_slice())?)
     }
 }
 
 impl TryFrom<SolidityAbiMeta> for JsonAbi {
-    type Error = anyhow::Error;
+    type Error = MetaError;
     fn try_from(value: SolidityAbiMeta) -> Result<Self, Self::Error> {
         Ok(serde_json::from_str(
             serde_json::to_string(&value)?.as_str(),
@@ -73,13 +82,14 @@ impl TryFrom<SolidityAbiMeta> for JsonAbi {
 }
 
 impl TryFrom<JsonAbi> for SolidityAbiMeta {
-    type Error = anyhow::Error;
+    type Error = MetaError;
     fn try_from(value: JsonAbi) -> Result<Self, Self::Error> {
         Ok(serde_json::from_value(serde_json::to_value(value)?)?)
     }
 }
 
-#[derive(Validate, JsonSchema, Debug, Clone, PartialEq)]
+#[derive(Validate, Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 pub struct SolidityAbiItemFn {
     inputs: Vec<SolidityAbiFnIO>,
     name: String,
@@ -102,7 +112,8 @@ impl Serialize for SolidityAbiItemFn {
     }
 }
 
-#[derive(Validate, JsonSchema, Debug, Clone, PartialEq)]
+#[derive(Validate, Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 pub struct SolidityAbiItemConstructor {
     inputs: Vec<SolidityAbiFnIO>,
     state_mutability: SolidityAbiFnMutability,
@@ -121,7 +132,8 @@ impl Serialize for SolidityAbiItemConstructor {
     }
 }
 
-#[derive(Validate, JsonSchema, Debug, Clone, PartialEq)]
+#[derive(Validate, Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 pub struct SolidityAbiItemReceive {
     state_mutability: SolidityAbiFnMutability,
 }
@@ -138,7 +150,8 @@ impl Serialize for SolidityAbiItemReceive {
     }
 }
 
-#[derive(Validate, JsonSchema, Debug, Clone, PartialEq)]
+#[derive(Validate, Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 pub struct SolidityAbiItemFallback {
     state_mutability: SolidityAbiFnMutability,
 }
@@ -155,7 +168,8 @@ impl Serialize for SolidityAbiItemFallback {
     }
 }
 
-#[derive(Validate, JsonSchema, Debug, Clone, PartialEq)]
+#[derive(Validate, Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 pub struct SolidityAbiItemEvent {
     anonymous: bool,
     inputs: Vec<SolidityAbiEventInput>,
@@ -176,7 +190,8 @@ impl Serialize for SolidityAbiItemEvent {
     }
 }
 
-#[derive(Validate, JsonSchema, Debug, Clone, PartialEq)]
+#[derive(Validate, Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 pub struct SolidityAbiItemError {
     inputs: Vec<SolidityAbiErrorInput>,
     name: String,
@@ -195,7 +210,8 @@ impl Serialize for SolidityAbiItemError {
     }
 }
 
-#[derive(JsonSchema, Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 pub enum SolidityAbiItem {
     Function(SolidityAbiItemFn),
     Constructor(SolidityAbiItemConstructor),
@@ -236,7 +252,8 @@ impl Validate for SolidityAbiItem {
     }
 }
 
-#[derive(JsonSchema, Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 #[serde(rename_all = "lowercase")]
 pub enum SolidityAbiFnMutability {
     Pure,
@@ -245,7 +262,8 @@ pub enum SolidityAbiFnMutability {
     Payable,
 }
 
-#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Validate, Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct SolidityAbiFnIO {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -256,7 +274,8 @@ pub struct SolidityAbiFnIO {
     typ: String,
 }
 
-#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Validate, Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct SolidityAbiErrorInput {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -267,7 +286,8 @@ pub struct SolidityAbiErrorInput {
     typ: String,
 }
 
-#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Validate, Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct SolidityAbiEventInput {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -279,7 +299,8 @@ pub struct SolidityAbiEventInput {
     typ: String,
 }
 
-#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Validate, Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct SolidityAbiEventInputComponent {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -429,7 +450,7 @@ impl<'de> Deserialize<'de> for SolidityAbiItem {
                     Some(is) => {
                         let result: Result<Vec<SolidityAbiFnIO>, String> =
                             is.iter().map(map_item_fn_io).collect();
-                        result.map_err(|e| D::Error::custom(e))?
+                        result.map_err(D::Error::custom)?
                     }
                     None => vec![],
                 };
@@ -437,7 +458,7 @@ impl<'de> Deserialize<'de> for SolidityAbiItem {
                     Some(os) => {
                         let result: Result<Vec<SolidityAbiFnIO>, String> =
                             os.iter().map(map_item_fn_io).collect();
-                        result.map_err(|e| D::Error::custom(e))?
+                        result.map_err(D::Error::custom)?
                     }
                     None => vec![],
                 };
@@ -457,7 +478,7 @@ impl<'de> Deserialize<'de> for SolidityAbiItem {
                     Some(is) => {
                         let result: Result<Vec<SolidityAbiFnIO>, String> =
                             is.iter().map(map_item_fn_io).collect();
-                        result.map_err(|e| D::Error::custom(e))?
+                        result.map_err(D::Error::custom)?
                     }
                     None => vec![],
                 };
@@ -483,7 +504,7 @@ impl<'de> Deserialize<'de> for SolidityAbiItem {
                     Some(is) => {
                         let result: Result<Vec<SolidityAbiEventInput>, String> =
                             is.iter().map(map_item_event_input).collect();
-                        result.map_err(|e| D::Error::custom(e))?
+                        result.map_err(D::Error::custom)?
                     }
                     None => vec![],
                 };
@@ -502,7 +523,7 @@ impl<'de> Deserialize<'de> for SolidityAbiItem {
                     Some(is) => {
                         let result: Result<Vec<SolidityAbiErrorInput>, String> =
                             is.iter().map(map_item_error_input).collect();
-                        result.map_err(|e| D::Error::custom(e))?
+                        result.map_err(D::Error::custom)?
                     }
                     None => vec![],
                 };
@@ -522,6 +543,16 @@ mod tests {
     use std::path::PathBuf;
     use alloy_json_abi::JsonAbi;
     use super::SolidityAbiMeta;
+    use crate::error::Error;
+
+    #[test]
+    fn test_all() -> anyhow::Result<()> {
+        let artifact_paths = build_artifacts()?;
+        test_json_roundtrip(artifact_paths.clone())?;
+        test_abi_conversion(artifact_paths.clone())?;
+        test_no_abi_artifact_parse()?;
+        Ok(())
+    }
 
     // building the artifacts
     fn build_artifacts() -> anyhow::Result<Vec<PathBuf>> {
@@ -542,7 +573,7 @@ mod tests {
                         files_to_read.push(file.path());
                     }
                 }
-            } else if file.path().is_file() {
+            } else if file.path().is_file() && file.path().ends_with(".json") {
                 files_to_read.push(file.path());
             }
         }
@@ -550,9 +581,7 @@ mod tests {
     }
 
     // test json roundtrip for SolidityAbiMeta and alloy JsonAbi
-    #[test]
-    fn test_json_roundtrip() -> anyhow::Result<()> {
-        let files_to_read = build_artifacts()?;
+    fn test_json_roundtrip(files_to_read: Vec<PathBuf>) -> anyhow::Result<()> {
         for path in files_to_read {
             let original_json_value: serde_json::Value =
                 serde_json::from_slice(std::fs::read(path)?.as_slice())?;
@@ -565,10 +594,11 @@ mod tests {
             // since alloy JsonAbi doesn't keep the original order of abi items, we need to check item by item
             let json_abi_alloy: JsonAbi =
                 serde_json::from_str(original_json_abi.clone().to_string().as_str())?;
+
             for e in original_json_abi.as_array().unwrap().iter() {
-                if let None = json_abi_alloy
+                if !json_abi_alloy
                     .items()
-                    .find(|item| &serde_json::to_value(item).unwrap() == e)
+                    .any(|item| &serde_json::to_value(item).unwrap() == e)
                 {
                     return Err(anyhow::anyhow!("roundtrip failed!"));
                 }
@@ -579,9 +609,7 @@ mod tests {
     }
 
     // test conversion between SolidityAbiMeta and alloy JsonAbi
-    #[test]
-    fn test_abi_conversion() -> anyhow::Result<()> {
-        let files_to_read = build_artifacts()?;
+    fn test_abi_conversion(files_to_read: Vec<PathBuf>) -> anyhow::Result<()> {
         for path in files_to_read {
             let original_json_value: serde_json::Value =
                 serde_json::from_slice(std::fs::read(path)?.as_slice())?;
@@ -598,7 +626,7 @@ mod tests {
             // since alloy JsonAbi doesn't keep the original order of abi items, we need to check item by item
             let converted_abi_meta: SolidityAbiMeta = json_abi_alloy.clone().try_into()?;
             for item in solidity_abi_meta.0.iter() {
-                if let None = converted_abi_meta.0.iter().find(|e| *e == item) {
+                if !converted_abi_meta.0.iter().any(|e| e == item) {
                     return Err(anyhow::anyhow!("wrong conversion!"));
                 }
             }
@@ -608,9 +636,7 @@ mod tests {
     }
 
     // test reading a json artifact with no abi present
-    #[test]
     fn test_no_abi_artifact_parse() -> anyhow::Result<()> {
-        build_artifacts()?;
         let json = "../out/MetaBoard.sol/MetaBoard.json";
         let data = std::fs::read(json)?;
         let mut v = serde_json::from_slice::<serde_json::Value>(&data)?;
@@ -619,7 +645,7 @@ mod tests {
         let data = serde_json::to_vec(&v)?;
         assert!(matches!(
             SolidityAbiMeta::from_artifact(&data).unwrap_err(),
-            anyhow::Error { .. }
+            Error::SerdeJsonError(_)
         ));
         Ok(())
     }

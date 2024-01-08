@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: CAL
-pragma solidity ^0.8.18;
+pragma solidity =0.8.19;
 
-import "forge-std/Test.sol";
-import "../src/LibMeta.sol";
+import {Test} from "forge-std/Test.sol";
+import {LibMeta} from "src/lib/LibMeta.sol";
+import {UnexpectedMetaHash, NotRainMetaV1, META_MAGIC_NUMBER_V1} from "src/interface/IMetaV1.sol";
 
 contract LibMetaTest is Test {
     function testIsRainMetaV1Fuzz(bytes memory data_) public {

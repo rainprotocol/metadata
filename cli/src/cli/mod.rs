@@ -1,3 +1,9 @@
+//! Represents a [mod@clap] based CLI app module
+//!
+//! struct, enums that use `clap` derive macro to produce CLI commands, argument
+//! and options with underlying functions to handle each scenario.
+//! enabled by default or by `cli` feature if default features i off.
+
 pub mod solc;
 pub mod build;
 pub mod magic;
@@ -42,7 +48,6 @@ pub fn dispatch(meta: Meta) -> anyhow::Result<()> {
 
 pub fn main() -> anyhow::Result<()> {
     tracing::subscriber::set_global_default(tracing_subscriber::fmt::Subscriber::new())?;
-
     let cli = Cli::parse();
     dispatch(cli.meta)
 }

@@ -1,23 +1,24 @@
-pub mod magic;
-pub mod types;
-pub mod query;
-pub mod normalize;
-
 use reqwest::Client;
 use futures::future;
-use magic::KnownMagic;
+use super::error::Error;
 use graphql_client::GraphQLQuery;
 use strum::{EnumIter, EnumString};
+use super::subgraph::KnownSubgraphs;
 use alloy_primitives::{keccak256, hex};
+use types::authoring::v1::AuthoringMeta;
 use serde::de::{Deserialize, Deserializer, Visitor};
 use serde::ser::{Serialize, Serializer, SerializeMap};
 use std::{sync::Arc, fmt::Debug, convert::TryFrom, collections::HashMap};
 
-pub use super::subgraph::KnownSubgraphs;
-pub use query::{MetaResponse, DeployerMetaResponse};
+pub mod types;
+pub(crate) mod magic;
+pub(crate) mod query;
+pub(crate) mod normalize;
 
-/// # Known Meta
-/// all known meta identifiers
+pub use magic::*;
+pub use query::*;
+
+/// All known meta identifiers
 #[derive(Copy, Clone, EnumString, EnumIter, strum::Display, Debug, PartialEq)]
 #[strum(serialize_all = "kebab-case")]
 pub enum KnownMeta {
@@ -31,9 +32,9 @@ pub enum KnownMeta {
 }
 
 impl TryFrom<KnownMagic> for KnownMeta {
-    type Error = anyhow::Error;
-    fn try_from(magic: KnownMagic) -> anyhow::Result<Self> {
-        match magic {
+    type Error = Error;
+    fn try_from(value: KnownMagic) -> Result<Self, Self::Error> {
+        match value {
             KnownMagic::OpMetaV1 => Ok(KnownMeta::OpV1),
             KnownMagic::DotrainV1 => Ok(KnownMeta::DotrainV1),
             KnownMagic::RainlangV1 => Ok(KnownMeta::RainlangV1),
@@ -43,11 +44,12 @@ impl TryFrom<KnownMagic> for KnownMeta {
             KnownMagic::ExpressionDeployerV2BytecodeV1 => {
                 Ok(KnownMeta::ExpressionDeployerV2BytecodeV1)
             }
-            _ => Err(anyhow::anyhow!("Unsupported meta {}", magic)),
+            _ => Err(Error::UnsupportedMeta),
         }
     }
 }
 
+/// Content type of a cbor meta map
 #[derive(
     Copy,
     Clone,
@@ -70,6 +72,7 @@ pub enum ContentType {
     OctetStream,
 }
 
+/// Content encoding of a cbor meta map
 #[derive(
     Copy,
     Clone,
@@ -91,25 +94,29 @@ pub enum ContentEncoding {
 
 impl ContentEncoding {
     /// encode the data based on the variant
-    pub fn encode(&self, data: &Vec<u8>) -> anyhow::Result<Vec<u8>> {
-        Ok(match self {
-            ContentEncoding::None | ContentEncoding::Identity => data.clone(),
+    pub fn encode(&self, data: &[u8]) -> Vec<u8> {
+        match self {
+            ContentEncoding::None | ContentEncoding::Identity => data.to_vec(),
             ContentEncoding::Deflate => deflate::deflate_bytes_zlib(data),
-        })
+        }
     }
 
     /// decode the data based on the variant
-    pub fn decode(&self, data: &Vec<u8>) -> anyhow::Result<Vec<u8>> {
+    pub fn decode(&self, data: &[u8]) -> Result<Vec<u8>, Error> {
         Ok(match self {
-            ContentEncoding::None | ContentEncoding::Identity => data.clone(),
+            ContentEncoding::None | ContentEncoding::Identity => data.to_vec(),
             ContentEncoding::Deflate => match inflate::inflate_bytes_zlib(data) {
                 Ok(v) => v,
-                Err(error) => Err(anyhow::anyhow!(error))?,
+                Err(error) => match inflate::inflate_bytes(data) {
+                    Ok(v) => v,
+                    Err(_) => Err(Error::InflateError(error))?,
+                },
             },
         })
     }
 }
 
+/// Content language of a cbor meta map
 #[derive(
     Copy,
     Clone,
@@ -129,6 +136,7 @@ pub enum ContentLanguage {
 }
 
 /// # Rain Meta Document v1 Item (meta map)
+///
 /// represents a rain meta data and configuration that can be cbor encoded or unpacked back to the meta types
 #[derive(PartialEq, Debug, Clone)]
 pub struct RainMetaDocumentV1Item {
@@ -141,15 +149,15 @@ pub struct RainMetaDocumentV1Item {
 
 // this implementation is mainly used by Rainlang and Dotrain metas as they are aliased type for String
 impl TryFrom<RainMetaDocumentV1Item> for String {
-    type Error = anyhow::Error;
+    type Error = Error;
     fn try_from(value: RainMetaDocumentV1Item) -> Result<Self, Self::Error> {
-        String::from_utf8(value.unpack()?).map_err(anyhow::Error::from)
+        Ok(String::from_utf8(value.unpack()?)?)
     }
 }
 
 // this implementation is mainly used by ExpressionDeployerV2Bytecode meta as it is aliased type for Vec<u8>
 impl TryFrom<RainMetaDocumentV1Item> for Vec<u8> {
-    type Error = anyhow::Error;
+    type Error = Error;
     fn try_from(value: RainMetaDocumentV1Item) -> Result<Self, Self::Error> {
         value.unpack()
     }
@@ -171,7 +179,7 @@ impl RainMetaDocumentV1Item {
     }
 
     /// method to hash(keccak256) the cbor encoded bytes of this instance
-    pub fn hash(&self, as_rain_meta_document: bool) -> anyhow::Result<[u8; 32]> {
+    pub fn hash(&self, as_rain_meta_document: bool) -> Result<[u8; 32], Error> {
         if as_rain_meta_document {
             Ok(keccak256(Self::cbor_encode_seq(
                 &vec![self.clone()],
@@ -184,19 +192,16 @@ impl RainMetaDocumentV1Item {
     }
 
     /// method to cbor encode
-    pub fn cbor_encode(&self) -> anyhow::Result<Vec<u8>> {
+    pub fn cbor_encode(&self) -> Result<Vec<u8>, Error> {
         let mut bytes: Vec<u8> = vec![];
-        match serde_cbor::to_writer(&mut bytes, &self) {
-            Ok(()) => Ok(bytes),
-            Err(error) => Err(error)?,
-        }
+        Ok(serde_cbor::to_writer(&mut bytes, &self).map(|_| bytes)?)
     }
 
     /// builds a cbor sequence from given MetaMaps
     pub fn cbor_encode_seq(
         seq: &Vec<RainMetaDocumentV1Item>,
         magic: KnownMagic,
-    ) -> anyhow::Result<Vec<u8>> {
+    ) -> Result<Vec<u8>, Error> {
         let mut bytes: Vec<u8> = magic.to_prefix_bytes().to_vec();
         for item in seq {
             serde_cbor::to_writer(&mut bytes, &item)?;
@@ -205,7 +210,7 @@ impl RainMetaDocumentV1Item {
     }
 
     /// method to cbor decode from given bytes
-    pub fn cbor_decode(data: &Vec<u8>) -> anyhow::Result<Vec<RainMetaDocumentV1Item>> {
+    pub fn cbor_decode(data: &[u8]) -> Result<Vec<RainMetaDocumentV1Item>, Error> {
         let mut track: Vec<usize> = vec![];
         let mut metas: Vec<RainMetaDocumentV1Item> = vec![];
         let mut is_rain_document_meta = false;
@@ -223,7 +228,7 @@ impl RainMetaDocumentV1Item {
                 track.push(deserializer.byte_offset());
                 match serde_cbor::value::from_value(cbor_map) {
                     Ok(meta) => metas.push(meta),
-                    Err(error) => Err(error)?,
+                    Err(error) => Err(Error::SerdeCborError(error))?,
                 };
                 true
             }
@@ -232,32 +237,31 @@ impl RainMetaDocumentV1Item {
                     if error.offset() == len as u64 {
                         false
                     } else {
-                        Err(error)?
+                        Err(Error::SerdeCborError(error))?
                     }
                 } else {
-                    Err(error)?
+                    Err(Error::SerdeCborError(error))?
                 }
             }
         } {}
 
-        if metas.len() == 0
-            || track.len() == 0
+        if metas.is_empty()
+            || track.is_empty()
             || track.len() != metas.len()
-            || len as usize != track[track.len() - 1]
+            || len != track[track.len() - 1]
         {
-            return Err(anyhow::anyhow!("corrupt meta"));
+            Err(Error::CorruptMeta)?
         }
         Ok(metas)
     }
 
     // unpack the payload based on the configuration
-    pub fn unpack(&self) -> anyhow::Result<Vec<u8>> {
-        ContentEncoding::decode(&self.content_encoding, &self.payload.to_vec())
+    pub fn unpack(&self) -> Result<Vec<u8>, Error> {
+        ContentEncoding::decode(&self.content_encoding, self.payload.as_ref())
     }
 
     // unpacks the payload to given meta type based on configuration
-    pub fn unpack_into<T: TryFrom<Self, Error = anyhow::Error>>(&self) -> anyhow::Result<T> {
-        // let data = self.unpack()?;
+    pub fn unpack_into<T: TryFrom<Self, Error = Error>>(self) -> Result<T, Error> {
         match self.magic {
             KnownMagic::OpMetaV1
             | KnownMagic::DotrainV1
@@ -265,10 +269,8 @@ impl RainMetaDocumentV1Item {
             | KnownMagic::SolidityAbiV2
             | KnownMagic::AuthoringMetaV1
             | KnownMagic::InterpreterCallerMetaV1
-            | KnownMagic::ExpressionDeployerV2BytecodeV1 => {
-                T::try_from(self.clone()).map_err(anyhow::Error::from)
-            }
-            _ => Err(anyhow::anyhow!("unsupproted magic number")),
+            | KnownMagic::ExpressionDeployerV2BytecodeV1 => T::try_from(self),
+            _ => Err(Error::UnsupportedMeta)?,
         }
     }
 }
@@ -338,9 +340,9 @@ impl<'de> Deserialize<'de> for RainMetaDocumentV1Item {
                     Ok(m) => m,
                     _ => Err(serde::de::Error::custom("unknown magic number"))?,
                 };
-                let content_type = content_type.or(Some(ContentType::None)).unwrap();
-                let content_encoding = content_encoding.or(Some(ContentEncoding::None)).unwrap();
-                let content_language = content_language.or(Some(ContentLanguage::None)).unwrap();
+                let content_type = content_type.unwrap_or(ContentType::None);
+                let content_encoding = content_encoding.unwrap_or(ContentEncoding::None);
+                let content_language = content_language.unwrap_or(ContentLanguage::None);
 
                 Ok(RainMetaDocumentV1Item {
                     payload,
@@ -355,100 +357,111 @@ impl<'de> Deserialize<'de> for RainMetaDocumentV1Item {
     }
 }
 
-/// # Search Meta
 /// searches for a meta matching the given hash in given subgraphs urls
-pub async fn search(
-    hash: &str,
-    subgraphs: &Vec<String>,
-    timeout: u32,
-) -> anyhow::Result<query::MetaResponse> {
-    if !types::common::v1::HASH_PATTERN.is_match(hash) {
-        return Err(anyhow::anyhow!("invalid hash"));
-    }
+pub async fn search(hash: &str, subgraphs: &Vec<String>) -> Result<query::MetaResponse, Error> {
     let request_body = query::MetaQuery::build_query(query::meta_query::Variables {
         hash: Some(hash.to_ascii_lowercase()),
     });
     let mut promises = vec![];
-    let client = Arc::new(
-        Client::builder()
-            .timeout(std::time::Duration::from_secs(timeout as u64))
-            .build()?,
-    );
-    for sg in subgraphs {
+
+    let client = Arc::new(Client::builder().build().map_err(Error::ReqwestError)?);
+    for url in subgraphs {
         promises.push(Box::pin(query::process_meta_query(
             client.clone(),
             &request_body,
-            sg,
+            url,
         )));
     }
     let response_value = future::select_ok(promises.drain(..)).await?.0;
-
-    if response_value.starts_with("0x") {
-        Ok(query::MetaResponse {
-            bytes: hex::decode(&response_value[2..])?,
-        })
-    } else {
-        Ok(query::MetaResponse {
-            bytes: hex::decode(&response_value)?,
-        })
-    }
+    Ok(response_value)
 }
 
-/// # Search Deployer Meta
-/// searches for a deployer meta matching the given hash in given subgraphs urls
+/// searches for an ExpressionDeployer matching the given hash in given subgraphs urls
 pub async fn search_deployer(
     hash: &str,
     subgraphs: &Vec<String>,
-    timeout: u32,
-) -> anyhow::Result<query::DeployerMetaResponse> {
-    if !types::common::v1::HASH_PATTERN.is_match(hash) {
-        return Err(anyhow::anyhow!("invalid hash"));
-    }
+) -> Result<DeployerResponse, Error> {
     let request_body = query::DeployerQuery::build_query(query::deployer_query::Variables {
         hash: Some(hash.to_ascii_lowercase()),
     });
     let mut promises = vec![];
-    let client = Arc::new(
-        Client::builder()
-            .timeout(std::time::Duration::from_secs(timeout as u64))
-            .build()?,
-    );
-    for sg in subgraphs {
+
+    let client = Arc::new(Client::builder().build().map_err(Error::ReqwestError)?);
+    for url in subgraphs {
         promises.push(Box::pin(query::process_deployer_query(
             client.clone(),
             &request_body,
-            sg,
+            url,
         )));
     }
     let response_value = future::select_ok(promises.drain(..)).await?.0;
+    Ok(response_value)
+}
 
-    if response_value.1.starts_with("0x") {
-        Ok(query::DeployerMetaResponse {
-            hash: response_value.0,
-            bytes: hex::decode(&response_value.1[2..])?,
-        })
-    } else {
-        Ok(query::DeployerMetaResponse {
-            hash: response_value.0,
-            bytes: hex::decode(&response_value.1)?,
-        })
+/// All required NPE2 ExpressionDeployer data for reproducing it on a local evm
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct NPE2Deployer {
+    /// constructor meta hash
+    #[serde(with = "serde_bytes")]
+    pub meta_hash: Vec<u8>,
+    /// constructor meta bytes
+    #[serde(with = "serde_bytes")]
+    pub meta_bytes: Vec<u8>,
+    /// RainterpreterExpressionDeployerNPE2 contract bytecode
+    #[serde(with = "serde_bytes")]
+    pub bytecode: Vec<u8>,
+    /// RainterpreterParserNPE2 contract bytecode
+    #[serde(with = "serde_bytes")]
+    pub parser: Vec<u8>,
+    /// RainterpreterStoreNPE2 contract bytecode
+    #[serde(with = "serde_bytes")]
+    pub store: Vec<u8>,
+    /// RainterpreterNPE2 contract bytecode
+    #[serde(with = "serde_bytes")]
+    pub interpreter: Vec<u8>,
+    /// RainterpreterExpressionDeployerNPE2 authoring meta
+    pub authoring_meta: Option<AuthoringMeta>,
+}
+
+impl NPE2Deployer {
+    pub fn is_corrupt(&self) -> bool {
+        if self.meta_hash.is_empty() {
+            return true;
+        }
+        if self.meta_bytes.is_empty() {
+            return true;
+        }
+        if self.bytecode.is_empty() {
+            return true;
+        }
+        if self.parser.is_empty() {
+            return true;
+        }
+        if self.store.is_empty() {
+            return true;
+        }
+        if self.interpreter.is_empty() {
+            return true;
+        }
+        false
     }
 }
 
-/// # Meta Store(CAS)
+/// # Meta Storage(CAS)
 ///
-/// Reads, stores and simply manages k/v pairs of meta hash and meta bytes and provides the functionalities
-/// to easliy utilize them. a hash is a 32 bytes data in hex string format and will be stored as lower case.
-/// Meta items are stored as cbor encoded raw bytes.
+/// In-memory CAS (content addressed storage) for Rain metadata which basically stores
+/// k/v pairs of meta hash, meta bytes and ExpressionDeployer reproducible data as well
+/// as providing functionalities to easliy read/write to the CAS.
 ///
-/// Given a k/v pair of meta hash and meta bytes when using `update_with()` or `create()`,
-/// it regenrates the hash from the corresponding bytes to check the validity of the given k/v pair and ignores
-/// those that fail the check
+/// Hashes are normal bytes and meta bytes are valid cbor encoded as data bytes.
+/// ExpressionDeployers data are in form of a struct mapped to deployedBytecode meta hash
+/// and deploy transaction hash.
 ///
 /// ## Examples
 ///
 /// ```rust
-/// use rain_meta::meta::Store;
+/// use rain_meta::Store;
 /// use std::collections::HashMap;
 ///
 ///
@@ -474,7 +487,7 @@ pub async fn search_deployer(
 /// store.merge(&Store::default());
 ///
 /// // hash of a meta to search and store
-/// let hash = "some-hash".to_string();
+/// let hash = vec![0u8, 1u8, 2u8];
 ///
 /// // updates the meta store with a new meta by searching through subgraphs
 /// store.update(&hash);
@@ -485,8 +498,8 @@ pub async fn search_deployer(
 /// // to get a record from store
 /// let meta = store.get_meta(&hash);
 ///
-/// // to get a authoring meta record from store
-/// let am = store.get_authoring_meta(&hash);
+/// // to get a deployer record from store
+/// let deployer_record = store.get_deployer(&hash);
 ///
 /// // path to a .rain file
 /// let dotrain_uri = "path/to/file.rain";
@@ -506,9 +519,10 @@ pub async fn search_deployer(
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct Store {
     subgraphs: Vec<String>,
-    cache: HashMap<String, Vec<u8>>,
-    dotrain_cache: HashMap<String, String>,
-    authoring_cache: HashMap<String, Vec<u8>>,
+    cache: HashMap<Vec<u8>, Vec<u8>>,
+    dotrain_cache: HashMap<String, Vec<u8>>,
+    deployer_cache: HashMap<Vec<u8>, NPE2Deployer>,
+    deployer_hash_map: HashMap<Vec<u8>, Vec<u8>>,
 }
 
 impl Default for Store {
@@ -516,8 +530,9 @@ impl Default for Store {
         Store {
             cache: HashMap::new(),
             dotrain_cache: HashMap::new(),
-            authoring_cache: HashMap::new(),
-            subgraphs: KnownSubgraphs::NP.map(|url| url.to_string()).to_vec(),
+            deployer_cache: HashMap::new(),
+            subgraphs: KnownSubgraphs::NPE2.map(|url| url.to_string()).to_vec(),
+            deployer_hash_map: HashMap::new(),
         }
     }
 }
@@ -530,7 +545,8 @@ impl Store {
             subgraphs: vec![],
             cache: HashMap::new(),
             dotrain_cache: HashMap::new(),
-            authoring_cache: HashMap::new(),
+            deployer_cache: HashMap::new(),
+            deployer_hash_map: HashMap::new(),
         }
     }
 
@@ -538,9 +554,9 @@ impl Store {
     /// it checks the validity of each item of the provided values and only stores those that are valid
     pub fn create(
         subgraphs: &Vec<String>,
-        cache: &HashMap<String, Vec<u8>>,
-        authoring_cache: &HashMap<String, Vec<u8>>,
-        dotrain_cache: &HashMap<String, String>,
+        cache: &HashMap<Vec<u8>, Vec<u8>>,
+        deployer_cache: &HashMap<Vec<u8>, NPE2Deployer>,
+        dotrain_cache: &HashMap<String, Vec<u8>>,
         include_rain_subgraphs: bool,
     ) -> Store {
         let mut store;
@@ -549,30 +565,16 @@ impl Store {
         } else {
             store = Store::new();
         }
-        store.add_subgraphs(&subgraphs);
+        store.add_subgraphs(subgraphs);
         for (hash, bytes) in cache {
             store.update_with(hash, bytes);
         }
-        for (hash, bytes) in authoring_cache {
-            if types::common::v1::HASH_PATTERN.is_match(hash) {
-                let _h = hash.to_ascii_lowercase();
-                if !store.authoring_cache.contains_key(&_h) {
-                    if let Ok(hash_bytes) = hex::decode(&_h) {
-                        if keccak256(bytes) == hash_bytes.as_slice() {
-                            store.authoring_cache.insert(_h, bytes.clone());
-                        }
-                    }
-                }
-            }
+        for (hash, deployer) in deployer_cache {
+            store.set_deployer(hash, deployer, None);
         }
         for (uri, hash) in dotrain_cache {
-            if types::common::v1::HASH_PATTERN.is_match(hash) {
-                let _h = hash.to_ascii_lowercase();
-                if !store.dotrain_cache.contains_key(uri) {
-                    if store.cache.contains_key(&_h) {
-                        store.dotrain_cache.insert(uri.clone(), _h);
-                    }
-                }
+            if !store.dotrain_cache.contains_key(uri) && store.cache.contains_key(hash) {
+                store.dotrain_cache.insert(uri.clone(), hash.clone());
             }
         }
         store
@@ -587,74 +589,142 @@ impl Store {
     pub fn add_subgraphs(&mut self, subgraphs: &Vec<String>) {
         for sg in subgraphs {
             if !self.subgraphs.contains(sg) {
-                self.subgraphs.push(sg.clone());
+                self.subgraphs.push(sg.to_string());
             }
         }
     }
 
     /// getter method for the whole meta cache
-    pub fn cache(&self) -> &HashMap<String, Vec<u8>> {
+    pub fn cache(&self) -> &HashMap<Vec<u8>, Vec<u8>> {
         &self.cache
     }
 
     /// get the corresponding meta bytes of the given hash if it exists
-    pub fn get_meta(&self, hash: &String) -> Option<&Vec<u8>> {
-        self.cache.get(&hash.to_ascii_lowercase())
+    pub fn get_meta(&self, hash: &[u8]) -> Option<&Vec<u8>> {
+        self.cache.get(hash)
     }
 
     /// getter method for the whole authoring meta cache
-    pub fn authoring_cache(&self) -> &HashMap<String, Vec<u8>> {
-        &self.authoring_cache
+    pub fn deployer_cache(&self) -> &HashMap<Vec<u8>, NPE2Deployer> {
+        &self.deployer_cache
     }
 
-    /// get the corresponding authoring meta bytes of the given hash if it exists
-    pub fn get_authoring_meta(&self, hash: &String) -> Option<&Vec<u8>> {
-        self.authoring_cache.get(&hash.to_ascii_lowercase())
+    /// get the corresponding DeployerNPRecord of the given deployer hash if it exists
+    pub fn get_deployer(&self, deployer_hash: &[u8]) -> Option<&NPE2Deployer> {
+        self.deployer_cache.get(deployer_hash)
     }
 
-    /// if the authoring meta already is cached it returns it immediately else
-    /// searches for authoring meta in the subgraphs given the deployer hash
-    pub async fn search_authoring_meta(&mut self, hash: &String) -> Option<&Vec<u8>> {
-        if self
-            .authoring_cache
-            .contains_key(&hash.to_ascii_lowercase())
-        {
-            self.get_authoring_meta(hash)
-        } else {
-            match search_deployer(hash, &self.subgraphs, 6u32).await {
-                Ok(res) => self.update_with(&res.hash, &res.bytes),
-                Err(_e) => None,
+    /// searches for DeployerNPRecord in the subgraphs given the deployer hash
+    pub async fn search_deployer(&mut self, hash: &[u8]) -> Option<&NPE2Deployer> {
+        match search_deployer(&hex::encode_prefixed(hash), &self.subgraphs).await {
+            Ok(res) => {
+                self.cache
+                    .insert(res.meta_hash.clone(), res.meta_bytes.clone());
+                let authoring_meta = res.get_authoring_meta();
+                self.deployer_cache.insert(
+                    res.bytecode_meta_hash.clone(),
+                    NPE2Deployer {
+                        meta_hash: res.meta_hash.clone(),
+                        meta_bytes: res.meta_bytes,
+                        bytecode: res.bytecode,
+                        parser: res.parser,
+                        store: res.store,
+                        interpreter: res.interpreter,
+                        authoring_meta,
+                    },
+                );
+                self.deployer_hash_map.insert(res.tx_hash, res.meta_hash);
+                self.deployer_cache.get(hash)
             }
+            Err(_e) => None,
+        }
+    }
+
+    /// if the NPE2Deployer record already is cached it returns it immediately else
+    /// searches for NPE2Deployer in the subgraphs given the deployer hash
+    pub async fn search_deployer_check(&mut self, hash: &[u8]) -> Option<&NPE2Deployer> {
+        if self.deployer_cache.contains_key(hash) {
+            self.get_deployer(hash)
+        } else if self.deployer_hash_map.contains_key(hash) {
+            let b_hash = self.deployer_hash_map.get(hash).unwrap();
+            self.get_deployer(b_hash)
+        } else {
+            self.search_deployer(hash).await
+        }
+    }
+
+    /// sets deployer record from the deployer query response
+    pub fn set_deployer_from_query_response(
+        &mut self,
+        deployer_query_response: DeployerResponse,
+    ) -> NPE2Deployer {
+        let authoring_meta = deployer_query_response.get_authoring_meta();
+        let tx_hash = deployer_query_response.tx_hash;
+        let bytecode_meta_hash = deployer_query_response.bytecode_meta_hash;
+        let result = NPE2Deployer {
+            meta_hash: deployer_query_response.meta_hash.clone(),
+            meta_bytes: deployer_query_response.meta_bytes,
+            bytecode: deployer_query_response.bytecode,
+            parser: deployer_query_response.parser,
+            store: deployer_query_response.store,
+            interpreter: deployer_query_response.interpreter,
+            authoring_meta,
+        };
+        self.cache
+            .insert(deployer_query_response.meta_hash, result.meta_bytes.clone());
+        self.deployer_hash_map
+            .insert(tx_hash, bytecode_meta_hash.clone());
+        self.deployer_cache
+            .insert(bytecode_meta_hash, result.clone());
+        result
+    }
+
+    /// sets NPE2Deployer record
+    /// skips if the given hash is invalid
+    pub fn set_deployer(
+        &mut self,
+        hash: &[u8],
+        npe2_deployer: &NPE2Deployer,
+        tx_hash: Option<&[u8]>,
+    ) {
+        self.cache.insert(
+            npe2_deployer.meta_hash.clone(),
+            npe2_deployer.meta_bytes.clone(),
+        );
+        self.deployer_cache
+            .insert(hash.to_vec(), npe2_deployer.clone());
+        if let Some(v) = tx_hash {
+            self.deployer_hash_map.insert(v.to_vec(), hash.to_vec());
         }
     }
 
     /// getter method for the whole dotrain cache
-    pub fn dotrain_cache(&self) -> &HashMap<String, String> {
+    pub fn dotrain_cache(&self) -> &HashMap<String, Vec<u8>> {
         &self.dotrain_cache
     }
 
     /// get the corresponding dotrain hash of the given dotrain uri if it exists
-    pub fn get_dotrain_hash(&self, uri: &String) -> Option<&String> {
+    pub fn get_dotrain_hash(&self, uri: &str) -> Option<&Vec<u8>> {
         self.dotrain_cache.get(uri)
     }
 
     /// get the corresponding uri of the given dotrain hash if it exists
-    pub fn get_dotrain_uri(&self, hash: &String) -> Option<&String> {
+    pub fn get_dotrain_uri(&self, hash: &[u8]) -> Option<&String> {
         for (uri, h) in &self.dotrain_cache {
-            if h.eq_ignore_ascii_case(hash) {
+            if h == hash {
                 return Some(uri);
             }
         }
-        return None;
+        None
     }
 
     /// get the corresponding meta bytes of the given dotrain uri if it exists
-    pub fn get_dotrain_meta(&self, uri: &String) -> Option<&Vec<u8>> {
+    pub fn get_dotrain_meta(&self, uri: &str) -> Option<&Vec<u8>> {
         self.get_meta(self.dotrain_cache.get(uri)?)
     }
 
     /// deletes a dotrain record given a uri
-    pub fn delete_dotrain(&mut self, uri: &String, keep_meta: bool) {
+    pub fn delete_dotrain(&mut self, uri: &str, keep_meta: bool) {
         if let Some(kv) = self.dotrain_cache.remove_entry(uri) {
             if !keep_meta {
                 self.cache.remove(&kv.1);
@@ -667,55 +737,59 @@ impl Store {
         self.add_subgraphs(&other.subgraphs);
         for (hash, bytes) in &other.cache {
             if !self.cache.contains_key(hash) {
-                self.cache.insert(hash.to_ascii_lowercase(), bytes.clone());
+                self.cache.insert(hash.clone(), bytes.clone());
             }
         }
-        for (hash, bytes) in &other.authoring_cache {
-            if !self.authoring_cache.contains_key(hash) {
-                self.authoring_cache
-                    .insert(hash.to_ascii_lowercase(), bytes.clone());
+        for (hash, deployer) in &other.deployer_cache {
+            if !self.deployer_cache.contains_key(hash) {
+                self.deployer_cache.insert(hash.clone(), deployer.clone());
             }
+        }
+        for (hash, tx_hash) in &other.deployer_hash_map {
+            self.deployer_hash_map.insert(hash.clone(), tx_hash.clone());
         }
         for (uri, hash) in &other.dotrain_cache {
             if !self.dotrain_cache.contains_key(uri) {
-                self.dotrain_cache
-                    .insert(uri.clone(), hash.to_ascii_lowercase());
+                self.dotrain_cache.insert(uri.clone(), hash.clone());
             }
         }
     }
 
     /// updates the meta cache by searching through all subgraphs for the given hash
-    /// returns the reference to the authoring bytes if the updated meta bytes contained any
-    pub async fn update(&mut self, hash: &String) -> Option<&Vec<u8>> {
-        let mut am_bytes: Option<&Vec<u8>> = None;
-        if types::common::v1::HASH_PATTERN.is_match(hash) {
-            let _h = hash.to_ascii_lowercase();
-            if !self.cache.contains_key(&_h) {
-                if let Ok(meta) = search(hash, &self.subgraphs, 6u32).await {
-                    self.cache.insert(_h, meta.bytes.clone());
-                    am_bytes = self.store_content(&meta.bytes);
-                };
-            }
+    /// returns the reference to the meta bytes in the cache if it was found
+    pub async fn update(&mut self, hash: &[u8]) -> Option<&Vec<u8>> {
+        if let Ok(meta) = search(&hex::encode_prefixed(hash), &self.subgraphs).await {
+            self.store_content(&meta.bytes);
+            self.cache.insert(hash.to_vec(), meta.bytes);
+            return self.get_meta(hash);
+        } else {
+            None
         }
-        am_bytes
     }
 
-    /// updates the meta cache by the given hash and meta bytes, checks the hash to bytes validity
-    /// returns the reference to the authoring bytes if the updated meta bytes contained any
-    pub fn update_with(&mut self, hash: &String, bytes: &Vec<u8>) -> Option<&Vec<u8>> {
-        let mut am_bytes: Option<&Vec<u8>> = None;
-        if types::common::v1::HASH_PATTERN.is_match(hash) {
-            let _h = hash.to_ascii_lowercase();
-            if !self.cache.contains_key(&_h) {
-                if let Ok(hash_bytes) = hex::decode(&_h) {
-                    if keccak256(bytes) == hash_bytes.as_slice() {
-                        self.cache.insert(_h, bytes.clone());
-                        am_bytes = self.store_content(bytes);
-                    }
-                }
-            }
+    /// first checks if the meta is stored, if not will perform update()
+    pub async fn update_check(&mut self, hash: &[u8]) -> Option<&Vec<u8>> {
+        if !self.cache.contains_key(hash) {
+            self.update(hash).await
+        } else {
+            return self.get_meta(hash);
         }
-        am_bytes
+    }
+
+    /// updates the meta cache by the given hash and meta bytes, checks the hash to bytes
+    /// validity returns the reference to the bytes if the updated meta bytes contained any
+    pub fn update_with(&mut self, hash: &[u8], bytes: &[u8]) -> Option<&Vec<u8>> {
+        if !self.cache.contains_key(hash) {
+            if keccak256(bytes).0 == hash {
+                self.store_content(bytes);
+                self.cache.insert(hash.to_vec(), bytes.to_vec());
+                return self.cache.get(hash);
+            } else {
+                None
+            }
+        } else {
+            return self.get_meta(hash);
+        }
     }
 
     /// stores (or updates in case the URI already exists) the given dotrain text as meta into the store cache
@@ -724,10 +798,10 @@ impl Store {
     /// externally by the implementer
     pub fn set_dotrain(
         &mut self,
-        text: &String,
-        uri: &String,
+        text: &str,
+        uri: &str,
         keep_old: bool,
-    ) -> anyhow::Result<(String, String)> {
+    ) -> Result<(Vec<u8>, Vec<u8>), Error> {
         let bytes = RainMetaDocumentV1Item {
             payload: serde_bytes::ByteBuf::from(text.as_bytes()),
             magic: KnownMagic::DotrainV1,
@@ -736,63 +810,49 @@ impl Store {
             content_language: ContentLanguage::None,
         }
         .cbor_encode()?;
-        let new_hash = hex::encode_prefixed(keccak256(&bytes));
-        if let Some(k) = self.dotrain_cache.get(uri) {
-            let old_hash = k.clone();
-            if new_hash.eq_ignore_ascii_case(&old_hash) {
+        let new_hash = keccak256(&bytes).0.to_vec();
+        if let Some(h) = self.dotrain_cache.get(uri) {
+            let old_hash = h.clone();
+            if new_hash == old_hash {
                 self.cache.insert(new_hash.clone(), bytes);
-                return Ok((new_hash, "".to_string()));
+                Ok((new_hash, vec![]))
             } else {
                 self.cache.insert(new_hash.clone(), bytes);
-                self.dotrain_cache.insert(uri.clone(), new_hash.clone());
+                self.dotrain_cache.insert(uri.to_string(), new_hash.clone());
                 if !keep_old {
-                    self.cache.remove(&old_hash.clone());
+                    self.cache.remove(&old_hash);
                 }
-                return Ok((new_hash, old_hash));
+                Ok((new_hash, old_hash))
             }
         } else {
-            self.dotrain_cache.insert(uri.clone(), new_hash.clone());
+            self.dotrain_cache.insert(uri.to_string(), new_hash.clone());
             self.cache.insert(new_hash.clone(), bytes);
-            return Ok((new_hash, "".to_string()));
-        };
+            Ok((new_hash, vec![]))
+        }
     }
 
     /// decodes each meta and stores the inner meta items into the cache
     /// if any of the inner items is an authoring meta, stores it in authoring meta cache as well
     /// returns the reference to the authoring bytes if the meta bytes contained any
-    fn store_content(&mut self, bytes: &Vec<u8>) -> Option<&Vec<u8>> {
-        let mut h = String::new();
+    fn store_content(&mut self, bytes: &[u8]) {
         if let Ok(meta_maps) = RainMetaDocumentV1Item::cbor_decode(bytes) {
             if bytes.starts_with(&KnownMagic::RainMetaDocumentV1.to_prefix_bytes()) {
                 for meta_map in &meta_maps {
                     if let Ok(encoded_bytes) = meta_map.cbor_encode() {
-                        let hash = "0x".to_owned() + &hex::encode(keccak256(&encoded_bytes));
-                        h = hash.clone();
-                        self.update_with(&hash, &encoded_bytes);
-                        if meta_map.magic == KnownMagic::AuthoringMetaV1 {
-                            self.authoring_cache.insert(hash.clone(), encoded_bytes);
-                        }
+                        self.cache
+                            .insert(keccak256(&encoded_bytes).0.to_vec(), encoded_bytes);
                     }
-                }
-            } else {
-                if meta_maps.len() == 1 && meta_maps[0].magic == KnownMagic::AuthoringMetaV1 {
-                    let hash = "0x".to_owned() + &hex::encode(keccak256(bytes));
-                    h = hash.clone();
-                    self.authoring_cache.insert(hash.clone(), bytes.clone());
                 }
             }
         }
-        self.authoring_cache.get(&h)
     }
 }
 
 /// converts string to bytes32
-pub fn str_to_bytes32(text: &str) -> anyhow::Result<[u8; 32]> {
+pub fn str_to_bytes32(text: &str) -> Result<[u8; 32], Error> {
     let bytes: &[u8] = text.as_bytes();
     if bytes.len() > 32 {
-        return Err(anyhow::anyhow!(
-            "unexpected length, must be 32 bytes or less"
-        ));
+        return Err(Error::BiggerThan32Bytes);
     }
     let mut b32 = [0u8; 32];
     b32[..bytes.len()].copy_from_slice(bytes);
@@ -800,7 +860,7 @@ pub fn str_to_bytes32(text: &str) -> anyhow::Result<[u8; 32]> {
 }
 
 /// converts bytes32 to string
-pub fn bytes32_to_str(bytes: &[u8; 32]) -> anyhow::Result<&str> {
+pub fn bytes32_to_str(bytes: &[u8; 32]) -> Result<&str, Error> {
     let mut len = 32;
     if let Some((pos, _)) = itertools::Itertools::find_position(&mut bytes.iter(), |b| **b == 0u8) {
         len = pos;
@@ -815,14 +875,14 @@ mod tests {
     use super::{
         str_to_bytes32, bytes32_to_str,
         magic::KnownMagic,
-        RainMetaDocumentV1Item, ContentType, ContentEncoding, ContentLanguage,
+        RainMetaDocumentV1Item, ContentType, ContentEncoding, ContentLanguage, Error,
         types::{dotrain::v1::DotrainMeta, authoring::v1::AuthoringMeta},
     };
 
     /// Roundtrip test for an authoring meta
     /// original content -> pack -> MetaMap -> cbor encode -> cbor decode -> MetaMap -> unpack -> original content,
     #[test]
-    fn authoring_meta_roundtrip() -> anyhow::Result<()> {
+    fn authoring_meta_roundtrip() -> Result<(), Error> {
         let authoring_meta_content = r#"[
             {
                 "word": "stack",
@@ -891,14 +951,14 @@ mod tests {
         assert_eq!(&cbor_encoded[529..], "application/cbor".as_bytes());
 
         // decode the data back to MetaMap
-        let cbor_decoded = RainMetaDocumentV1Item::cbor_decode(&cbor_encoded)?;
+        let mut cbor_decoded = RainMetaDocumentV1Item::cbor_decode(&cbor_encoded)?;
         // the length of decoded maps must be 1 as we only had 1 encoded item
         assert_eq!(cbor_decoded.len(), 1);
         // decoded item must be equal to the original meta_map
         assert_eq!(cbor_decoded[0], meta_map);
 
         // unpack the payload into AuthoringMeta
-        let unpacked_payload: AuthoringMeta = cbor_decoded[0].unpack_into()?;
+        let unpacked_payload: AuthoringMeta = cbor_decoded.pop().unwrap().unpack_into()?;
         // must be equal to original meta
         assert_eq!(unpacked_payload, authoring_meta);
 
@@ -908,12 +968,12 @@ mod tests {
     /// Roundtrip test for a dotrain meta
     /// original content -> pack -> MetaMap -> cbor encode -> cbor decode -> MetaMap -> unpack -> original content,
     #[test]
-    fn dotrain_meta_roundtrip() -> anyhow::Result<()> {
+    fn dotrain_meta_roundtrip() -> Result<(), Error> {
         let dotrain_content = "#main _ _: int-add(1 2) int-add(2 3)";
         let dotrain_content_bytes = dotrain_content.as_bytes().to_vec();
 
         let content_encoding = ContentEncoding::Deflate;
-        let deflated_payload = content_encoding.encode(&dotrain_content_bytes)?;
+        let deflated_payload = content_encoding.encode(&dotrain_content_bytes);
 
         let meta_map = RainMetaDocumentV1Item {
             payload: serde_bytes::ByteBuf::from(deflated_payload.clone()),
@@ -964,14 +1024,14 @@ mod tests {
         assert_eq!(&cbor_encoded[88..], "en".as_bytes());
 
         // decode the data back to MetaMap
-        let cbor_decoded = RainMetaDocumentV1Item::cbor_decode(&cbor_encoded)?;
+        let mut cbor_decoded = RainMetaDocumentV1Item::cbor_decode(&cbor_encoded)?;
         // the length of decoded maps must be 1 as we only had 1 encoded item
         assert_eq!(cbor_decoded.len(), 1);
         // decoded item must be equal to the original meta_map
         assert_eq!(cbor_decoded[0], meta_map);
 
         // unpack the payload into DotrainMeta, should handle inflation of the payload internally
-        let unpacked_payload: DotrainMeta = cbor_decoded[0].unpack_into()?;
+        let unpacked_payload: DotrainMeta = cbor_decoded.pop().unwrap().unpack_into()?;
         // must be equal to the original dotrain content
         assert_eq!(unpacked_payload, dotrain_content);
 
@@ -981,7 +1041,7 @@ mod tests {
     /// Roundtrip test for a meta sequence
     /// original content -> pack -> MetaMap -> cbor encode -> cbor decode -> MetaMap -> unpack -> original content,
     #[test]
-    fn meta_seq_roundtrip() -> anyhow::Result<()> {
+    fn meta_seq_roundtrip() -> Result<(), Error> {
         let authoring_meta_content = r#"[
             {
                 "word": "stack",
@@ -1007,7 +1067,7 @@ mod tests {
         let dotrain_content = "#main _ _: int-add(1 2) int-add(2 3)";
         let dotrain_content_bytes = dotrain_content.as_bytes().to_vec();
         let content_encoding = ContentEncoding::Deflate;
-        let deflated_payload = content_encoding.encode(&dotrain_content_bytes)?;
+        let deflated_payload = content_encoding.encode(&dotrain_content_bytes);
         let meta_map_2 = RainMetaDocumentV1Item {
             payload: serde_bytes::ByteBuf::from(deflated_payload.clone()),
             magic: KnownMagic::DotrainV1,
@@ -1099,7 +1159,7 @@ mod tests {
         assert_eq!(&cbor_encoded[641..], "en".as_bytes());
 
         // decode the data back to MetaMap
-        let cbor_decoded = RainMetaDocumentV1Item::cbor_decode(&cbor_encoded)?;
+        let mut cbor_decoded = RainMetaDocumentV1Item::cbor_decode(&cbor_encoded)?;
         // the length of decoded maps must be 2 as we had 2 encoded item
         assert_eq!(cbor_decoded.len(), 2);
 
@@ -1108,15 +1168,15 @@ mod tests {
         // decoded item 2 must be equal to the original meta_map_2
         assert_eq!(cbor_decoded[1], meta_map_2);
 
-        // unpack the payload of first decoded map into AuthoringMeta
-        let unpacked_payload_1: AuthoringMeta = cbor_decoded[0].unpack_into()?;
-        // must be equal to original meta
-        assert_eq!(unpacked_payload_1, authoring_meta);
-
         // unpack the payload of the second decoded map into DotrainMeta, should handle inflation of the payload internally
-        let unpacked_payload_2: DotrainMeta = cbor_decoded[1].unpack_into()?;
-        // must be equal to the original dotrain content
+        let unpacked_payload_2: DotrainMeta = cbor_decoded.pop().unwrap().unpack_into()?;
+        // must be equal to original meta
         assert_eq!(unpacked_payload_2, dotrain_content);
+
+        // unpack the payload of first decoded map into AuthoringMeta
+        let unpacked_payload_1: AuthoringMeta = cbor_decoded.pop().unwrap().unpack_into()?;
+        // must be equal to the original dotrain content
+        assert_eq!(unpacked_payload_1, authoring_meta);
 
         Ok(())
     }
@@ -1177,7 +1237,7 @@ mod tests {
     fn test_str_to_bytes32_long() {
         assert!(matches!(
             str_to_bytes32("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456").unwrap_err(),
-            anyhow::Error { .. }
+            Error::BiggerThan32Bytes
         ));
     }
 }

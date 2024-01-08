@@ -71,7 +71,7 @@ impl TryFrom<&BuildItem> for RainMetaDocumentV1Item {
     type Error = anyhow::Error;
     fn try_from(item: &BuildItem) -> anyhow::Result<Self> {
         let normalized = TryInto::<KnownMeta>::try_into(item.magic)?.normalize(&item.data)?;
-        let encoded = item.content_encoding.encode(&normalized)?;
+        let encoded = item.content_encoding.encode(&normalized);
         Ok(RainMetaDocumentV1Item {
             payload: serde_bytes::ByteBuf::from(encoded),
             magic: item.magic,
@@ -88,7 +88,7 @@ pub fn build_bytes(magic: KnownMagic, items: Vec<BuildItem>) -> anyhow::Result<V
     for item in items {
         metas.push(RainMetaDocumentV1Item::try_from(&item)?);
     }
-    RainMetaDocumentV1Item::cbor_encode_seq(&metas, magic)
+    Ok(RainMetaDocumentV1Item::cbor_encode_seq(&metas, magic)?)
 }
 
 /// Build a rain meta document from command line options.

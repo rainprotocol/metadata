@@ -1,31 +1,35 @@
 use regex::Regex;
 use validator::Validate;
-use schemars::JsonSchema;
 use once_cell::sync::Lazy;
 use serde::{Serialize, Deserialize};
 
-/// Valid symbols in Rainlang are alpha prefixed alphanumeric kebab case.
-pub const REGEX_RAIN_SYMBOL: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[a-z][0-9a-z-]*$").unwrap());
+#[cfg(feature = "json-schema")]
+use schemars::JsonSchema;
 
-/// > An identifier in solidity has to start with a letter, a dollar-sign or an
-/// > underscore and may additionally contain numbers after the first symbol.
-/// https://docs.soliditylang.org/en/latest/grammar.html#a4.SolidityLexer.Identifier
-pub const REGEX_SOLIDITY_IDENTIFIER: Lazy<Regex> =
+/// Valid symbols in Rainlang are alpha prefixed alphanumeric kebab case.
+pub static REGEX_RAIN_SYMBOL: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[a-z][0-9a-z-]*$").unwrap());
+
+/// An identifier in solidity has to start with a letter, a dollar-sign or an
+/// sunderscore and may additionally contain numbers after the first symbol.
+///
+/// <https://docs.soliditylang.org/en/latest/grammar.html#a4.SolidityLexer.Identifier>
+pub static REGEX_SOLIDITY_IDENTIFIER: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"^[a-zA-Z$_][a-zA-Z0-9$_]*$").unwrap());
 
 /// Strings in Rain are limited to printable ASCII chars and whitespace.
-pub const REGEX_RAIN_STRING: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[\s!-~]*$").unwrap());
+pub static REGEX_RAIN_STRING: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[\s!-~]*$").unwrap());
 
 /// Titles in Rain are limited to printable ASCII chars and the space character.
 /// The title MUST NOT begin or end with a space.
-pub const REGEX_RAIN_TITLE: Lazy<Regex> =
+pub static REGEX_RAIN_TITLE: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"^[!-~]([ -~]*[!-~]|[!-~]*)$").unwrap());
 
 /// keccak256 hash pattern
-pub const HASH_PATTERN: Lazy<Regex> = Lazy::new(|| Regex::new(r"^0x[a-fA-F0-9]{64}$").unwrap());
+pub static HASH_PATTERN: Lazy<Regex> = Lazy::new(|| Regex::new(r"^0x[a-fA-F0-9]{64}$").unwrap());
 
 /// Rain symbols are a subset of kebab case.
-#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Validate, Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 #[serde(transparent)]
 #[repr(transparent)]
 pub struct RainSymbol {
@@ -36,7 +40,8 @@ pub struct RainSymbol {
     pub value: String,
 }
 
-#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Validate, Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 #[serde(transparent)]
 #[repr(transparent)]
 pub struct RainTitle {
@@ -47,7 +52,8 @@ pub struct RainTitle {
     pub value: String,
 }
 
-#[derive(Validate, JsonSchema, Debug, Default, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Validate, Debug, Default, Serialize, Deserialize, Clone, PartialEq)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 #[serde(transparent)]
 #[repr(transparent)]
 pub struct RainString {
@@ -60,7 +66,8 @@ pub struct RainString {
 
 pub type Description = RainString;
 
-#[derive(Validate, JsonSchema, Debug, Default, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Validate, Debug, Default, Serialize, Deserialize, Clone, PartialEq)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 #[serde(transparent)]
 #[repr(transparent)]
 pub struct SolidityIdentifier {

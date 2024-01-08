@@ -1,11 +1,13 @@
-use schemars::JsonSchema;
 use alloy_sol_types::{SolType, sol};
 use serde::{Serialize, Deserialize};
 use validator::{Validate, ValidationErrors, ValidationError};
 use super::super::{
-    super::{RainMetaDocumentV1Item, str_to_bytes32, bytes32_to_str},
+    super::{RainMetaDocumentV1Item, str_to_bytes32, bytes32_to_str, Error},
     common::v1::{REGEX_RAIN_SYMBOL, REGEX_RAIN_STRING},
 };
+
+#[cfg(feature = "json-schema")]
+use schemars::JsonSchema;
 
 /// authoring meta struct
 pub type AuthoringMetaStruct = sol!((bytes32, uint8, string));
@@ -13,25 +15,24 @@ pub type AuthoringMetaStruct = sol!((bytes32, uint8, string));
 /// array of authoring meta struct
 pub type AuthoringMetaStructArray = sol!((bytes32, uint8, string)[]);
 
-/// # Authoring Meta
-/// array of native parser opcode metadata
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, JsonSchema)]
+/// Array of native parser opcode metadata
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 pub struct AuthoringMeta(pub Vec<AuthoringMetaItem>);
 
 /// AuthoringMeta single item
-#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Validate, Debug, Serialize, Deserialize, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 pub struct AuthoringMetaItem {
-    /// # Word
     /// Primary word used to identify the opcode.
     #[validate(regex(
         path = "REGEX_RAIN_SYMBOL",
         message = "Must be alphanumeric lower-kebab-case beginning with a letter.\n"
     ))]
     pub word: String,
-    /// # Operand Offest
+    /// Operand offest
     pub operand_parser_offset: u8,
-    /// # Description
     /// Brief description of the opcode.
     #[serde(default)]
     #[validate(regex(
@@ -42,7 +43,7 @@ pub struct AuthoringMetaItem {
 }
 
 impl AuthoringMetaItem {
-    pub fn abi_encode(&self) -> anyhow::Result<Vec<u8>> {
+    pub fn abi_encode(&self) -> Result<Vec<u8>, Error> {
         Ok(AuthoringMetaStruct::abi_encode(&(
             str_to_bytes32(self.word.as_str())?,
             self.operand_parser_offset,
@@ -51,12 +52,12 @@ impl AuthoringMetaItem {
     }
 
     // validates and abi encodes
-    pub fn abi_encode_validate(&self) -> anyhow::Result<Vec<u8>> {
+    pub fn abi_encode_validate(&self) -> Result<Vec<u8>, Error> {
         self.validate()?;
         self.abi_encode()
     }
 
-    pub fn abi_decode(data: &Vec<u8>) -> anyhow::Result<AuthoringMetaItem> {
+    pub fn abi_decode(data: &[u8]) -> Result<AuthoringMetaItem, Error> {
         let result = AuthoringMetaStruct::abi_decode(data, false)?;
         Ok(AuthoringMetaItem {
             word: bytes32_to_str(&result.0)?.to_string(),
@@ -66,7 +67,7 @@ impl AuthoringMetaItem {
     }
 
     // abi decodes and validates
-    pub fn abi_decode_validate(data: &Vec<u8>) -> anyhow::Result<AuthoringMetaItem> {
+    pub fn abi_decode_validate(data: &[u8]) -> Result<AuthoringMetaItem, Error> {
         let result = AuthoringMetaStruct::abi_decode(data, true)?;
         let am = AuthoringMetaItem {
             word: bytes32_to_str(&result.0)?.to_string(),
@@ -80,7 +81,7 @@ impl AuthoringMetaItem {
 
 impl AuthoringMeta {
     /// abi encodes array of AuthoringMeta items
-    pub fn abi_encode(&self) -> anyhow::Result<Vec<u8>> {
+    pub fn abi_encode(&self) -> Result<Vec<u8>, Error> {
         let mut v = vec![];
         for item in &self.0 {
             v.push((
@@ -93,13 +94,13 @@ impl AuthoringMeta {
     }
 
     /// abi encodes array of AuthoringMeta items after validating each
-    pub fn abi_encode_validate(&self) -> anyhow::Result<Vec<u8>> {
+    pub fn abi_encode_validate(&self) -> Result<Vec<u8>, Error> {
         self.validate()?;
         self.abi_encode()
     }
 
     /// abi decodes some data into array of AuthoringMeta
-    pub fn abi_decode(data: &Vec<u8>) -> anyhow::Result<AuthoringMeta> {
+    pub fn abi_decode(data: &[u8]) -> Result<AuthoringMeta, Error> {
         let result = AuthoringMetaStructArray::abi_decode(data, false)?;
         let mut am = vec![];
         for item in result {
@@ -113,7 +114,7 @@ impl AuthoringMeta {
     }
 
     /// abi decodes some data into array of AuthoringMeta and validates each decoded item
-    pub fn abi_decode_validate(data: &Vec<u8>) -> anyhow::Result<AuthoringMeta> {
+    pub fn abi_decode_validate(data: &[u8]) -> Result<AuthoringMeta, Error> {
         let result = AuthoringMetaStructArray::abi_decode(data, true)?;
         let mut ams = vec![];
         for item in result {
@@ -145,24 +146,31 @@ impl Validate for AuthoringMeta {
 }
 
 impl TryFrom<Vec<u8>> for AuthoringMeta {
-    type Error = anyhow::Error;
+    type Error = Error;
     fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
-        match AuthoringMeta::abi_decode(&value.to_vec()) {
+        match AuthoringMeta::abi_decode(&value) {
             Ok(am) => Ok(am),
-            Err(_e) => serde_json::from_str::<AuthoringMeta>(std::str::from_utf8(&value).or(
-                Err(anyhow::anyhow!(
-                    "deserialization attempts failed with both abi decoding and json parsing"
-                )),
-            )?)
-            .or(Err(anyhow::anyhow!(
-                "deserialization attempts failed with both abi decoding and json parsing"
-            ))),
+            Err(_e) => Ok(serde_json::from_str::<AuthoringMeta>(std::str::from_utf8(
+                &value,
+            )?)?),
+        }
+    }
+}
+
+impl TryFrom<&[u8]> for AuthoringMeta {
+    type Error = Error;
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+        match AuthoringMeta::abi_decode(value) {
+            Ok(am) => Ok(am),
+            Err(_e) => Ok(serde_json::from_str::<AuthoringMeta>(std::str::from_utf8(
+                value,
+            )?)?),
         }
     }
 }
 
 impl TryFrom<RainMetaDocumentV1Item> for AuthoringMeta {
-    type Error = anyhow::Error;
+    type Error = Error;
     fn try_from(value: RainMetaDocumentV1Item) -> Result<Self, Self::Error> {
         AuthoringMeta::try_from(value.unpack()?)
     }
@@ -170,12 +178,12 @@ impl TryFrom<RainMetaDocumentV1Item> for AuthoringMeta {
 
 #[cfg(test)]
 mod tests {
-    use crate::meta::str_to_bytes32;
     use alloy_sol_types::{SolType, sol};
     use super::{AuthoringMeta, AuthoringMetaItem};
+    use crate::{meta::str_to_bytes32, error::Error};
 
     #[test]
-    fn test_encode_decode_validate() -> anyhow::Result<()> {
+    fn test_encode_decode_validate() -> Result<(), Error> {
         let authoring_meta_content = r#"[
             {
                 "word": "stack",

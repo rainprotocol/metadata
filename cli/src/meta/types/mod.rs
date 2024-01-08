@@ -1,3 +1,5 @@
+//! All the known different Rain meta types and implementations
+
 pub mod op;
 pub mod common;
 pub mod dotrain;

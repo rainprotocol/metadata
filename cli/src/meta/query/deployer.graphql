@@ -1,6 +1,35 @@
 query DeployerQuery($hash: String) { 
-  expressionDeployers(where: {meta_: {id: $hash}} first: 1) { 
+  expressionDeployers(
+    first: 1
+    where: {or: [
+      {deployTransaction_: {id: $hash}}, 
+      {meta_: {id: $hash}}
+    ]}
+  ) { 
     constructorMetaHash 
-    constructorMeta 
+    constructorMeta
+    deployTransaction {
+      id
+    }
+    bytecode
+    parser {
+      parser {
+        deployedBytecode
+      }
+    }
+    store {
+      store {
+        deployedBytecode
+      }
+    }
+    interpreter {
+      interpreter {
+        deployedBytecode
+      }
+    }
+    meta(first: 1 where: {magicNumber: "18436497220406627634"}) {
+      __typename
+      id
+    }
   }
 }

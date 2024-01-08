@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: CAL
-pragma solidity =0.8.18;
+pragma solidity =0.8.19;
 
-import "forge-std/Test.sol";
-import "../src/IMetaV1.sol";
-import "../src/LibMeta.sol";
-import "../src/MetaBoard.sol";
+import {Test} from "forge-std/Test.sol";
+import {IMetaV1, NotRainMetaV1, META_MAGIC_NUMBER_V1} from "src/interface/IMetaV1.sol";
+import {LibMeta} from "src/lib/LibMeta.sol";
+import {MetaBoard} from "src/concrete/MetaBoard.sol";
 
 contract MetaBoardTest is Test, IMetaV1 {
     function testEmitMeta(uint256 subject_, bytes memory data_) public {

@@ -1,17 +1,18 @@
-use serde::Serialize;
-use serde::Deserialize;
-use validator::Validate;
-use schemars::JsonSchema;
-use validator::{ValidationError, ValidationErrors};
+use serde::{Serialize, Deserialize};
+use validator::{Validate, ValidationError, ValidationErrors};
 use super::super::{
-    super::RainMetaDocumentV1Item,
+    super::{RainMetaDocumentV1Item, Error},
     common::v1::{RainSymbol, RainString, Description},
 };
+
+#[cfg(feature = "json-schema")]
+use schemars::JsonSchema;
 
 pub type Computation = RainString;
 
 /// Operands in the standard interpreter are `u16` values.
-#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize, PartialEq, PartialOrd)]
+#[derive(Validate, Debug, Serialize, Deserialize, PartialEq, PartialOrd)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 #[serde(transparent)]
 #[repr(transparent)]
 pub struct Operand {
@@ -25,7 +26,8 @@ pub const MAX_BIT_INTEGER: usize = (std::mem::size_of::<Operand>() * 8) - 1;
 
 /// # BitInteger
 /// Counts or ranges bits in an operand. Ranges are 0 indexed.
-#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize, PartialOrd, PartialEq)]
+#[derive(Validate, Debug, Serialize, Deserialize, PartialOrd, PartialEq)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 #[serde(transparent)]
 pub struct BitInteger {
     #[validate(range(min = "MIN_BIT_INTEGER", max = "MAX_BIT_INTEGER"))]
@@ -33,7 +35,8 @@ pub struct BitInteger {
 }
 
 /// # BitIntegerRange
-#[derive(JsonSchema, Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 pub struct BitIntegerRange(BitInteger, BitInteger);
 
 impl Validate for BitIntegerRange {
@@ -52,7 +55,8 @@ impl Validate for BitIntegerRange {
     }
 }
 
-#[derive(JsonSchema, Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 pub enum OperandArgRange {
     Exact(Operand),
     Range(Operand, Operand),
@@ -84,7 +88,8 @@ impl Validate for OperandArgRange {
 
 /// # OpMeta.
 /// Opcodes metadata used by Rainlang.
-#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize)]
+#[derive(Validate, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 pub struct OpMeta {
     /// # Name
     /// Primary word used to identify the opcode.
@@ -126,20 +131,17 @@ pub struct OpMeta {
 }
 
 impl TryFrom<Vec<u8>> for OpMeta {
-    type Error = anyhow::Error;
+    type Error = Error;
     fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
-        match serde_json::from_slice::<Self>(&value).map_err(anyhow::Error::from) {
-            Ok(t) => match t.validate().map_err(anyhow::Error::from) {
-                Ok(()) => Ok(t),
-                Err(e) => Err(e),
-            },
-            Err(e) => Err(e),
+        match serde_json::from_slice::<Self>(&value) {
+            Ok(t) => Ok(t.validate().map(|_| t)?),
+            Err(e) => Err(e)?,
         }
     }
 }
 
 impl TryFrom<RainMetaDocumentV1Item> for OpMeta {
-    type Error = anyhow::Error;
+    type Error = Error;
     fn try_from(value: RainMetaDocumentV1Item) -> Result<Self, Self::Error> {
         Self::try_from(value.unpack()?)
     }
@@ -148,7 +150,8 @@ impl TryFrom<RainMetaDocumentV1Item> for OpMeta {
 /// # Input
 /// Data type of opcode's inputs that determines the number of inputs an opcode
 /// has and provide information about them.
-#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize)]
+#[derive(Validate, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 pub struct Input {
     /// # Parameters
     /// List of InputParameters, may be empty.
@@ -175,7 +178,8 @@ pub struct Input {
 /// # Input Parameter
 /// Data type for opcode's inputs parameters, the length determines the number of
 /// inputs for constant (non-computed) inputs.
-#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize)]
+#[derive(Validate, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 pub struct InputParameter {
     /// # Input Parameter Name
     /// Name of the input parameter.
@@ -196,7 +200,8 @@ pub struct InputParameter {
 /// # Output
 /// Data type of opcode's outputs that determines the number of outputs an opcode
 /// has and provide information about them.
-#[derive(JsonSchema, Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 pub enum Output {
     Exact(Operand),
     Computed(BitIntegerRange, Computation),
@@ -217,7 +222,8 @@ impl Validate for Output {
     }
 }
 
-#[derive(Validate, JsonSchema, Debug, Serialize, Deserialize)]
+#[derive(Validate, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 pub struct OperandArg {
     /// # Allocated Operand Bits
     /// Specifies the bits to allocate to this operand argument.
@@ -246,8 +252,8 @@ pub struct OperandArg {
     /// # Operand Argument Range
     /// Determines the valid range of the operand argument after computation
     /// applied. For example an operand argument can be any value between range
-    /// of 1 - 10: [[1, 10]] or an operand argument can only be certain exact
-    /// values: [[2], [3], [9]], meaning it can only be 2 or 3 or 9.
+    /// of 1 - 10: \[\[1, 10\]\] or an operand argument can only be certain exact
+    /// values: \[\[2\], \[3\], \[9\]\], meaning it can only be 2 or 3 or 9.
     #[serde(default)]
     #[validate]
     pub valid_range: Option<Vec<OperandArgRange>>,
