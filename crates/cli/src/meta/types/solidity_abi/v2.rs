@@ -632,7 +632,10 @@ mod tests {
 
     // test reading a json artifact with no abi present
     fn test_no_abi_artifact_parse() -> anyhow::Result<()> {
-        let json = format!("{}{}", SOLIDITY_ARTIFACTS_PATH, "/MetaBoard.sol/MetaBoard.json");
+        let json = format!(
+            "{}{}",
+            SOLIDITY_ARTIFACTS_PATH, "/MetaBoard.sol/MetaBoard.json"
+        );
         let data = std::fs::read(json)?;
         let mut v = serde_json::from_slice::<serde_json::Value>(&data)?;
         // take out the abi field and serialize the json value again
