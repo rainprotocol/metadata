@@ -6,8 +6,8 @@ import {LibMeta} from "../lib/LibMeta.sol";
 
 contract MetaBoard is IMetaBoardV1 {
     /// @inheritdoc IMetaBoardV1
-    function emitMeta(uint256 subject_, bytes calldata meta_) public {
-        LibMeta.checkMetaUnhashed(meta_);
-        emit MetaV1(msg.sender, subject_, meta_);
+    function emitMeta(uint256 subject, bytes calldata meta) external {
+        LibMeta.checkMetaUnhashedV1(meta);
+        emit MetaV1(msg.sender, subject, meta);
     }
 }
