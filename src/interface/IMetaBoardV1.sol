@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: CAL
 pragma solidity ^0.8.19;
 
-import "./IMetaV1.sol";
+import {IMetaV1} from "./IMetaV1.sol";
 
 /// Defines a general purpose contract that anon may call to emit ANY metadata.
 /// Anons MAY send garbage and malicious metadata so it is up to tooling to
