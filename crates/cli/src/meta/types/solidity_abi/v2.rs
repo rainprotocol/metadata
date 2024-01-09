@@ -545,6 +545,8 @@ mod tests {
     use super::SolidityAbiMeta;
     use crate::error::Error;
 
+    static SOLIDITY_ARTIFACTS_PATH: &str = "../../out";
+
     #[test]
     fn test_all() -> anyhow::Result<()> {
         let artifact_paths = build_artifacts()?;
@@ -556,15 +558,8 @@ mod tests {
 
     // building the artifacts
     fn build_artifacts() -> anyhow::Result<Vec<PathBuf>> {
-        std::process::Command::new("forge")
-            .arg("build")
-            .current_dir("../")
-            .output()
-            .map_err(anyhow::Error::from)?;
-
-        let out_path = "../out";
         let mut files_to_read = vec![];
-        for file in std::fs::read_dir(out_path)? {
+        for file in std::fs::read_dir(SOLIDITY_ARTIFACTS_PATH)? {
             let file = file?;
             if file.path().is_dir() {
                 for file in std::fs::read_dir(file.path())? {
@@ -637,7 +632,7 @@ mod tests {
 
     // test reading a json artifact with no abi present
     fn test_no_abi_artifact_parse() -> anyhow::Result<()> {
-        let json = "../out/MetaBoard.sol/MetaBoard.json";
+        let json = format!("{}{}", SOLIDITY_ARTIFACTS_PATH, "/MetaBoard.sol/MetaBoard.json");
         let data = std::fs::read(json)?;
         let mut v = serde_json::from_slice::<serde_json::Value>(&data)?;
         // take out the abi field and serialize the json value again
