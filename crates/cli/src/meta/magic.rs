@@ -32,7 +32,7 @@ pub enum KnownMagic {
     /// ExpressionDeployer deployed bytecode meta v1
     ExpressionDeployerV2BytecodeV1 = 0xffdb988a8cd04d32,
     /// Rainlang source code meta v1
-    RainlangSourceV1 = 0xffca762d2c209ed1,
+    RainlangSourceV1 = 0xff13109e41336ff2,
 }
 
 impl KnownMagic {
@@ -138,6 +138,6 @@ mod tests {
         let magic_number = KnownMagic::RainlangSourceV1;
         let magic_number_after_prefix = magic_number.to_prefix_bytes();
 
-        assert_eq!(hex::encode(magic_number_after_prefix), "ffca762d2c209ed1");
+        assert_eq!(hex::encode(magic_number_after_prefix), "ff13109e41336ff2");
     }
 }
