@@ -93,17 +93,17 @@
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1704618558,
-        "narHash": "sha256-74tXbReHZScqfE9SNHUQVAy2Z9Zvvw9hX/JZUHAsynE=",
+        "lastModified": 1705216422,
+        "narHash": "sha256-kIAi+aqJoOVhpQP5DWRDdNsrfBMn+GsCwiuwJhG4w/g=",
         "owner": "shazow",
         "repo": "foundry.nix",
-        "rev": "dc1daa5e4b98e3ee467ba49f4feafef7cb67798d",
+        "rev": "9ecf12199280f738eaaad2d1224e54403dbdf426",
         "type": "github"
       },
       "original": {
         "owner": "shazow",
-        "ref": "main",
         "repo": "foundry.nix",
+        "rev": "9ecf12199280f738eaaad2d1224e54403dbdf426",
         "type": "github"
       }
     },
@@ -141,17 +141,17 @@
     },
     "nixpkgs_2": {
       "locked": {
-        "lastModified": 1699343069,
-        "narHash": "sha256-s7BBhyLA6MI6FuJgs4F/SgpntHBzz40/qV0xLPW6A1Q=",
+        "lastModified": 1705061183,
+        "narHash": "sha256-+AbYDMee1f3yP2IzGemiFOyTI4z+r+YJNcdn0LA6Qb0=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "ec750fd01963ab6b20ee1f0cb488754e8036d89d",
+        "rev": "9e68f1146cacc5f45b6646e73c54c88c73e8df12",
         "type": "github"
       },
       "original": {
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "ec750fd01963ab6b20ee1f0cb488754e8036d89d",
+        "rev": "9e68f1146cacc5f45b6646e73c54c88c73e8df12",
         "type": "github"
       }
     },
@@ -218,7 +218,6 @@
       "original": {
         "owner": "rainprotocol",
         "repo": "rain.cli",
-        "rev": "6a912680be6d967fd6114aafab793ebe8503d27b",
         "type": "github"
       }
     },
@@ -231,17 +230,16 @@
         "rust-overlay": "rust-overlay"
       },
       "locked": {
-        "lastModified": 1704723525,
-        "narHash": "sha256-FVDjJxkoPP6DhRCQj8NJ4iswjEBNmDkkhMg0K1CZ5tw=",
+        "lastModified": 1705295519,
+        "narHash": "sha256-cix6P56jkcVQNehwG4kRNsNNXQmGyc4z0J3l+JdA/58=",
         "owner": "rainprotocol",
         "repo": "rainix",
-        "rev": "bc7f418a26165faaf920134341c6faab254f237d",
+        "rev": "8e72569f868adcb9bfd52125441651d7ba913b3e",
         "type": "github"
       },
       "original": {
         "owner": "rainprotocol",
         "repo": "rainix",
-        "rev": "bc7f418a26165faaf920134341c6faab254f237d",
         "type": "github"
       }
     },
