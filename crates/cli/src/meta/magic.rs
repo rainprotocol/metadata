@@ -31,6 +31,8 @@ pub enum KnownMagic {
     InterpreterCallerMetaV1 = 0xffc21bbf86cc199b,
     /// ExpressionDeployer deployed bytecode meta v1
     ExpressionDeployerV2BytecodeV1 = 0xffdb988a8cd04d32,
+    /// Rainlang source code meta v1
+    RainlangSourceV1 = 0xff13109e41336ff2,
 }
 
 impl KnownMagic {
@@ -56,6 +58,7 @@ impl TryFrom<u64> for KnownMagic {
             v if v == KnownMagic::ExpressionDeployerV2BytecodeV1 as u64 => {
                 Ok(KnownMagic::ExpressionDeployerV2BytecodeV1)
             }
+            v if v == KnownMagic::RainlangSourceV1 as u64 => Ok(KnownMagic::RainlangSourceV1),
             _ => Err(crate::error::Error::UnknownMagic),
         }
     }
@@ -128,5 +131,13 @@ mod tests {
         let magic_number_after_prefix = magic_number.to_prefix_bytes();
 
         assert_eq!(hex::encode(magic_number_after_prefix), "ffdb988a8cd04d32");
+    }
+
+    #[test]
+    fn test_rainlang_source_meta_v1() {
+        let magic_number = KnownMagic::RainlangSourceV1;
+        let magic_number_after_prefix = magic_number.to_prefix_bytes();
+
+        assert_eq!(hex::encode(magic_number_after_prefix), "ff13109e41336ff2");
     }
 }
