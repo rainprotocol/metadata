@@ -58,6 +58,7 @@ impl TryFrom<u64> for KnownMagic {
             v if v == KnownMagic::ExpressionDeployerV2BytecodeV1 as u64 => {
                 Ok(KnownMagic::ExpressionDeployerV2BytecodeV1)
             }
+            v if v == KnownMagic::RainlangSourceV1 as u64 => Ok(KnownMagic::RainlangSourceV1),
             _ => Err(crate::error::Error::UnknownMagic),
         }
     }
@@ -130,5 +131,13 @@ mod tests {
         let magic_number_after_prefix = magic_number.to_prefix_bytes();
 
         assert_eq!(hex::encode(magic_number_after_prefix), "ffdb988a8cd04d32");
+    }
+
+    #[test]
+    fn test_rainlang_source_meta_v1() {
+        let magic_number = KnownMagic::RainlangSourceV1;
+        let magic_number_after_prefix = magic_number.to_prefix_bytes();
+
+        assert_eq!(hex::encode(magic_number_after_prefix), "ffca762d2c209ed1");
     }
 }

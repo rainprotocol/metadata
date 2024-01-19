@@ -1,19 +1,19 @@
-use reqwest::Client;
-use futures::future;
 use super::error::Error;
-use graphql_client::GraphQLQuery;
-use strum::{EnumIter, EnumString};
 use super::subgraph::KnownSubgraphs;
-use alloy_primitives::{keccak256, hex};
-use types::authoring::v1::AuthoringMeta;
+use alloy_primitives::{hex, keccak256};
+use futures::future;
+use graphql_client::GraphQLQuery;
+use reqwest::Client;
 use serde::de::{Deserialize, Deserializer, Visitor};
-use serde::ser::{Serialize, Serializer, SerializeMap};
-use std::{sync::Arc, fmt::Debug, convert::TryFrom, collections::HashMap};
+use serde::ser::{Serialize, SerializeMap, Serializer};
+use std::{collections::HashMap, convert::TryFrom, fmt::Debug, sync::Arc};
+use strum::{EnumIter, EnumString};
+use types::authoring::v1::AuthoringMeta;
 
-pub mod types;
 pub(crate) mod magic;
-pub(crate) mod query;
 pub(crate) mod normalize;
+pub(crate) mod query;
+pub mod types;
 
 pub use magic::*;
 pub use query::*;
@@ -29,6 +29,7 @@ pub enum KnownMeta {
     AuthoringMetaV1,
     InterpreterCallerMetaV1,
     ExpressionDeployerV2BytecodeV1,
+    RainlangSourceV1,
 }
 
 impl TryFrom<KnownMagic> for KnownMeta {
@@ -44,6 +45,7 @@ impl TryFrom<KnownMagic> for KnownMeta {
             KnownMagic::ExpressionDeployerV2BytecodeV1 => {
                 Ok(KnownMeta::ExpressionDeployerV2BytecodeV1)
             }
+            KnownMagic::RainlangSourceV1 => Ok(KnownMeta::RainlangSourceV1),
             _ => Err(Error::UnsupportedMeta),
         }
     }
@@ -269,7 +271,8 @@ impl RainMetaDocumentV1Item {
             | KnownMagic::SolidityAbiV2
             | KnownMagic::AuthoringMetaV1
             | KnownMagic::InterpreterCallerMetaV1
-            | KnownMagic::ExpressionDeployerV2BytecodeV1 => T::try_from(self),
+            | KnownMagic::ExpressionDeployerV2BytecodeV1
+            | KnownMagic::RainlangSourceV1 => T::try_from(self),
             _ => Err(Error::UnsupportedMeta)?,
         }
     }
@@ -876,14 +879,15 @@ pub fn bytes32_to_str(bytes: &[u8; 32]) -> Result<&str, Error> {
 
 #[cfg(test)]
 mod tests {
+    use super::{
+        bytes32_to_str,
+        magic::KnownMagic,
+        str_to_bytes32,
+        types::{authoring::v1::AuthoringMeta, dotrain::v1::DotrainMeta},
+        ContentEncoding, ContentLanguage, ContentType, Error, RainMetaDocumentV1Item,
+    };
     use alloy_primitives::hex;
     use alloy_sol_types::SolType;
-    use super::{
-        str_to_bytes32, bytes32_to_str,
-        magic::KnownMagic,
-        RainMetaDocumentV1Item, ContentType, ContentEncoding, ContentLanguage, Error,
-        types::{dotrain::v1::DotrainMeta, authoring::v1::AuthoringMeta},
-    };
 
     /// Roundtrip test for an authoring meta
     /// original content -> pack -> MetaMap -> cbor encode -> cbor decode -> MetaMap -> unpack -> original content,
