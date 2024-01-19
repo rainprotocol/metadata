@@ -32,7 +32,7 @@ pub enum KnownMagic {
     /// ExpressionDeployer deployed bytecode meta v1
     ExpressionDeployerV2BytecodeV1 = 0xffdb988a8cd04d32,
     /// Rainlang source code meta v1
-    RainlangSourceV1 = 0xffdb7962d2c209ed1,
+    RainlangSourceV1 = 0xffca762d2c209ed1,
 }
 
 impl KnownMagic {
