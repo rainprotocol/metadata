@@ -72,6 +72,8 @@ pub enum ContentType {
     Cbor,
     #[serde(rename = "application/octet-stream")]
     OctetStream,
+    #[serde(rename = "text/plain")]
+    Text,
 }
 
 /// Content encoding of a cbor meta map
