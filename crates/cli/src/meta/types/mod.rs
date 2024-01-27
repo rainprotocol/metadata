@@ -1,10 +1,11 @@
 //! All the known different Rain meta types and implementations
 
-pub mod op;
+pub mod authoring;
 pub mod common;
 pub mod dotrain;
-pub mod rainlang;
-pub mod authoring;
-pub mod solidity_abi;
-pub mod interpreter_caller;
 pub mod expression_deployer_v2_bytecode;
+pub mod interpreter_caller;
+pub mod op;
+pub mod rainlang;
+pub mod rainlangsource;
+pub mod solidity_abi;
