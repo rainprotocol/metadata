@@ -1,5 +1,5 @@
 [package]
-name = "rain-meta"
+name = "rain-metadata"
 version = "0.0.1"
 edition = "2021"
 description = "Tooling and utilities for RainLanguage metadata."
@@ -42,7 +42,7 @@ clap = { version = "4.4.8", features = ["cargo", "derive"], optional = true }
 tokio = { version = "1.34.0", features = ["sync", "macros", "io-util", "rt", "time"], optional = true }
 
 [[bin]]
-name = "rain-meta"
+name = "rain-metadata"
 path = "src/main.rs"
 required-features = ["cli"]
 

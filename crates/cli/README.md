@@ -15,7 +15,7 @@ Also provides CLI app (executable binary) to generate desireable Rain cbor encod
 ## CLI (Binary Crate)
     Tooling and utilities for RainLanguage metadata.
 
-    Usage: rain-meta <COMMAND>
+    Usage: rain-metadata <COMMAND>
 
     Commands:
       schema    command related to meta json schema

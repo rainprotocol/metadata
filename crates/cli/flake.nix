@@ -28,21 +28,21 @@
       }).buildRustPackage {
         src = ./.;
         doCheck = false;
-        name = "rain-meta";
+        name = "rain-metadata";
         cargoLock.lockFile = ./Cargo.lock;
         # allows for git deps to be resolved without the need to specify their outputHash
         cargoLock.allowBuiltinFetchGit = true;
         buildPhase = ''
-          cargo build --release --bin rain-meta --all-features
+          cargo build --release --bin rain-metadata --all-features
         '';
         installPhase = ''
           mkdir -p $out/bin
-          cp target/release/rain-meta $out/bin/
+          cp target/release/rain-metadata $out/bin/
         '';
-        buildInputs = with pkgs; [ 
-          openssl 
+        buildInputs = with pkgs; [
+          openssl
         ];
-        nativeBuildInputs = with pkgs; [ 
+        nativeBuildInputs = with pkgs; [
           pkg-config
         ] ++ lib.optionals stdenv.isDarwin [
           darwin.apple_sdk.frameworks.SystemConfiguration
@@ -51,12 +51,12 @@
 
       # For `nix develop`:
       devShell = pkgs.mkShell {
-        nativeBuildInputs = (with pkgs; [ 
-          openssl 
+        nativeBuildInputs = (with pkgs; [
+          openssl
           pkg-config
           foundry-bin
           rust-toolchain
-          slither-analyzer 
+          slither-analyzer
         ] ++ lib.optionals stdenv.isDarwin [
           darwin.apple_sdk.frameworks.SystemConfiguration
         ]);
