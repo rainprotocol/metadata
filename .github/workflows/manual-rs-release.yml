@@ -14,7 +14,7 @@ jobs:
       - uses: DeterminateSystems/magic-nix-cache-action@v2
 
       - run: |
-          git config --global user.email "noreply@rainlang.xyz"
+          git config --global user.email "david@rainlang.xyz"
           git config --global user.name "Rain CI"
       - run: nix develop --command cargo release --no-confirm --execute alpha
         env:
