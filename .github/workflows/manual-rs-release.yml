@@ -14,3 +14,6 @@ jobs:
       - uses: DeterminateSystems/magic-nix-cache-action@v2
 
       - run: nix develop --command cargo release --no-confirm --execute alpha
+        env:
+          GIT_AUTHOR_NAME: "Rain CI"
+          GIT_AUTHOR_EMAIL: "noreply@rainlang.xyz"
