@@ -31,10 +31,10 @@ jobs:
         uses: DeterminateSystems/nix-installer-action@v4
       - uses: DeterminateSystems/magic-nix-cache-action@v2
 
-      - run: nix run .#rainix-sol-prelude
-      - run: nix run .#rainix-rs-prelude
+      - run: nix develop --command rainix-sol-prelude
+      - run: nix develop --command rainix-rs-prelude
       - name: Run ${{ matrix.task }}
         env:
           ETH_RPC_URL: ${{ secrets.CI_DEPLOY_RPC_URL }}
           ETHERSCAN_API_KEY: ${{ secrets.EXPLORER_VERIFICATION_KEY }}
-        run: nix run .#${{ matrix.task }}
+        run: nix develop --command ${{ matrix.task }}
