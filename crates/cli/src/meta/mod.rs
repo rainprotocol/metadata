@@ -30,6 +30,7 @@ pub enum KnownMeta {
     InterpreterCallerMetaV1,
     ExpressionDeployerV2BytecodeV1,
     RainlangSourceV1,
+    AuthorsList,
 }
 
 impl TryFrom<KnownMagic> for KnownMeta {
@@ -41,6 +42,7 @@ impl TryFrom<KnownMagic> for KnownMeta {
             KnownMagic::RainlangV1 => Ok(KnownMeta::RainlangV1),
             KnownMagic::SolidityAbiV2 => Ok(KnownMeta::SolidityAbiV2),
             KnownMagic::AuthoringMetaV1 => Ok(KnownMeta::AuthoringMetaV1),
+            KnownMagic::AuthorsList => Ok(KnownMeta::AuthorsList),
             KnownMagic::InterpreterCallerMetaV1 => Ok(KnownMeta::InterpreterCallerMetaV1),
             KnownMagic::ExpressionDeployerV2BytecodeV1 => {
                 Ok(KnownMeta::ExpressionDeployerV2BytecodeV1)
@@ -270,6 +272,7 @@ impl RainMetaDocumentV1Item {
             | KnownMagic::RainlangV1
             | KnownMagic::SolidityAbiV2
             | KnownMagic::AuthoringMetaV1
+            | KnownMagic::AuthorsList
             | KnownMagic::InterpreterCallerMetaV1
             | KnownMagic::ExpressionDeployerV2BytecodeV1
             | KnownMagic::RainlangSourceV1 => T::try_from(self),
