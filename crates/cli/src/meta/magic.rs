@@ -34,7 +34,7 @@ pub enum KnownMagic {
     /// Rainlang source code meta v1
     RainlangSourceV1 = 0xff13109e41336ff2,
     //Authors list meta
-    RainlangSourceV1 = 0xffb2637608c09e38,
+    AuthorsList = 0xffb2637608c09e38,
 }
 
 impl KnownMagic {
