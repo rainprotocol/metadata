@@ -10,7 +10,7 @@ use std::{collections::HashMap, convert::TryFrom, fmt::Debug, sync::Arc};
 use strum::{EnumIter, EnumString};
 use types::authoring::v1::AuthoringMeta;
 
-pub(crate) mod magic;
+pub mod magic;
 pub(crate) mod normalize;
 pub(crate) mod query;
 pub mod types;
