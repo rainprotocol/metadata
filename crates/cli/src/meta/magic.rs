@@ -53,6 +53,7 @@ impl TryFrom<u64> for KnownMagic {
             v if v == KnownMagic::RainlangV1 as u64 => Ok(KnownMagic::RainlangV1),
             v if v == KnownMagic::SolidityAbiV2 as u64 => Ok(KnownMagic::SolidityAbiV2),
             v if v == KnownMagic::AuthoringMetaV1 as u64 => Ok(KnownMagic::AuthoringMetaV1),
+            v if v == KnownMagic::AuthorsList as u64 => Ok(KnownMagic::AuthorsList),
             v if v == KnownMagic::RainMetaDocumentV1 as u64 => Ok(KnownMagic::RainMetaDocumentV1),
             v if v == KnownMagic::InterpreterCallerMetaV1 as u64 => {
                 Ok(KnownMagic::InterpreterCallerMetaV1)
