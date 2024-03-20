@@ -68,8 +68,8 @@
 //! ```
 
 pub(crate) mod solc;
-pub(crate) mod meta;
-pub(crate) mod error;
+pub mod meta;
+pub mod error;
 pub(crate) mod subgraph;
 
 #[cfg(feature = "cli")]

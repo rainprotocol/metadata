@@ -10,7 +10,7 @@ use std::{collections::HashMap, convert::TryFrom, fmt::Debug, sync::Arc};
 use strum::{EnumIter, EnumString};
 use types::authoring::v1::AuthoringMeta;
 
-pub(crate) mod magic;
+pub mod magic;
 pub(crate) mod normalize;
 pub(crate) mod query;
 pub mod types;
@@ -30,6 +30,7 @@ pub enum KnownMeta {
     InterpreterCallerMetaV1,
     ExpressionDeployerV2BytecodeV1,
     RainlangSourceV1,
+    AddressList,
 }
 
 impl TryFrom<KnownMagic> for KnownMeta {
@@ -41,6 +42,7 @@ impl TryFrom<KnownMagic> for KnownMeta {
             KnownMagic::RainlangV1 => Ok(KnownMeta::RainlangV1),
             KnownMagic::SolidityAbiV2 => Ok(KnownMeta::SolidityAbiV2),
             KnownMagic::AuthoringMetaV1 => Ok(KnownMeta::AuthoringMetaV1),
+            KnownMagic::AddressList => Ok(KnownMeta::AddressList),
             KnownMagic::InterpreterCallerMetaV1 => Ok(KnownMeta::InterpreterCallerMetaV1),
             KnownMagic::ExpressionDeployerV2BytecodeV1 => {
                 Ok(KnownMeta::ExpressionDeployerV2BytecodeV1)
@@ -270,6 +272,7 @@ impl RainMetaDocumentV1Item {
             | KnownMagic::RainlangV1
             | KnownMagic::SolidityAbiV2
             | KnownMagic::AuthoringMetaV1
+            | KnownMagic::AddressList
             | KnownMagic::InterpreterCallerMetaV1
             | KnownMagic::ExpressionDeployerV2BytecodeV1
             | KnownMagic::RainlangSourceV1 => T::try_from(self),
