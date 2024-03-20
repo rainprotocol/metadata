@@ -33,8 +33,8 @@ pub enum KnownMagic {
     ExpressionDeployerV2BytecodeV1 = 0xffdb988a8cd04d32,
     /// Rainlang source code meta v1
     RainlangSourceV1 = 0xff13109e41336ff2,
-    //Authors list meta
-    AuthorsList = 0xffb2637608c09e38,
+    //Address list meta
+    AddressList = 0xffb2637608c09e38,
 }
 
 impl KnownMagic {
@@ -53,7 +53,7 @@ impl TryFrom<u64> for KnownMagic {
             v if v == KnownMagic::RainlangV1 as u64 => Ok(KnownMagic::RainlangV1),
             v if v == KnownMagic::SolidityAbiV2 as u64 => Ok(KnownMagic::SolidityAbiV2),
             v if v == KnownMagic::AuthoringMetaV1 as u64 => Ok(KnownMagic::AuthoringMetaV1),
-            v if v == KnownMagic::AuthorsList as u64 => Ok(KnownMagic::AuthorsList),
+            v if v == KnownMagic::AddressList as u64 => Ok(KnownMagic::AddressList),
             v if v == KnownMagic::RainMetaDocumentV1 as u64 => Ok(KnownMagic::RainMetaDocumentV1),
             v if v == KnownMagic::InterpreterCallerMetaV1 as u64 => {
                 Ok(KnownMagic::InterpreterCallerMetaV1)
