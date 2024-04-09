@@ -11,8 +11,9 @@ type MetaV1 @entity {
     meta: Bytes!
     subject: BigInt!
     metaBoard: MetaBoard!
-    payload: String!
-    magicNumber: BigInt!
-    contentType: String!
+    payload: String
+    magicNumber: BigInt
+    contentType: String
+    metaHash: Bytes!
 }
 
