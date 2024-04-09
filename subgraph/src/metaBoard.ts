@@ -27,9 +27,14 @@ export function handleMetaV1(event: MetaV1Event): void {
     if ( jsonData.isOk ) {
       let jsonDataArray = jsonData.value.toArray();
       if ( jsonDataArray.length ) {
-        metaV1.payload = jsonDataArray[ 0 ].toObject().mustGet("0").toString();
-        metaV1.magicNumber = jsonDataArray[ 0 ].toObject().mustGet("1").toBigInt();
-        metaV1.contentType = jsonDataArray[ 0 ].toObject().mustGet("2").toString();
+        let payload = jsonDataArray[ 0 ].toObject().get("0");
+        let magicNumber = jsonDataArray[ 0 ].toObject().get("1");
+        let contentType = jsonDataArray[ 0 ].toObject().get("2");
+        if ( payload && magicNumber && contentType ) {
+          metaV1.payload = payload.toString();
+          metaV1.magicNumber = magicNumber.toBigInt();
+          metaV1.contentType = contentType.toString();
+        }
       }
     }
   }
