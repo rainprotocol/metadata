@@ -1,4 +1,4 @@
-import { BigInt, json, log } from "@graphprotocol/graph-ts";
+import { BigInt, json } from "@graphprotocol/graph-ts";
 import { MetaV1 as MetaV1Event } from "../generated/MetaBoard/MetaBoard";
 import { MetaBoard, MetaV1 } from "../generated/schema";
 import { CBORDecoder } from "@rainprotocol/assemblyscript-cbor";
@@ -19,6 +19,7 @@ export function handleMetaV1(event: MetaV1Event): void {
   let metaV1 = new MetaV1(event.transaction.hash.toHex());
   metaV1.sender = event.params.sender;
   metaV1.meta = event.params.meta;
+  metaV1.metaHash = metaBoard.hash(event.params.meta);
   metaV1.metaBoard = event.address;
   metaV1.subject = event.params.subject;
 
