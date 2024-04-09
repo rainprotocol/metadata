@@ -22,8 +22,9 @@ export function handleMetaV1(event: MetaV1Event): void {
   metaV1.subject = event.params.subject;
 
   let data = new CBORDecoder(stringToArrayBuffer(metaData));
-  if ( data.parse().isObj ) {
-    let jsonData = json.try_fromString(data.parse().stringify());
+  let parsedData = data.parse();
+  if ( parsedData.isObj ) {
+    let jsonData = json.try_fromString(parsedData.stringify());
     if ( jsonData.isOk ) {
       let jsonDataArray = jsonData.value.toArray();
       if ( jsonDataArray.length ) {
