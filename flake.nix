@@ -11,7 +11,7 @@
       let
         pkgs = rainix.pkgs.${system};
         rust-toolchain = rainix.rust-toolchain.${system};
-      in {
+      in rec {
         packages = {
           mkBin = (pkgs.makeRustPlatform{
             rustc = rust-toolchain;
@@ -39,8 +39,27 @@
               darwin.apple_sdk.frameworks.SystemConfiguration
             ];
           };
+
+          subgraph-build = rainix.mkTask.${system} {
+            name = "subgraph-build";
+            body = ''
+              forge build
+              cd ./subgraph;
+              graph codegen;
+              graph build;
+              cd -;
+            '';
+          };
         } // rainix.packages.${system};
-        devShells = rainix.devShells.${system};
+
+        devShells.default = pkgs.mkShell {
+          packages = [
+            packages.subgraph-build
+          ];
+          shellHook = rainix.devShells.${system}.default.shellHook;
+          buildInputs = rainix.devShells.${system}.default.buildInputs;
+          nativeBuildInputs = rainix.devShells.${system}.default.nativeBuildInputs;
+        };
       }
     );
 

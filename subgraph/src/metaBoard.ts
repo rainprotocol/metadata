@@ -12,7 +12,7 @@ export function handleMetaV1(event: MetaV1Event): void {
     metaBoard.save();
   }
 
-  let metaV1 = new MetaV1(metaBoard.nextMetaId);
+  let metaV1 = new MetaV1(metaBoard.nextMetaId.toString());
 
   metaV1.metaBoard = metaBoard.address;
 
