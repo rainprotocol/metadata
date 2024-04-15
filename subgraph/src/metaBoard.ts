@@ -3,6 +3,8 @@ import { MetaV1 as MetaV1Event } from "../generated/MetaBoard/MetaBoard";
 import { MetaBoard as MetaBoardContract } from "../generated/MetaBoard/MetaBoard";
 import { MetaBoard, MetaV1 } from "../generated/schema";
 import { CBORDecoder } from "@rainprotocol/assemblyscript-cbor";
+import { Value } from "@rainprotocol/assemblyscript-cbor/assembly/types";
+
 
 export function handleMetaV1(event: MetaV1Event): void {
   let metaBoard = MetaBoard.load(event.address);
@@ -54,4 +56,9 @@ function stringToArrayBuffer(val: string): ArrayBuffer {
     view.setUint8(j, u8(Number.parseInt(`${ val.at(i) }${ val.at(i + 1) }`, 16)));
   }
   return buff;
+}
+
+function parseCBORData(metaData: string): Value {
+  const data = new CBORDecoder(stringToArrayBuffer(metaData));
+  return data.parse();
 }
