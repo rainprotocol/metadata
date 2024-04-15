@@ -45,6 +45,7 @@
             body = ''
               forge build
               cd ./subgraph;
+              npm install;
               graph codegen;
               graph build;
               cd -;
