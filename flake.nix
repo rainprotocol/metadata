@@ -64,6 +64,7 @@
         devShells.default = pkgs.mkShell {
           packages = [
             packages.subgraph-build
+            packages.subgraph-deploy
           ];
           shellHook = rainix.devShells.${system}.default.shellHook;
           buildInputs = rainix.devShells.${system}.default.buildInputs;
