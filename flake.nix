@@ -58,7 +58,10 @@
             body = ''
               set -euo pipefail
               ${subgraph-build}/bin/subgraph-build
+
+              cd ./subgraph;
               goldsky --token ''${GOLDSKY_TOKEN} subgraph deploy ''${GOLDSKY_NAME_AND_VERSION}
+              cd -
             '';
           };
         } // rainix.packages.${system};
