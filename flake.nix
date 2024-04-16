@@ -43,6 +43,7 @@
           subgraph-build = rainix.mkTask.${system} {
             name = "subgraph-build";
             body = ''
+              set -euxo pipefail
               forge build
               cd ./subgraph;
               npm install;
@@ -55,8 +56,9 @@
           subgraph-deploy = rainix.mkTask.${system} {
             name = "subgraph-deploy";
             body = ''
+              set -euo pipefail
               ${subgraph-build}/bin/subgraph-build
-              goldsky --token ''${GOLDSKY_TOKEN} deploy ''${GOLDSKY_NAME_AND_VERSION}
+              goldsky --token ''${GOLDSKY_TOKEN} subgraph deploy ''${GOLDSKY_NAME_AND_VERSION}
             '';
           };
         } // rainix.packages.${system};
