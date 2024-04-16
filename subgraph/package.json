@@ -1,30 +1,19 @@
 {
-  "name": "subgraph",
+  "name": "rain-metaboard-subgraph",
   "version": "1.0.0",
-  "description": "",
+  "description": "Subgraph for the Rain metaboard.",
   "main": "index.js",
-  "scripts": {
-    "test": "hardhat test"
-  },
+  "scripts": {},
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "CAL",
   "dependencies": {
-    "@graphprotocol/graph-cli": "^0.46.1",
-    "@graphprotocol/graph-ts": "^0.29.3",
-    "@rainprotocol/assemblyscript-cbor": "git+https://github.com/rainprotocol/assemblyscript-cbor.git#03142dcf5de7e796abf325df09b15090483daa00",
-    "cbor": "^8.1.0",
-    "hardhat": "^2.13.0",
-    "mustache": "^4.2.0"
+    "@graphprotocol/graph-ts": "^0.29.3"
   },
   "devDependencies": {
-    "@nomiclabs/hardhat-waffle": "^2.0.5",
-    "@typechain/hardhat": "^6.1.5",
     "@types/mocha": "^10.0.1",
     "@types/node": "^18.15.11",
-    "apollo-fetch": "^0.7.0",
     "assert": "^2.0.0",
-    "commander": "^10.0.0",
     "dotenv": "^16.0.3",
     "ts-node": "^10.9.1",
     "typechain": "^8.1.1",

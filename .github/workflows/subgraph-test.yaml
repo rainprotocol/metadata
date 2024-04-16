@@ -1,15 +1,9 @@
 name: MetaBoard Subgraph CI
 on: [push]
-env:
-  THE_GRAPH_API_TOKEN: ${{ secrets.THE_GRAPH_API_TOKEN }}
 
 jobs:
   test:
     runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: ./subgraph
 
     steps:
       - name: Checkout repository
@@ -22,20 +16,4 @@ jobs:
         uses: DeterminateSystems/nix-installer-action@v4
       - uses: DeterminateSystems/magic-nix-cache-action@v2
 
-      - run: nix develop --command rainix-sol-prelude
-      - run: nix develop --command rainix-rs-prelude
-
-      - name: install npm dependencies
-        run: nix develop --command init
-
-      - name: Build Docker Compose images
-        run: |
-          nix develop --command docker-down
-          nix develop --command docker-up
-
-
-      - name: Run Subgraph tests
-        run: nix develop --command ci-test
-
-      - name: Stop containers
-        run: nix develop --command docker-down
+      - run: nix develop --command subgraph-build
