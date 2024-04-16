@@ -12,7 +12,7 @@
         pkgs = rainix.pkgs.${system};
         rust-toolchain = rainix.rust-toolchain.${system};
       in rec {
-        packages = {
+        packages = rec {
           mkBin = (pkgs.makeRustPlatform{
             rustc = rust-toolchain;
             cargo = rust-toolchain;
