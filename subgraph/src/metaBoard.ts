@@ -1,6 +1,6 @@
 import { BigInt } from "@graphprotocol/graph-ts";
-import { MetaV1 as MetaV1Event } from "../generated/MetaBoard/MetaBoard";
-import { MetaBoard as MetaBoardContract } from "../generated/MetaBoard/MetaBoard";
+import { MetaV1 as MetaV1Event } from "../generated/metaboard0/MetaBoard";
+import { MetaBoard as MetaBoardContract } from "../generated/metaboard0/MetaBoard";
 import { MetaBoard, MetaV1 } from "../generated/schema";
 
 export function handleMetaV1(event: MetaV1Event): void {
