@@ -2,7 +2,7 @@
   description = "Flake for development workflows.";
 
   inputs = {
-    rainix.url = "github:rainprotocol/rainix/dba62881adda438774f079c335220d36d512b5d2";
+    rainix.url = "github:rainprotocol/rainix";
     flake-utils.url = "github:numtide/flake-utils";
   };
 
@@ -47,8 +47,16 @@
               cd ./subgraph;
               npm install;
               graph codegen;
-              graph build;
+              graph build --network matic;
               cd -;
+            '';
+          };
+
+          subgraph-deploy = rainix.mkTask.${system} {
+            name = "subgraph-deploy";
+            body = ''
+              ${subgraph-build}/bin/subgraph-build
+              goldsky --token ''${GOLDSKY_TOKEN} deploy ''${GOLDSKY_NAME_AND_VERSION}
             '';
           };
         } // rainix.packages.${system};
