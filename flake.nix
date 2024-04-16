@@ -12,7 +12,7 @@
         pkgs = rainix.pkgs.${system};
         rust-toolchain = rainix.rust-toolchain.${system};
       in rec {
-        packages = {
+        packages = rec {
           mkBin = (pkgs.makeRustPlatform{
             rustc = rust-toolchain;
             cargo = rust-toolchain;
@@ -47,8 +47,16 @@
               cd ./subgraph;
               npm install;
               graph codegen;
-              graph build;
+              graph build --network matic;
               cd -;
+            '';
+          };
+
+          subgraph-deploy = rainix.mkTask.${system} {
+            name = "subgraph-deploy";
+            body = ''
+              ${subgraph-build}/bin/subgraph-build
+              goldsky --token ''${GOLDSKY_TOKEN} deploy ''${GOLDSKY_NAME_AND_VERSION}
             '';
           };
         } // rainix.packages.${system};
