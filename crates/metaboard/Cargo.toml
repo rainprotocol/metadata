@@ -1,5 +1,5 @@
 [package]
-name = "rain-metadata-subgraph"
+name = "rain_metaboard_subgraph"
 version = "0.1.0"
 edition = "2021"
 
