@@ -1,5 +1,5 @@
 [package]
-name = "rain_interpreter_bindings"
+name = "rain_metadata_bindings"
 version = "0.1.0"
 edition = "2021"
 
