@@ -1962,7 +1962,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "rain-metadata-subgraph"
+name = "rain_metaboard_subgraph"
 version = "0.1.0"
 dependencies = [
  "alloy-primitives 0.5.4",
@@ -1975,7 +1975,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "rain_interpreter_bindings"
+name = "rain_metadata_bindings"
 version = "0.1.0"
 dependencies = [
  "alloy-primitives 0.5.4",
