@@ -3,18 +3,23 @@
   "version": "1.0.0",
   "description": "Subgraph for the Rain metaboard.",
   "main": "index.js",
-  "scripts": {},
+  "type": "module",
+  "scripts": {
+    "test": "mocha"
+  },
   "keywords": [],
   "author": "",
   "license": "CAL",
   "dependencies": {
-    "@graphprotocol/graph-ts": "^0.29.3"
+    "@graphprotocol/graph-ts": "^0.29.3",
+    "mocha": "^10.4.0"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.1",
     "@types/node": "^18.15.11",
     "assert": "^2.0.0",
     "dotenv": "^16.0.3",
+    "ethers": "^6.11.1",
     "ts-node": "^10.9.1",
     "typechain": "^8.1.1",
     "typescript": "^5.0.2"
