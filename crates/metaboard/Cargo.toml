@@ -9,6 +9,7 @@ edition = "2021"
 cynic = { version = "3" }
 reqwest = { workspace = true }
 thiserror = { workspace = true }
+alloy-primitives = { workspace = true }
 
 [dev-dependencies]
 insta = { workspace = true }

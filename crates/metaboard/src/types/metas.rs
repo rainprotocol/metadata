@@ -1,3 +1,4 @@
+use crate::schema;
 #[derive(cynic::QueryVariables, Debug)]
 pub struct MetasByHashVariables {
     pub metahash: Option<Bytes>,
