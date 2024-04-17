@@ -3,12 +3,16 @@
   "version": "1.0.0",
   "description": "Subgraph for the Rain metaboard.",
   "main": "index.js",
-  "scripts": {},
+  "scripts": {
+    "test": "graph test"
+  },
   "keywords": [],
   "author": "",
   "license": "CAL",
   "dependencies": {
-    "@graphprotocol/graph-ts": "^0.29.3"
+    "@graphprotocol/graph-ts": "^0.29.3",
+    "add": "^2.0.6",
+    "matchstick-as": "^0.6.0"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.1",
