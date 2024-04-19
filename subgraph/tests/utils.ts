@@ -29,3 +29,5 @@ export function handleNewMetaV1Events(events: MetaV1[]): void {
     handleMetaV1(event)
   })
 }
+
+export const CONTRACT_ADDRESS = Address.fromString("0xfc34d331cc7a4b461b7ded2f6835a837411d8684");
