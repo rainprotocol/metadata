@@ -1,0 +1,22 @@
+name: Subgraph manual deploy
+on: [workflow_dispatch]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v4
+      - uses: DeterminateSystems/magic-nix-cache-action@v2
+
+      - run: nix develop --command subgraph-deploy
+        env:
+          GOLDSKY_TOKEN: ${{ secrets.CI_GOLDSKY_TOKEN }}
+          GOLDSKY_NAME_AND_VERSION: "test-polygon/0.0.1"

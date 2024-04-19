@@ -4,11 +4,11 @@ schema:
 dataSources:
   - kind: ethereum/contract
     name: MetaBoard
-    network: {{ network }}
+    network: matic
     source:
-      address: "{{ MetaBoard }}"
+      address: "0x23F77e7Bc935503e437166498D7D72f2Ea290E1f"
       abi: MetaBoard
-      startBlock: {{ MetaBoardBlock }}
+      startBlock: 55856789
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
