@@ -3,23 +3,26 @@ use alloy_ethers_typecast::transaction::{
     ReadContractParametersBuilder, ReadContractParametersBuilderError, ReadableClient,
     ReadableClientError,
 };
-use alloy_primitives::{
-    hex::{decode, FromHexError},
-    Address,
-};
-use alloy_sol_types::sol;
+use alloy_primitives::hex::FromHexError;
+use alloy_sol_types::{sol, private::Address};
 use rain_metaboard_subgraph::metaboard_client::MetaboardSubgraphClient;
 use crate::meta::{KnownMagic, RainMetaDocumentV1Item};
 use rain_metadata_bindings::IDescribedByMetaV1;
 use thiserror::Error;
 
-pub struct Words {
-    metaboard_url: String,
-    rpc_url: String,
+#[derive(Debug, Clone)]
+pub struct AuthoringMetaV2Word {
+    pub word: String,
+    pub description: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct AuthoringMetaV2 {
+    pub words: Vec<AuthoringMetaV2Word>,
 }
 
 sol!(
-    struct AuthoringMetaV2 {
+    struct AuthoringMetaV2Sol {
         // `word` is referenced directly in assembly so don't move the field. It MUST
         // be the first item.
         bytes32 word;
@@ -27,10 +30,10 @@ sol!(
     }
 );
 
-type AuthoringMetas = sol! { AuthoringMetaV2[] };
+type AuthoringMetasV2Sol = sol! { AuthoringMetaV2Sol[] };
 
 #[derive(Error, Debug)]
-pub enum WordsError {
+pub enum AuthoringMetaV2Error {
     #[error(transparent)]
     FromHexError(#[from] FromHexError),
     #[error(transparent)]
@@ -45,64 +48,81 @@ pub enum WordsError {
     ),
     #[error("Meta bytes do not start with RainMetaDocumentV1 Magic")]
     MetaMagicNumberMismatch,
-    #[error("Metadata error {0}")]
-    MetadataError(#[from] crate::Error),
     #[error(transparent)]
     AbiDecodeError(#[from] alloy_sol_types::Error),
     #[error(transparent)]
     Utf8Error(#[from] std::string::FromUtf8Error),
+    #[error(transparent)]
+    MetaError(#[from] crate::error::Error),
 }
 
-impl Words {
-    pub fn new(metaboard_url: String, rpc_url: String) -> Self {
-        Self {
-            metaboard_url,
-            rpc_url,
+/// Implementation of the AuthoringMetaV2 struct.
+impl AuthoringMetaV2 {
+    /// Decodes the ABI encoded bytes into an AuthoringMetaV2 struct.
+    ///
+    /// # Arguments
+    ///
+    /// * `bytes` - The bytes to decode.
+    ///
+    /// # Returns
+    ///
+    /// An AuthoringMetaV2 struct if successful, or an AuthoringMetaV2Error if an error occurs.
+    pub fn abi_decode(bytes: &[u8]) -> Result<Self, AuthoringMetaV2Error> {
+        let decoded = AuthoringMetasV2Sol::abi_decode(bytes, true)?;
+
+        let mut words = Vec::new();
+
+        for item in decoded.iter() {
+            words.push(AuthoringMetaV2Word {
+                word: String::from_utf8(item.word.as_slice().into())?,
+                description: item.description.clone(),
+            });
         }
+
+        Ok(AuthoringMetaV2 { words })
     }
 
-    pub async fn get_words_for_contract(
-        &self,
+    /// Fetches the authoring meta for a contract that implements IDescribedByMetaV1
+    /// from the metaboard.
+    ///
+    /// # Arguments
+    ///
+    /// * `contract_address` - The address of the contract.
+    ///
+    /// # Returns
+    ///
+    /// An empty result if successful, or a AuthoringMetaV2Error if an error occurs.
+    pub async fn fetch_for_contract(
         contract_address: Address,
-    ) -> Result<(), WordsError> {
-        let subgraph_client = MetaboardSubgraphClient::new(self.metaboard_url.parse()?);
-
-        let client = ReadableClient::new_from_url(self.rpc_url.clone())?;
-
+        rpc_url: String,
+        metaboard_url: String,
+    ) -> Result<Self, AuthoringMetaV2Error> {
+        // get the metahash
+        let client = ReadableClient::new_from_url(rpc_url.clone())?;
         let parameters = ReadContractParametersBuilder::default()
             .address(contract_address)
             .call(IDescribedByMetaV1::describedByMetaV1Call {})
             .build()?;
+        let metahash = client.read(parameters).await?._0;
 
-        let metahash = client.read(parameters).await.unwrap()._0;
+        // query the metaboard for the metas
+        let subgraph_client = MetaboardSubgraphClient::new(metaboard_url.parse()?);
+        let metas = subgraph_client.get_metabytes_by_hash(&metahash).await?;
 
-        let meta = subgraph_client.get_meta_by_hash(&metahash).await?;
-
-        let meta_bytes = decode(&meta[0].meta.0)?;
-
-        if !meta_bytes
+        RainMetaDocumentV1Item::cbor_decode(metas[0].as_slice())?[0]
             .clone()
-            .starts_with(&KnownMagic::RainMetaDocumentV1.to_prefix_bytes())
-        {
-            return Err(WordsError::MetaMagicNumberMismatch);
+            .try_into()
+    }
+}
+
+impl TryFrom<RainMetaDocumentV1Item> for AuthoringMetaV2 {
+    type Error = AuthoringMetaV2Error;
+    fn try_from(value: RainMetaDocumentV1Item) -> Result<Self, AuthoringMetaV2Error> {
+        if value.magic != KnownMagic::AuthoringMetaV2 {
+            return Err(AuthoringMetaV2Error::MetaMagicNumberMismatch);
         }
-
-        // Decode meta to string
-        let meta_bytes_slice = meta_bytes.as_slice();
-        let rain_meta_document_item = RainMetaDocumentV1Item::cbor_decode(meta_bytes_slice)?;
-
-        println!("rain_meta_document_item: {:?}", rain_meta_document_item);
-
-        let payload = rain_meta_document_item[0].unpack()?;
-
-        let authoring_meta = AuthoringMetas::abi_decode(&payload, true)?;
-
-        for item in authoring_meta.iter() {
-            println!("Word: {}", String::from_utf8(item.word.as_slice().into())?);
-            println!("Description: {}", item.description);
-        }
-
-        Ok(())
+        let payload = value.unpack()?;
+        AuthoringMetaV2::abi_decode(&payload)
     }
 }
 
@@ -118,12 +138,11 @@ mod tests {
             .parse()
             .unwrap();
 
-        let words = Words::new(metaboard_url, rpc_url);
+        let res =
+            AuthoringMetaV2::fetch_for_contract(contract_address, rpc_url, metaboard_url).await;
 
-        let result = words.get_words_for_contract(contract_address).await;
-
-        match result {
-            Ok(_) => println!("Success"),
+        match res {
+            Ok(res) => println!("{:?}", res),
             Err(e) => println!("Error: {:?}", e),
         }
     }
