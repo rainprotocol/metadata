@@ -31,6 +31,11 @@ alloy-json-abi = { version = "0.5.0", features = ["serde_json"] }
 alloy-primitives = { workspace = true }
 alloy-sol-types = { workspace = true }
 graphql_client = "0.13.0"
+rain_metaboard_subgraph = { workspace = true }
+rain_metadata_bindings = { workspace = true }
+thiserror = { workspace = true }
+alloy-ethers-typecast = { workspace = true }
+url = { workspace = true }
 
 # json-schema
 schemars = { version = "0.8.12", optional = true }

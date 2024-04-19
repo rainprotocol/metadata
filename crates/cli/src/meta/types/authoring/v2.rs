@@ -1,4 +1,4 @@
-use alloy_dyn_abi::SolType;
+use alloy_sol_types::SolType;
 use alloy_ethers_typecast::transaction::{
     ReadContractParametersBuilder, ReadContractParametersBuilderError, ReadableClient,
     ReadableClientError,
@@ -9,7 +9,7 @@ use alloy_primitives::{
 };
 use alloy_sol_types::sol;
 use rain_metaboard_subgraph::metaboard_client::MetaboardSubgraphClient;
-use rain_metadata::{KnownMagic, RainMetaDocumentV1Item};
+use crate::meta::{KnownMagic, RainMetaDocumentV1Item};
 use rain_metadata_bindings::IDescribedByMetaV1;
 use thiserror::Error;
 
@@ -46,7 +46,7 @@ pub enum WordsError {
     #[error("Meta bytes do not start with RainMetaDocumentV1 Magic")]
     MetaMagicNumberMismatch,
     #[error("Metadata error {0}")]
-    MetadataError(#[from] rain_metadata::Error),
+    MetadataError(#[from] crate::Error),
     #[error(transparent)]
     AbiDecodeError(#[from] alloy_sol_types::Error),
     #[error(transparent)]

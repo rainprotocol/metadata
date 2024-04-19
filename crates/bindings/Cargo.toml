@@ -6,5 +6,5 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-alloy-sol-types = { workspace = true }
+alloy-sol-types = { workspace = true, features = ["json"] }
 alloy-primitives = { workspace = true }
