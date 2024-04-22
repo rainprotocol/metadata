@@ -2,26 +2,27 @@ import { test, assert, createMockedFunction, clearStore, describe, afterEach, ne
 import { createNewMetaV1Event, CONTRACT_ADDRESS } from "./utils";
 import { Bytes, BigInt, ethereum, Address } from "@graphprotocol/graph-ts";
 import { MetaBoard, MetaV1 } from "../generated/metaboard0/MetaBoard";
+import { MetaBoard as MetaBoardEntity, MetaV1 as MetaV1Entity } from "../generated/schema";
 import { handleMetaV1 } from "../src/metaBoard";
 
 const ENTITY_TYPE_META_V1 = "MetaV1";
 const ENTITY_TYPE_META_BOARD = "MetaBoard";
-test("Can mock metaBoard function correctly", () => {
-  const meta = Bytes.fromHexString("0xff0a89c674ee7874010203");
-  createMockedFunction(CONTRACT_ADDRESS, "hash", "hash(bytes):(bytes32)")
-    .withArgs([ethereum.Value.fromBytes(meta)])
-    .returns([ethereum.Value.fromBytes(Bytes.fromHexString("0x6bdf81f785b54fd65ca6fc5d02b40fa361bc7d5f4f1067fc534b9433ecbc784d"))]);
 
-  let metaBoardContract = MetaBoard.bind(CONTRACT_ADDRESS);
-  let result = metaBoardContract.hash(meta);
-
-  assert.equals(ethereum.Value.fromBytes(Bytes.fromHexString("0x6bdf81f785b54fd65ca6fc5d02b40fa361bc7d5f4f1067fc534b9433ecbc784d")), ethereum.Value.fromBytes(result));
-});
-describe("Mocked Events", () => {
+describe("Test meta event", () => {
   afterEach(() => {
     clearStore();
   });
+  test("Can mock metaBoard function correctly", () => {
+    const meta = Bytes.fromHexString("0xff0a89c674ee7874010203");
+    createMockedFunction(CONTRACT_ADDRESS, "hash", "hash(bytes):(bytes32)")
+      .withArgs([ethereum.Value.fromBytes(meta)])
+      .returns([ethereum.Value.fromBytes(Bytes.fromHexString("0x6bdf81f785b54fd65ca6fc5d02b40fa361bc7d5f4f1067fc534b9433ecbc784d"))]);
 
+    let metaBoardContract = MetaBoard.bind(CONTRACT_ADDRESS);
+    let result = metaBoardContract.hash(meta);
+
+    assert.equals(ethereum.Value.fromBytes(Bytes.fromHexString("0x6bdf81f785b54fd65ca6fc5d02b40fa361bc7d5f4f1067fc534b9433ecbc784d")), ethereum.Value.fromBytes(result));
+  });
   test("Checks event params", () => {
     // Call mappings
     const sender = "0xc0D477556c25C9d67E1f57245C7453DA776B51cf";
@@ -60,6 +61,9 @@ describe("Mocked Events", () => {
     assert.bigIntEquals(subjectBigInt, metaV1Event.params.subject);
     assert.bytesEquals(meta, metaV1Event.params.meta);
   });
-
+  test("Returns null when calling entity.load() if an entity doesn't exist", () => {
+    let retrievedGravatar = MetaV1Entity.load("1");
+    assert.assertNull(retrievedGravatar);
+  });
 });
 
