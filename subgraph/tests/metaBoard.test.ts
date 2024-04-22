@@ -1,8 +1,8 @@
 import { test, assert, createMockedFunction, clearStore, describe, afterEach } from "matchstick-as";
-import { handleMetaV1 } from "../src/metaBoard";
 import { createNewMetaV1Event, CONTRACT_ADDRESS } from "./utils";
 import { Bytes, BigInt, ethereum, Address } from "@graphprotocol/graph-ts";
 import { MetaBoard } from "../generated/metaboard0/MetaBoard";
+import { handleMetaV1 } from "../src/metaBoard";
 
 const ENTITY_TYPE_META_V1 = "MetaV1";
 const ENTITY_TYPE_META_BOARD = "MetaBoard";
@@ -26,10 +26,14 @@ describe("Mocked Events", () => {
     // Call mappings
     const sender = "0xc0D477556c25C9d67E1f57245C7453DA776B51cf";
     const subjectBigInt = BigInt.fromI32(1000);
-    const meta = Bytes.fromHexString("0x123456789abcde");
+    const meta = Bytes.fromHexString("0xff0a89c674ee7874010203");
     let newMetaV1Event = createNewMetaV1Event(sender, subjectBigInt, meta);
 
-    // handleMetaV1(newMetaV1Event); should be uncommented
+    createMockedFunction(CONTRACT_ADDRESS, "hash", "hash(bytes):(bytes32)")
+      .withArgs([ethereum.Value.fromBytes(meta)])
+      .returns([ethereum.Value.fromBytes(Bytes.fromHexString("0x6bdf81f785b54fd65ca6fc5d02b40fa361bc7d5f4f1067fc534b9433ecbc784d"))]);
+
+    handleMetaV1(newMetaV1Event);
 
     assert.entityCount(ENTITY_TYPE_META_V1, 1);
     assert.addressEquals(newMetaV1Event.address, CONTRACT_ADDRESS);
