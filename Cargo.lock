@@ -3697,6 +3697,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dc33ff2d4973d518d823d61aa239014831e521c75da58e3df4840d3f47749d09"
 
 [[package]]
+name = "rain-metaboard-subgraph"
+version = "0.1.0"
+dependencies = [
+ "alloy-primitives 0.5.4",
+ "cynic",
+ "cynic-codegen",
+ "httpmock",
+ "insta",
+ "reqwest",
+ "serde_json",
+ "thiserror",
+ "tokio",
+]
+
+[[package]]
 name = "rain-metadata"
 version = "0.0.2-alpha.6"
 dependencies = [
@@ -3712,8 +3727,8 @@ dependencies = [
  "inflate",
  "itertools 0.10.5",
  "once_cell",
- "rain_metaboard_subgraph",
- "rain_metadata_bindings",
+ "rain-metaboard-subgraph",
+ "rain-metadata-bindings",
  "regex",
  "reqwest",
  "schemars",
@@ -3731,22 +3746,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "rain_metaboard_subgraph"
-version = "0.1.0"
-dependencies = [
- "alloy-primitives 0.5.4",
- "cynic",
- "cynic-codegen",
- "httpmock",
- "insta",
- "reqwest",
- "serde_json",
- "thiserror",
- "tokio",
-]
-
-[[package]]
-name = "rain_metadata_bindings"
+name = "rain-metadata-bindings"
 version = "0.1.0"
 dependencies = [
  "alloy-primitives 0.5.4",
