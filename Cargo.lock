@@ -2590,6 +2590,7 @@ dependencies = [
  "httpmock",
  "insta",
  "reqwest",
+ "serde_json",
  "thiserror",
  "tokio",
 ]
