@@ -1,5 +1,8 @@
+scalar Bytes
+scalar BigInt
+
 type MetaBoard @entity {
-    id:Bytes!
+    id: Bytes!
     address: Bytes!
     metas: [MetaV1!] @derivedFrom(field: "metaBoard")
     nextMetaId: BigInt!
