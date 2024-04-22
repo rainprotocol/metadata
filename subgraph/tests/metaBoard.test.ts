@@ -1,7 +1,7 @@
-import { test, assert, createMockedFunction, clearStore, describe, afterEach } from "matchstick-as";
+import { test, assert, createMockedFunction, clearStore, describe, afterEach, newMockEvent } from "matchstick-as";
 import { createNewMetaV1Event, CONTRACT_ADDRESS } from "./utils";
 import { Bytes, BigInt, ethereum, Address } from "@graphprotocol/graph-ts";
-import { MetaBoard } from "../generated/metaboard0/MetaBoard";
+import { MetaBoard, MetaV1 } from "../generated/metaboard0/MetaBoard";
 import { handleMetaV1 } from "../src/metaBoard";
 
 const ENTITY_TYPE_META_V1 = "MetaV1";
@@ -40,29 +40,26 @@ describe("Mocked Events", () => {
     assert.equals(ethereum.Value.fromUnsignedBigInt(newMetaV1Event.params.subject), ethereum.Value.fromUnsignedBigInt(subjectBigInt));
     assert.equals(ethereum.Value.fromBytes(newMetaV1Event.params.meta), ethereum.Value.fromBytes(meta));
   });
-  //
-  // test("Checks entity count", () => {
-  //   // Call mappings
-  //   let firstMetaV1Event = createNewMetaV1Event(
-  //     "0xc0D477556c25C9d67E1f57245C7453DA776B51cf",
-  //     BigInt.fromI32(1000),
-  //     Bytes.fromHexString("0x123456789abcde"));
-  //   let secondMetaV1Event = createNewMetaV1Event(
-  //     "0xc0D477556c25C9d67E1f57245C7453DA776B51cf",
-  //     BigInt.fromI32(2000),
-  //     Bytes.fromHexString("0x1234"));
-  //   let thirdMetaV1Event = createNewMetaV1Event(
-  //     "0xc0D477556c25C9d67E1f57245C7453DA776B51cf",
-  //     BigInt.fromI32(3000),
-  //     Bytes.fromHexString("0x1456"));
-  //
-  //
-  //   handleNewMetaV1Events([firstMetaV1Event, secondMetaV1Event,thirdMetaV1Event]);
-  //   assert.entityCount(ENTITY_TYPE_META_V1, 3);
-  //   // assert.addressEquals(newMetaV1Event.address, CONTRACT_ADDRESS);
-  //   // assert.equals(ethereum.Value.fromUnsignedBigInt(newMetaV1Event.params.subject), ethereum.Value.fromUnsignedBigInt(subjectBigInt));
-  //   // assert.equals(ethereum.Value.fromBytes(newMetaV1Event.params.meta), ethereum.Value.fromBytes(meta));
-  // });
+  test("Can update event metadata", () => {
+    const metaV1Event = changetype<MetaV1>(newMockEvent());
+    metaV1Event.parameters = new Array();
+
+    const sender = "0x8058ad7C22fdC8788fe4cB1dAc15D6e976127324";
+    const subjectBigInt = BigInt.fromI32(2000);
+    const meta = Bytes.fromHexString("0xff0a89c674ee787401020304");
+
+    let UPDATED_SENDER = new ethereum.EventParam("sender", ethereum.Value.fromAddress(Address.fromString(sender)));
+    let UPDATED_SUBJECT = new ethereum.EventParam("subject", ethereum.Value.fromUnsignedBigInt(subjectBigInt));
+    let UPDATED_META = new ethereum.EventParam("meta", ethereum.Value.fromBytes(meta));
+
+    metaV1Event.parameters.push(UPDATED_SENDER);
+    metaV1Event.parameters.push(UPDATED_SUBJECT);
+    metaV1Event.parameters.push(UPDATED_META);
+
+    assert.addressEquals(Address.fromString(sender), metaV1Event.params.sender);
+    assert.bigIntEquals(subjectBigInt, metaV1Event.params.subject);
+    assert.bytesEquals(meta, metaV1Event.params.meta);
+  });
 
 });
 
