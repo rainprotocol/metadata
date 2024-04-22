@@ -10,14 +10,10 @@ export function createNewMetaV1Event(sender: string, subject: BigInt, meta: Byte
   metaV1Event.parameters = new Array()
   metaV1Event.address = CONTRACT_ADDRESS;
 
-  // let idParam = new ethereum.EventParam("id", ethereum.Value.fromI32(1));
   let senderParam = new ethereum.EventParam("sender", ethereum.Value.fromAddress(Address.fromString(sender)))
-
   let subjectParam = new ethereum.EventParam("subject", ethereum.Value.fromUnsignedBigInt(subject));
   let metaParam = new ethereum.EventParam("meta", ethereum.Value.fromBytes(meta));
 
-
-  // metaV1Event.parameters.push(idParam);
   metaV1Event.parameters.push(senderParam);
   metaV1Event.parameters.push(subjectParam);
   metaV1Event.parameters.push(metaParam);

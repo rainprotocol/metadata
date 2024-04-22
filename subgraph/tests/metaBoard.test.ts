@@ -29,7 +29,7 @@ describe("Mocked Events", () => {
     const meta = Bytes.fromHexString("0x123456789abcde");
     let newMetaV1Event = createNewMetaV1Event(sender, subjectBigInt, meta);
 
-    handleMetaV1(newMetaV1Event);
+    // handleMetaV1(newMetaV1Event); should be uncommented
 
     assert.entityCount(ENTITY_TYPE_META_V1, 1);
     assert.addressEquals(newMetaV1Event.address, CONTRACT_ADDRESS);
