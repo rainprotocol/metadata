@@ -2,7 +2,7 @@ import { test, assert, createMockedFunction, clearStore, describe, afterEach } f
 import { handleMetaV1 } from "../src/metaBoard";
 import { createNewMetaV1Event, CONTRACT_ADDRESS } from "./utils";
 import { Bytes, BigInt, ethereum, Address } from "@graphprotocol/graph-ts";
-import { MetaBoard } from "../generated/MetaBoard/MetaBoard";
+import { MetaBoard } from "../generated/metaboard0/MetaBoard";
 
 const ENTITY_TYPE_META_V1 = "MetaV1";
 const ENTITY_TYPE_META_BOARD = "MetaBoard";
