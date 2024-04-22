@@ -1,9 +1,10 @@
 [package]
-name = "rain_metadata_bindings"
+name = "rain-metadata-bindings"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+description = "Solidity bindings for rain metadata."
+license-file = "LICENSE.md"
+repository = "https://github.com/rainlanguage/rain.metadata"
 
 [dependencies]
 alloy-sol-types = { workspace = true, features = ["json"] }

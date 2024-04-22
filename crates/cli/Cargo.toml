@@ -3,7 +3,7 @@ name = "rain-metadata"
 version = "0.0.2-alpha.6"
 edition = "2021"
 description = "Tooling and utilities for RainLanguage metadata."
-license = "CAL-1.0"
+license-file = "LICENSE.md"
 repository = "https://github.com/rainlanguage/rain.metadata"
 
 [features]
