@@ -12,8 +12,10 @@ thiserror = { workspace = true }
 alloy-primitives = { workspace = true }
 
 [dev-dependencies]
+httpmock = "0.7.0"
 insta = { workspace = true }
 tokio = { workspace = true }
+serde_json = { workspace = true }
 
 [build-dependencies]
 cynic-codegen = { version = "3" }

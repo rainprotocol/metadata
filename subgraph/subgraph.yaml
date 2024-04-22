@@ -3,7 +3,7 @@ schema:
   file: ./schema.graphql
 dataSources:
   - kind: ethereum/contract
-    name: MetaBoard
+    name: metaboard0
     network: matic
     source:
       address: "0x23F77e7Bc935503e437166498D7D72f2Ea290E1f"
