@@ -61,7 +61,6 @@ describe("Test meta event", () => {
     const metaV1Event = changetype<MetaV1>(newMockEvent());
     metaV1Event.parameters = new Array();
 
-    const sender = "0x8058ad7C22fdC8788fe4cB1dAc15D6e976127324";
     const subjectBigInt = BigInt.fromI32(2000);
     const meta = Bytes.fromHexString(metaString);
 
@@ -86,7 +85,6 @@ describe("Test meta event", () => {
 
 describe("Test MetaBoard and MetaV1 Entities", () => {
   beforeAll(() => {
-    const sender = "0xc0D477556c25C9d67E1f57245C7453DA776B51cf";
     const subjectBigInt = BigInt.fromI32(subject);
     const meta = Bytes.fromHexString(metaString);
     let newMetaV1Event = createNewMetaV1Event(sender, subjectBigInt, meta);
