@@ -8,7 +8,6 @@ import {
   beforeAll,
   afterAll,
   newMockEvent,
-  mockInBlockStore,
   clearInBlockStore
 } from "matchstick-as";
 import { createNewMetaV1Event, CONTRACT_ADDRESS } from "./utils";
@@ -83,11 +82,16 @@ describe("Test meta event", () => {
 
 describe("Test Metaboard Entity", () => {
   beforeAll(() => {
-    let metaBoard = new MetaBoard(CONTRACT_ADDRESS);
-    metaBoard.address = CONTRACT_ADDRESS;
-    metaBoard.nextMetaId = BigInt.fromI32(2);
-    metaBoard.save();
-    mockInBlockStore("MetaBoard", CONTRACT_ADDRESS.toString(), metaBoard);
+    const sender = "0xc0D477556c25C9d67E1f57245C7453DA776B51cf";
+    const subjectBigInt = BigInt.fromI32(1000);
+    const meta = Bytes.fromHexString("0xff0a89c674ee7874010203");
+    let newMetaV1Event = createNewMetaV1Event(sender, subjectBigInt, meta);
+
+    createMockedFunction(CONTRACT_ADDRESS, "hash", "hash(bytes):(bytes32)")
+      .withArgs([ethereum.Value.fromBytes(meta)])
+      .returns([ethereum.Value.fromBytes(Bytes.fromHexString("0x6bdf81f785b54fd65ca6fc5d02b40fa361bc7d5f4f1067fc534b9433ecbc784d"))]);
+
+    handleMetaV1(newMetaV1Event);
 
   });
 
@@ -100,6 +104,10 @@ describe("Test Metaboard Entity", () => {
     let retrievedMetaBoard = MetaBoard.load(CONTRACT_ADDRESS) as MetaBoard;
     assert.entityCount(ENTITY_TYPE_META_BOARD, 1);
     assert.addressEquals(Address.fromBytes(retrievedMetaBoard.address), CONTRACT_ADDRESS);
+  });
+  test("Returns null when calling entity.loadInBlock() if an entity doesn't exist in the current block", () => {
+    let retrievedMetaBoard = MetaBoard.loadInBlock(Address.fromString("0x33F77e7Bc935503e437166498D7D72f2Ea290E1f"));
+    assert.assertNull(retrievedMetaBoard);
   });
 
 });
