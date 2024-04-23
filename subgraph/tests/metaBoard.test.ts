@@ -105,10 +105,16 @@ describe("Test Metaboard Entity", () => {
     assert.entityCount(ENTITY_TYPE_META_BOARD, 1);
     assert.addressEquals(Address.fromBytes(retrievedMetaBoard.address), CONTRACT_ADDRESS);
   });
+
   test("Returns null when calling entity.loadInBlock() if an entity doesn't exist in the current block", () => {
     let retrievedMetaBoard = MetaBoard.loadInBlock(Address.fromString("0x33F77e7Bc935503e437166498D7D72f2Ea290E1f"));
     assert.assertNull(retrievedMetaBoard);
   });
 
+  test("Checks MetaBoard entity id", () => {
+    let retrievedMetaBoard = MetaBoard.load(CONTRACT_ADDRESS) as MetaBoard;
+    assert.entityCount(ENTITY_TYPE_META_BOARD, 1);
+    assert.bytesEquals(retrievedMetaBoard.id, CONTRACT_ADDRESS);
+  });
 });
 
