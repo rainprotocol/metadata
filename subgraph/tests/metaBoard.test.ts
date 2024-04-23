@@ -8,8 +8,7 @@ import {
   beforeAll,
   afterAll,
   newMockEvent,
-  clearInBlockStore,
-  logStore
+  clearInBlockStore
 } from "matchstick-as";
 import { createNewMetaV1Event, CONTRACT_ADDRESS } from "./utils";
 import { Bytes, BigInt, ethereum, Address } from "@graphprotocol/graph-ts";
@@ -131,16 +130,5 @@ describe("Test MetaBoard and MetaV1 Entities", () => {
     assert.bytesEquals(retrievedMetaV1.meta, Bytes.fromHexString(metaString));//meta
     assert.bytesEquals(retrievedMetaV1.metaHash, Bytes.fromHexString(metaHashString));//metaHash
   });
-
-  // test("Returns null when calling entity.loadInBlock() if an entity doesn't exist in the current block", () => {
-  //   let retrievedMetaBoard = MetaBoard.loadInBlock(Address.fromString("0x33F77e7Bc935503e437166498D7D72f2Ea290E1f"));
-  //   assert.assertNull(retrievedMetaBoard);
-  // });
-  //
-  // test("Checks MetaBoard entity id", () => {
-  //   let retrievedMetaBoard = MetaBoard.load(CONTRACT_ADDRESS) as MetaBoard;
-  //   assert.entityCount(ENTITY_TYPE_META_BOARD, 1);
-  //   assert.bytesEquals(retrievedMetaBoard.id, CONTRACT_ADDRESS);
-  // });
 });
 
