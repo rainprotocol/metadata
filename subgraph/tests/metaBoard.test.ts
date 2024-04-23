@@ -1,8 +1,20 @@
-import { test, assert, createMockedFunction, clearStore, describe, afterEach, newMockEvent } from "matchstick-as";
+import {
+  test,
+  assert,
+  createMockedFunction,
+  clearStore,
+  describe,
+  afterEach,
+  beforeAll,
+  afterAll,
+  newMockEvent,
+  mockInBlockStore,
+  clearInBlockStore
+} from "matchstick-as";
 import { createNewMetaV1Event, CONTRACT_ADDRESS } from "./utils";
 import { Bytes, BigInt, ethereum, Address } from "@graphprotocol/graph-ts";
-import { MetaBoard, MetaV1 } from "../generated/metaboard0/MetaBoard";
-import { MetaBoard as MetaBoardEntity, MetaV1 as MetaV1Entity } from "../generated/schema";
+import { MetaBoard as MetaBoardContract, MetaV1 } from "../generated/metaboard0/MetaBoard";
+import { MetaBoard, MetaV1 as MetaV1Entity } from "../generated/schema";
 import { handleMetaV1 } from "../src/metaBoard";
 
 const ENTITY_TYPE_META_V1 = "MetaV1";
@@ -11,6 +23,7 @@ const ENTITY_TYPE_META_BOARD = "MetaBoard";
 describe("Test meta event", () => {
   afterEach(() => {
     clearStore();
+    clearInBlockStore();
   });
   test("Can mock metaBoard function correctly", () => {
     const meta = Bytes.fromHexString("0xff0a89c674ee7874010203");
@@ -18,7 +31,7 @@ describe("Test meta event", () => {
       .withArgs([ethereum.Value.fromBytes(meta)])
       .returns([ethereum.Value.fromBytes(Bytes.fromHexString("0x6bdf81f785b54fd65ca6fc5d02b40fa361bc7d5f4f1067fc534b9433ecbc784d"))]);
 
-    let metaBoardContract = MetaBoard.bind(CONTRACT_ADDRESS);
+    let metaBoardContract = MetaBoardContract.bind(CONTRACT_ADDRESS);
     let result = metaBoardContract.hash(meta);
 
     assert.equals(ethereum.Value.fromBytes(Bytes.fromHexString("0x6bdf81f785b54fd65ca6fc5d02b40fa361bc7d5f4f1067fc534b9433ecbc784d")), ethereum.Value.fromBytes(result));
@@ -62,8 +75,32 @@ describe("Test meta event", () => {
     assert.bytesEquals(meta, metaV1Event.params.meta);
   });
   test("Returns null when calling entity.load() if an entity doesn't exist", () => {
-    let retrievedGravatar = MetaV1Entity.load("1");
-    assert.assertNull(retrievedGravatar);
+    let retrievedMetaV1 = MetaV1Entity.load("1");
+    assert.assertNull(retrievedMetaV1);
   });
+
+});
+
+describe("Test Metaboard Entity", () => {
+  beforeAll(() => {
+    let metaBoard = new MetaBoard(CONTRACT_ADDRESS);
+    metaBoard.address = CONTRACT_ADDRESS;
+    metaBoard.nextMetaId = BigInt.fromI32(2);
+    metaBoard.save();
+    mockInBlockStore("MetaBoard", CONTRACT_ADDRESS.toString(), metaBoard);
+
+  });
+
+  afterAll(() => {
+    clearStore();
+    clearInBlockStore();
+  });
+
+  test("Checks MetaBoard entity", () => {
+    let retrievedMetaBoard = MetaBoard.load(CONTRACT_ADDRESS) as MetaBoard;
+    assert.entityCount(ENTITY_TYPE_META_BOARD, 1);
+    assert.addressEquals(Address.fromBytes(retrievedMetaBoard.address), CONTRACT_ADDRESS);
+  });
+
 });
 
