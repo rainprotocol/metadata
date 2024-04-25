@@ -1,0 +1,22 @@
+[package]
+name = "rain-metaboard-subgraph"
+version = "0.1.0"
+edition = "2021"
+description = "A subgraph client for the Rain Metaboard."
+license-file = "LICENSE.md"
+repository = "https://github.com/rainlanguage/rain.metadata"
+
+[dependencies]
+cynic = { version = "3" }
+reqwest = { workspace = true }
+thiserror = { workspace = true }
+alloy-primitives = { workspace = true }
+
+[dev-dependencies]
+httpmock = "0.7.0"
+insta = { workspace = true }
+tokio = { workspace = true }
+serde_json = { workspace = true }
+
+[build-dependencies]
+cynic-codegen = { version = "3" }

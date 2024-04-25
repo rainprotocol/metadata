@@ -25,8 +25,10 @@ pub enum KnownMagic {
     RainlangV1 = 0xff1c198cec3b48a7,
     /// Solidity ABI meta v2
     SolidityAbiV2 = 0xffe5ffb4a3ff2cde,
-    /// Authroing meta v1
+    /// Authoring meta v1
     AuthoringMetaV1 = 0xffe9e3a02ca8e235,
+    // Authoring meta v2
+    AuthoringMetaV2 = 0xff52fe42f1a05093,
     /// InterpreterCaller meta v1
     InterpreterCallerMetaV1 = 0xffc21bbf86cc199b,
     /// ExpressionDeployer deployed bytecode meta v1
@@ -53,6 +55,7 @@ impl TryFrom<u64> for KnownMagic {
             v if v == KnownMagic::RainlangV1 as u64 => Ok(KnownMagic::RainlangV1),
             v if v == KnownMagic::SolidityAbiV2 as u64 => Ok(KnownMagic::SolidityAbiV2),
             v if v == KnownMagic::AuthoringMetaV1 as u64 => Ok(KnownMagic::AuthoringMetaV1),
+            v if v == KnownMagic::AuthoringMetaV2 as u64 => Ok(KnownMagic::AuthoringMetaV2),
             v if v == KnownMagic::AddressList as u64 => Ok(KnownMagic::AddressList),
             v if v == KnownMagic::RainMetaDocumentV1 as u64 => Ok(KnownMagic::RainMetaDocumentV1),
             v if v == KnownMagic::InterpreterCallerMetaV1 as u64 => {
@@ -110,6 +113,14 @@ mod tests {
         let magic_number_after_prefix = magic_number.to_prefix_bytes();
 
         assert_eq!(hex::encode(magic_number_after_prefix), "ffe9e3a02ca8e235");
+    }
+
+    #[test]
+    fn test_authoring_meta_v2() {
+        let magic_number = KnownMagic::AuthoringMetaV2;
+        let magic_number_after_prefix = magic_number.to_prefix_bytes();
+
+        assert_eq!(hex::encode(magic_number_after_prefix), "ff52fe42f1a05093");
     }
 
     #[test]

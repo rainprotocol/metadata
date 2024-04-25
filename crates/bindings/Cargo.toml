@@ -1,0 +1,11 @@
+[package]
+name = "rain-metadata-bindings"
+version = "0.1.0"
+edition = "2021"
+description = "Solidity bindings for rain metadata."
+license-file = "LICENSE.md"
+repository = "https://github.com/rainlanguage/rain.metadata"
+
+[dependencies]
+alloy-sol-types = { workspace = true, features = ["json"] }
+alloy-primitives = { workspace = true }
