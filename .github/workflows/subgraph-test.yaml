@@ -16,4 +16,8 @@ jobs:
         uses: DeterminateSystems/nix-installer-action@v4
       - uses: DeterminateSystems/magic-nix-cache-action@v2
 
-      - run: nix develop --command subgraph-test
+      - name: Pull Docker image
+        run: docker pull rainprotocol/matchstick:main
+
+      - name: Run tests inside Docker
+        run: docker run rainprotocol/matchstick:main nix develop --command subgraph-test
