@@ -6,17 +6,18 @@ use alloy_ethers_typecast::transaction::{
 use alloy_primitives::hex::FromHexError;
 use alloy_sol_types::{sol, private::Address};
 use rain_metaboard_subgraph::metaboard_client::MetaboardSubgraphClient;
+use serde::Serialize;
 use crate::meta::{KnownMagic, RainMetaDocumentV1Item};
 use rain_metadata_bindings::IDescribedByMetaV1;
 use thiserror::Error;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct AuthoringMetaV2Word {
     pub word: String,
     pub description: String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct AuthoringMetaV2 {
     pub words: Vec<AuthoringMetaV2Word>,
 }
