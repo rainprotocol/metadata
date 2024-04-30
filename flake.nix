@@ -1,4 +1,3 @@
-# flake.nix
 {
   description = "Flake for development workflows.";
 
@@ -60,13 +59,19 @@
               set -euxo pipefail
               forge build
               cd ./subgraph;
+              apt update && apt install -y sudo curl postgresql postgresql-contrib
+              curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+              sudo apt-get install -y nodejs
+              curl -OL https://github.com/LimeChain/matchstick/releases/download/0.6.0/binary-linux-22
+              chmod a+x binary-linux-22
               npm install;
               graph codegen;
               graph build --network matic;
-              graph test;
+              npm test;
               cd -;
             '';
           };
+
 
           subgraph-deploy = rainix.mkTask.${system} {
             name = "subgraph-deploy";
