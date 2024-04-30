@@ -21,4 +21,4 @@ jobs:
 
       - name: Run tests inside Docker
         run: |
-          docker run rainprotocol/matchstick:main sh -c '. /root/.nix-profile/etc/profile.d/nix.sh && nix develop --command subgraph-test'
+          docker run rainprotocol/matchstick:main sh -c '. /nix/var/nix/profiles/default/etc/profile.d/nix.sh && nix develop --command subgraph-test'
