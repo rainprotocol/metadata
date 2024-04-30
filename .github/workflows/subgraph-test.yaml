@@ -13,6 +13,6 @@ jobs:
           submodules: recursive
 
       - name: Pull Docker image
-        run: docker pull matchstick:latest
+        run: docker pull rainprotocol/matchstick:main
 
       - run: nix develop --command subgraph-test
