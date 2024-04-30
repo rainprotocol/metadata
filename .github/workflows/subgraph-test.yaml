@@ -13,12 +13,6 @@ jobs:
           submodules: recursive
 
       - name: Pull Docker image
-        run: docker pull rainprotocol/matchstick:main
+        run: docker pull matchstick:latest
 
-      - name: Install Nix inside Docker
-        run: |
-          docker run rainprotocol/matchstick:main sh -c 'curl -L https://nixos.org/nix/install | sh -s -- --daemon'
-
-      - name: Run tests inside Docker
-        run: |
-          docker run rainprotocol/matchstick:main sh -c 'source $HOME/.nix-profile/etc/profile.d/nix.sh && nix develop --command subgraph-test'
+      - run: nix develop --command subgraph-test
