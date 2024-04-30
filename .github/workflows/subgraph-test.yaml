@@ -13,8 +13,8 @@ jobs:
           submodules: recursive
 
       - name: Build Docker image
-        run: docker build -t matchstick .
+        run: docker build -t matchstick ./subgraph
 
       - name: Run Docker container
         run: |
-          docker run -it --rm --mount type=bind,source=./,target=/matchstick matchstick
+             docker run -it --rm --mount type=bind,source=./,target=/matchstick matchstick
