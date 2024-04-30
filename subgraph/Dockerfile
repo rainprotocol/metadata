@@ -17,6 +17,9 @@ RUN mkdir matchstick
 WORKDIR /matchstick
 
 # Commenting out for now as it seems there's no need to copy when using bind mount
-# COPY ./ .
+COPY ./ .
+
+# Install Node.js dependencies
+RUN npm install
 
 CMD ../binary-linux-22 ${ARGS}
