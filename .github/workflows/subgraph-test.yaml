@@ -20,5 +20,4 @@ jobs:
           docker run rainprotocol/matchstick:main curl -L https://nixos.org/nix/install | sh -s -- --daemon
 
       - name: Run tests inside Docker
-        run: |
-          docker run rainprotocol/matchstick:main sh -c '. /nix/var/nix/profiles/default/etc/profile.d/nix.sh && nix develop --command subgraph-test'
+        run: docker run rainprotocol/matchstick:main nix develop --command subgraph-test
