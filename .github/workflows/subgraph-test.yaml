@@ -12,7 +12,8 @@ jobs:
           fetch-depth: 0
           submodules: recursive
 
-      - name: Pull Docker image
-        run: docker pull rainprotocol/matchstick:main
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v4
+      - uses: DeterminateSystems/magic-nix-cache-action@v2
 
       - run: nix develop --command subgraph-test
