@@ -12,8 +12,9 @@ jobs:
           fetch-depth: 0
           submodules: recursive
 
-      - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@v4
-      - uses: DeterminateSystems/magic-nix-cache-action@v2
+      - name: Build Docker image
+        run: docker build -t matchstick .
 
-      - run: nix develop --command subgraph-test
+      - name: Run Docker container
+        run: |
+          docker run -it --rm --mount type=bind,source=./,target=/matchstick matchstick
