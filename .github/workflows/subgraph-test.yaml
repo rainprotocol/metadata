@@ -12,12 +12,13 @@ jobs:
           fetch-depth: 0
           submodules: recursive
 
-      - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@v4
-      - uses: DeterminateSystems/magic-nix-cache-action@v2
-
       - name: Pull Docker image
         run: docker pull rainprotocol/matchstick:main
 
+      - name: Install Nix inside Docker
+        run: |
+          docker run rainprotocol/matchstick:main curl -L https://nixos.org/nix/install | sh -s -- --daemon
+
       - name: Run tests inside Docker
-        run: docker run rainprotocol/matchstick:main nix develop --command subgraph-test
+        run: |
+          docker run rainprotocol/matchstick:main sh -c '. /root/.nix-profile/etc/profile.d/nix.sh && nix develop --command subgraph-test'
