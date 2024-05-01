@@ -15,6 +15,9 @@ jobs:
       - name: Build Docker image
         run: docker build -t matchstick ./subgraph
 
+      - name: Install Node modules
+        run: docker run --rm --mount type=bind,source=./subgraph,target=/matchstick matchstick sh -c "cd /matchstick && npm install"
+
       - name: Run Docker container
         run: |
           docker run --rm --mount type=bind,source=./subgraph,target=/matchstick matchstick
