@@ -12,13 +12,18 @@ jobs:
           fetch-depth: 0
           submodules: recursive
 
+      - name: Install Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
       - name: Build Docker image
-        run: docker build -t matchstick ./subgraph
+        run: docker-compose -f docker-compose.yml build
 
       - name: Install Node modules
         run: |
-          docker run --rm --mount type=bind,source=./subgraph,target=/matchstick matchstick sh -c "cd /matchstick && npm install && npm install -g @graphprotocol/graph-cli && graph codegen && graph build"
+          docker-compose -f docker-compose.yml run matchstick sh -c "cd /matchstick && npm install && npm install -g @graphprotocol/graph-cli && graph codegen && graph build"
 
       - name: Run Docker container
         run: |
-          docker run --rm --mount type=bind,source=./subgraph,target=/matchstick matchstick
+          docker-compose -f docker-compose.yml up --abort-on-container-exit

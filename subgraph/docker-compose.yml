@@ -1,0 +1,7 @@
+version: '3'
+services:
+  matchstick:
+    build:
+      context: ./subgraph
+    volumes:
+      - ./subgraph:/matchstick
