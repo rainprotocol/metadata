@@ -18,12 +18,12 @@ jobs:
           sudo apt-get install -y docker-compose
 
       - name: Build Docker image
-        run: docker-compose -f docker-compose.yml build
+        run: docker-compose -f subgraph/docker-compose.yml build
 
       - name: Install Node modules
         run: |
-          docker-compose -f docker-compose.yml run matchstick sh -c "cd /matchstick && npm install && npm install -g @graphprotocol/graph-cli && graph codegen && graph build"
+          docker-compose -f subgraph/docker-compose.yml run matchstick sh -c "cd /matchstick && npm install && npm install -g @graphprotocol/graph-cli && graph codegen && graph build"
 
       - name: Run Docker container
         run: |
-          docker-compose -f docker-compose.yml up --abort-on-container-exit
+          docker-compose -f subgraph/docker-compose.yml up --abort-on-container-exit
