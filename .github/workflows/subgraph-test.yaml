@@ -12,7 +12,11 @@ jobs:
           fetch-depth: 0
           submodules: recursive
 
-      - name: Install Node modules
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v4
+      - uses: DeterminateSystems/magic-nix-cache-action@v2
+
+      - name: Build matchstick
         working-directory: ./subgraph
         run: |
           docker compose run matchstick sh -c "cd /matchstick && npm install && graph codegen && graph build"
