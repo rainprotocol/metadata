@@ -15,8 +15,9 @@ jobs:
       - name: Install Node modules
         working-directory: ./subgraph
         run: |
-          docker compose run matchstick sh -c "cd /matchstick && npm install && npm install -g @graphprotocol/graph-cli && graph codegen && graph build"
+          docker compose run matchstick sh -c "cd /matchstick && npm install && graph codegen && graph build"
 
       - name: Run Docker container
+        working-directory: ./subgraph
         run: |
-          docker compose -f ./subgraph/docker-compose.yml up --abort-on-container-exit
+          docker compose up --abort-on-container-exit
