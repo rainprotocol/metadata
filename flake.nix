@@ -57,13 +57,7 @@
             name = "subgraph-test";
             body = ''
               set -euxo pipefail
-              forge build
-              cd ./subgraph;
-              npm install;
-              graph codegen;
-              graph build --network matic;
-              graph test;
-              cd -;
+              (cd ./subgraph && docker compose up --abort-on-container-exit)
             '';
           };
 

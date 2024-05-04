@@ -19,7 +19,5 @@ jobs:
       - name: Build subgraph
         run: nix develop -c subgraph-build
 
-      - name: Run Docker container
-        working-directory: ./subgraph
-        run: |
-          docker compose up --abort-on-container-exit
+      - name: Matchstick tests
+        run: nix develop -c subgraph-test
