@@ -16,10 +16,8 @@ jobs:
         uses: DeterminateSystems/nix-installer-action@v4
       - uses: DeterminateSystems/magic-nix-cache-action@v2
 
-      - name: Build matchstick
-        working-directory: ./subgraph
-        run: |
-          docker compose run matchstick sh -c "cd /matchstick && npm install && graph codegen && graph build"
+      - name: Build subgraph
+        run: nix develop -c subgraph-build
 
       - name: Run Docker container
         working-directory: ./subgraph
