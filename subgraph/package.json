@@ -3,9 +3,7 @@
   "version": "1.0.0",
   "description": "Subgraph for the Rain metaboard.",
   "main": "index.js",
-  "scripts": {
-    "test": "graph test"
-  },
+  "scripts": {},
   "keywords": [],
   "author": "",
   "license": "CAL",
