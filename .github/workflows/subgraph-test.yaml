@@ -16,4 +16,8 @@ jobs:
         uses: DeterminateSystems/nix-installer-action@v4
       - uses: DeterminateSystems/magic-nix-cache-action@v2
 
-      - run: nix develop --command subgraph-build
+      - name: Build subgraph
+        run: nix develop -c subgraph-build
+
+      - name: Matchstick tests
+        run: nix develop -c subgraph-test

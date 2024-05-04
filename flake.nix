@@ -6,7 +6,7 @@
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = {self, flake-utils, rainix }:
+  outputs = { self, flake-utils, rainix }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = rainix.pkgs.${system};
@@ -53,6 +53,14 @@
             '';
           };
 
+          subgraph-test = rainix.mkTask.${system} {
+            name = "subgraph-test";
+            body = ''
+              set -euxo pipefail
+              (cd ./subgraph && docker compose up --abort-on-container-exit)
+            '';
+          };
+
           subgraph-deploy = rainix.mkTask.${system} {
             name = "subgraph-deploy";
             body = ''
@@ -69,6 +77,7 @@
         devShells.default = pkgs.mkShell {
           packages = [
             packages.subgraph-build
+            packages.subgraph-test
             packages.subgraph-deploy
           ];
           shellHook = rainix.devShells.${system}.default.shellHook;

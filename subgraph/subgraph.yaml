@@ -20,6 +20,6 @@ dataSources:
         - name: MetaBoard
           file: ../out/MetaBoard.sol/MetaBoard.json
       eventHandlers:
-        - event:  MetaV1(address,uint256,bytes)
+        - event: MetaV1(address,uint256,bytes)
           handler: handleMetaV1
       file: ./src/metaBoard.ts
