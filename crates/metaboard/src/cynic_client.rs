@@ -1,3 +1,4 @@
+use async_trait::async_trait;
 use cynic::{
     serde::{Deserialize, Serialize},
     GraphQlError, GraphQlResponse, QueryBuilder, QueryFragment,
@@ -15,10 +16,14 @@ pub enum CynicClientError {
     Request(#[from] reqwest::Error),
 }
 
+#[async_trait]
 pub trait CynicClient {
     fn get_base_url(&self) -> Url;
 
-    async fn query<R: QueryFragment + QueryBuilder<V> + for<'a> Deserialize<'a>, V: Serialize>(
+    async fn query<
+        R: QueryFragment + QueryBuilder<V> + for<'a> Deserialize<'a>,
+        V: Serialize + Send,
+    >(
         &self,
         variables: V,
     ) -> Result<R, CynicClientError> {

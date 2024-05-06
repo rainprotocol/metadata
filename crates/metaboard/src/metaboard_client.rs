@@ -6,12 +6,20 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum MetaboardSubgraphClientError {
-    #[error(transparent)]
-    CynicClientError(#[from] CynicClientError),
-    #[error("Subgraph query returned no data")]
-    Empty,
-    #[error(transparent)]
-    FromHexError(#[from] FromHexError),
+    #[error("Request Error for metahash {metahash}: {source}")]
+    CynicClientError {
+        metahash: String,
+        #[source]
+        source: CynicClientError,
+    },
+    #[error("Subgraph query returned no data for metahash {0}")]
+    Empty(String),
+    #[error("Error decoding metahash {metahash}: {source}")]
+    FromHexError {
+        metahash: String,
+        #[source]
+        source: FromHexError,
+    },
 }
 
 pub struct MetaboardSubgraphClient {
@@ -39,18 +47,27 @@ impl MetaboardSubgraphClient {
 
         let data = self
             .query::<MetasByHash, MetasByHashVariables>(MetasByHashVariables {
-                metahash: Some(Bytes(metahash)),
+                metahash: Some(Bytes(metahash.clone())),
             })
-            .await?;
+            .await
+            .map_err(|e| MetaboardSubgraphClientError::CynicClientError {
+                metahash: metahash.clone(),
+                source: e,
+            })?;
 
         if data.meta_v1_s.is_empty() {
-            return Err(MetaboardSubgraphClientError::Empty);
+            return Err(MetaboardSubgraphClientError::Empty(metahash));
         }
 
         // decode all the metas
         let mut meta_bytes = Vec::new();
         for meta in data.meta_v1_s {
-            meta_bytes.push(decode(&meta.meta.0)?);
+            meta_bytes.push(decode(&meta.meta.0).map_err(|e| {
+                MetaboardSubgraphClientError::FromHexError {
+                    metahash: metahash.clone(),
+                    source: e,
+                }
+            })?);
         }
 
         Ok(meta_bytes)
@@ -144,7 +161,7 @@ mod tests {
 
         assert!(result.is_err());
         match result {
-            Err(MetaboardSubgraphClientError::Empty) => (),
+            Err(MetaboardSubgraphClientError::Empty(_)) => (),
             _ => panic!("Unexpected result: {:?}", result),
         }
     }
