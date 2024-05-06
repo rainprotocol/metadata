@@ -1,6 +1,3 @@
-scalar Bytes
-scalar BigInt
-
 type MetaBoard @entity {
     id: Bytes!
     address: Bytes!
