@@ -179,7 +179,7 @@ impl AuthoringMetaV2 {
                     contract_address,
                     rpc_url,
                     metaboard_url,
-                    error: error.into(),
+                    error,
                 },
             )?;
 
