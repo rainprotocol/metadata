@@ -3701,6 +3701,7 @@ name = "rain-metaboard-subgraph"
 version = "0.1.0"
 dependencies = [
  "alloy-primitives 0.5.4",
+ "async-trait",
  "cynic",
  "cynic-codegen",
  "httpmock",
@@ -3724,6 +3725,7 @@ dependencies = [
  "deflate",
  "futures",
  "graphql_client",
+ "httpmock",
  "inflate",
  "itertools 0.10.5",
  "once_cell",

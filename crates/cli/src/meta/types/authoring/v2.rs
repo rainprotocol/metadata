@@ -5,7 +5,7 @@ use alloy_ethers_typecast::transaction::{
 };
 use alloy_primitives::hex::FromHexError;
 use alloy_sol_types::{sol, private::Address};
-use rain_metaboard_subgraph::metaboard_client::MetaboardSubgraphClient;
+use rain_metaboard_subgraph::metaboard_client::*;
 use serde::Serialize;
 use crate::meta::{KnownMagic, RainMetaDocumentV1Item};
 use rain_metadata_bindings::IDescribedByMetaV1;
@@ -57,6 +57,16 @@ pub enum AuthoringMetaV2Error {
     MetaError(#[from] crate::error::Error),
 }
 
+#[derive(Error, Debug)]
+#[error("Error fetching authoring meta for contract {contract_address}, RPC URL {rpc_url}, Metaboard URL {metaboard_url}: {error}")]
+pub struct FetchAuthoringMetaV2WordError {
+    contract_address: Address,
+    rpc_url: String,
+    metaboard_url: String,
+    #[source]
+    error: AuthoringMetaV2Error,
+}
+
 /// Implementation of the AuthoringMetaV2 struct.
 impl AuthoringMetaV2 {
     /// Decodes the ABI encoded bytes into an AuthoringMetaV2 struct.
@@ -103,22 +113,77 @@ impl AuthoringMetaV2 {
         contract_address: Address,
         rpc_url: String,
         metaboard_url: String,
-    ) -> Result<Self, AuthoringMetaV2Error> {
+    ) -> Result<Self, FetchAuthoringMetaV2WordError> {
         // get the metahash
-        let client = ReadableClient::new_from_url(rpc_url.clone())?;
+        let client = ReadableClient::new_from_url(rpc_url.clone()).map_err(|error| {
+            FetchAuthoringMetaV2WordError {
+                contract_address,
+                rpc_url: rpc_url.clone(),
+                metaboard_url: metaboard_url.clone(),
+                error: error.into(),
+            }
+        })?;
         let parameters = ReadContractParametersBuilder::default()
             .address(contract_address)
             .call(IDescribedByMetaV1::describedByMetaV1Call {})
-            .build()?;
-        let metahash = client.read(parameters).await?._0;
+            .build()
+            .map_err(|error| FetchAuthoringMetaV2WordError {
+                contract_address,
+                rpc_url: rpc_url.clone(),
+                metaboard_url: metaboard_url.clone(),
+                error: error.into(),
+            })?;
+        let metahash = client
+            .read(parameters)
+            .await
+            .map_err(|error| FetchAuthoringMetaV2WordError {
+                contract_address,
+                rpc_url: rpc_url.clone(),
+                metaboard_url: metaboard_url.clone(),
+                error: error.into(),
+            })?
+            ._0;
 
         // query the metaboard for the metas
-        let subgraph_client = MetaboardSubgraphClient::new(metaboard_url.parse()?);
-        let metas = subgraph_client.get_metabytes_by_hash(&metahash).await?;
+        let subgraph_client = MetaboardSubgraphClient::new(metaboard_url.parse().map_err(
+            |error: url::ParseError| FetchAuthoringMetaV2WordError {
+                contract_address,
+                rpc_url: rpc_url.clone(),
+                metaboard_url: metaboard_url.clone(),
+                error: error.into(),
+            },
+        )?);
 
-        RainMetaDocumentV1Item::cbor_decode(metas[0].as_slice())?[0]
+        let metas = subgraph_client
+            .get_metabytes_by_hash(&metahash)
+            .await
+            .map_err(|error| FetchAuthoringMetaV2WordError {
+                contract_address,
+                rpc_url: rpc_url.clone(),
+                metaboard_url: metaboard_url.clone(),
+                error: error.into(),
+            })?;
+
+        let meta = RainMetaDocumentV1Item::cbor_decode(metas[0].as_slice()).map_err(|error| {
+            FetchAuthoringMetaV2WordError {
+                contract_address,
+                rpc_url: rpc_url.clone(),
+                metaboard_url: metaboard_url.clone(),
+                error: error.into(),
+            }
+        })?[0]
             .clone()
             .try_into()
+            .map_err(
+                |error: AuthoringMetaV2Error| FetchAuthoringMetaV2WordError {
+                    contract_address,
+                    rpc_url,
+                    metaboard_url,
+                    error,
+                },
+            )?;
+
+        Ok(meta)
     }
 }
 
@@ -135,8 +200,11 @@ impl TryFrom<RainMetaDocumentV1Item> for AuthoringMetaV2 {
 
 #[cfg(test)]
 mod tests {
-    use alloy_primitives::hex::decode;
+    use alloy_primitives::hex::{decode, encode};
     use serde_bytes::ByteBuf;
+    use httpmock::Method::POST;
+    use httpmock::MockServer;
+    use reqwest::Url;
 
     use crate::meta::{ContentEncoding, ContentLanguage, ContentType};
 
@@ -225,6 +293,92 @@ mod tests {
         match error {
             AuthoringMetaV2Error::AbiDecodeError(_) => {}
             _ => panic!("Unexpected error: {:?}", error),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_get_metabytes_by_hash_success() {
+        let hash = [1u8; 32];
+
+        let rpc_server = MockServer::start_async().await;
+        let rpc_url = Url::parse(&rpc_server.url("/")).unwrap();
+
+        // Mock a successful response
+        rpc_server.mock(|when, then| {
+            when.method(POST).path("/");
+            then.status(200).json_body_obj(&{
+                serde_json::json!({
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "result": format!("0x{}", encode(hash))
+                })
+            });
+        });
+
+        let metaboard_server = MockServer::start_async().await;
+        let metaboard_url = Url::parse(&metaboard_server.url("/")).unwrap();
+
+        // Mock a successful response
+        metaboard_server.mock(|when, then| {
+            when.method(POST).path("/").body_contains(encode(hash)); // You need to tailor this to the actual body sent
+            then.status(200).json_body_obj(&{
+                serde_json::json!({
+                    "data": {
+                        "metaV1S": [
+                            {
+                             "meta": "0x01",
+                             "metaHash": "0x00",
+                             "sender": "0x00",
+                             "id": "0x00",
+                             "metaBoard": {
+                                 "id": "0x00",
+                                 "metas": [],
+                                 "address": "0x00",
+                             },
+                             "subject": "0x00",
+                            },
+                            {
+                                "meta": "0x02",
+                                "metaHash": "0x00",
+                                "sender": "0x00",
+                                "id": "0x00",
+                                "metaBoard": {
+                                    "id": "0x00",
+                                    "metas": [],
+                                    "address": "0x00",
+                                },
+                                "subject": "0x00",
+                               }
+                        ]
+                    }
+                })
+            });
+        });
+
+        let authoring_meta = AuthoringMetaV2::fetch_for_contract(
+            Address::from([0u8; 20]),
+            rpc_url.to_string(),
+            metaboard_url.to_string(),
+        )
+        .await;
+
+        match authoring_meta {
+            Ok(_) => panic!("Expected error"),
+            Err(error) => {
+                let FetchAuthoringMetaV2WordError {
+                    contract_address,
+                    rpc_url,
+                    metaboard_url,
+                    error,
+                } = error;
+                assert_eq!(contract_address, Address::from([0u8; 20]));
+                assert_eq!(rpc_url, rpc_url.to_string());
+                assert_eq!(metaboard_url, metaboard_url.to_string());
+                match error {
+                    AuthoringMetaV2Error::MetaError(_) => {}
+                    _ => panic!("Unexpected error: {:?}", error),
+                }
+            }
         }
     }
 }
