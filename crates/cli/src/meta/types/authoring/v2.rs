@@ -364,22 +364,21 @@ mod tests {
 
         match authoring_meta {
             Ok(_) => panic!("Expected error"),
-            Err(error) => match error {
-                FetchAuthoringMetaV2WordError {
+            Err(error) => {
+                let FetchAuthoringMetaV2WordError {
                     contract_address,
                     rpc_url,
                     metaboard_url,
                     error,
-                } => {
-                    assert_eq!(contract_address, Address::from([0u8; 20]));
-                    assert_eq!(rpc_url, rpc_url.to_string());
-                    assert_eq!(metaboard_url, metaboard_url.to_string());
-                    match error {
-                        AuthoringMetaV2Error::MetaError(_) => {}
-                        _ => panic!("Unexpected error: {:?}", error),
-                    }
+                } = error;
+                assert_eq!(contract_address, Address::from([0u8; 20]));
+                assert_eq!(rpc_url, rpc_url.to_string());
+                assert_eq!(metaboard_url, metaboard_url.to_string());
+                match error {
+                    AuthoringMetaV2Error::MetaError(_) => {}
+                    _ => panic!("Unexpected error: {:?}", error),
                 }
-            },
+            }
         }
     }
 }
