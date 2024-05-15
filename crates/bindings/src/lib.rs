@@ -6,10 +6,7 @@ sol!(
     "../../out/IDescribedByMetaV1.sol/IDescribedByMetaV1.json"
 );
 
-sol! {
-    /// IERC165 supportsInterface fn
-    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool);
-}
+sol!("../../lib/forge-std/src/interfaces/IERC165.sol");
 
 /// get interface id of IDescribedByMetaV1
 pub fn i_described_by_meta_v1_interface_id() -> [u8; 4] {

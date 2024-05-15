@@ -8,9 +8,7 @@ use alloy_sol_types::{sol, private::Address};
 use rain_metaboard_subgraph::metaboard_client::*;
 use serde::Serialize;
 use crate::meta::{KnownMagic, RainMetaDocumentV1Item};
-use rain_metadata_bindings::{
-    i_described_by_meta_v1_interface_id, supportsInterfaceCall, IDescribedByMetaV1,
-};
+use rain_metadata_bindings::{i_described_by_meta_v1_interface_id, IERC165, IDescribedByMetaV1};
 use thiserror::Error;
 
 #[derive(Debug, Clone, Serialize)]
@@ -210,8 +208,8 @@ impl AuthoringMetaV2 {
         let parameters = ReadContractParameters {
             address: contract_address,
             // equates to 0x01ffc9a701ffc9a700000000000000000000000000000000000000000000000000000000
-            call: supportsInterfaceCall {
-                interfaceId: supportsInterfaceCall::SELECTOR.into(),
+            call: IERC165::supportsInterfaceCall {
+                interfaceID: IERC165::supportsInterfaceCall::SELECTOR.into(),
             },
             block_number: None,
         };
@@ -223,8 +221,8 @@ impl AuthoringMetaV2 {
         let parameters = ReadContractParameters {
             address: contract_address,
             // equates to 0x01ffc9a7ffffffff00000000000000000000000000000000000000000000000000000000
-            call: supportsInterfaceCall {
-                interfaceId: [255, 255, 255, 255].into(),
+            call: IERC165::supportsInterfaceCall {
+                interfaceID: [255, 255, 255, 255].into(),
             },
             block_number: None,
         };
@@ -244,8 +242,8 @@ impl AuthoringMetaV2 {
 
         let parameters = ReadContractParameters {
             address: contract_address,
-            call: supportsInterfaceCall {
-                interfaceId: i_described_by_meta_v1_interface_id().into(),
+            call: IERC165::supportsInterfaceCall {
+                interfaceID: i_described_by_meta_v1_interface_id().into(),
             },
             block_number: None,
         };
