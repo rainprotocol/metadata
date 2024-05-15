@@ -1,14 +1,16 @@
 use alloy_sol_types::SolType;
 use alloy_ethers_typecast::transaction::{
-    ReadContractParametersBuilder, ReadContractParametersBuilderError, ReadableClient,
-    ReadableClientError,
+    ReadContractParameters, ReadContractParametersBuilder, ReadContractParametersBuilderError,
+    ReadableClient, ReadableClientError, ReadableClientHttp,
 };
 use alloy_primitives::hex::FromHexError;
 use alloy_sol_types::{sol, private::Address};
 use rain_metaboard_subgraph::metaboard_client::*;
 use serde::Serialize;
 use crate::meta::{KnownMagic, RainMetaDocumentV1Item};
-use rain_metadata_bindings::IDescribedByMetaV1;
+use rain_metadata_bindings::{
+    i_described_by_meta_v1_interface_id, supportsInterfaceCall, IDescribedByMetaV1,
+};
 use thiserror::Error;
 
 #[derive(Debug, Clone, Serialize)]
@@ -55,6 +57,8 @@ pub enum AuthoringMetaV2Error {
     Utf8Error(#[from] std::string::FromUtf8Error),
     #[error(transparent)]
     MetaError(#[from] crate::error::Error),
+    #[error("Contract has no words")]
+    HasNoWords,
 }
 
 #[derive(Error, Debug)]
@@ -123,6 +127,19 @@ impl AuthoringMetaV2 {
                 error: error.into(),
             }
         })?;
+
+        // return "has no words" error if the contract does not implement IDescribeByMetaV2 interface
+        let implements_i_describe_by_meta_v2 =
+            Self::implements_i_describe_by_meta_v2(&client, contract_address).await;
+        if !implements_i_describe_by_meta_v2 {
+            return Err(FetchAuthoringMetaV2WordError {
+                contract_address,
+                rpc_url: rpc_url.clone(),
+                metaboard_url: metaboard_url.clone(),
+                error: AuthoringMetaV2Error::HasNoWords,
+            });
+        }
+
         let parameters = ReadContractParametersBuilder::default()
             .address(contract_address)
             .call(IDescribedByMetaV1::describedByMetaV1Call {})
@@ -184,6 +201,20 @@ impl AuthoringMetaV2 {
             )?;
 
         Ok(meta)
+    }
+
+    pub async fn implements_i_describe_by_meta_v2(
+        client: &ReadableClientHttp,
+        contract_address: Address,
+    ) -> bool {
+        let parameters = ReadContractParameters {
+            address: contract_address,
+            call: supportsInterfaceCall {
+                interfaceId: i_described_by_meta_v1_interface_id().into(),
+            },
+            block_number: None,
+        };
+        client.read(parameters).await.map(|v| v._0).unwrap_or(false)
     }
 }
 
@@ -375,7 +406,7 @@ mod tests {
                 assert_eq!(rpc_url, rpc_url.to_string());
                 assert_eq!(metaboard_url, metaboard_url.to_string());
                 match error {
-                    AuthoringMetaV2Error::MetaError(_) => {}
+                    AuthoringMetaV2Error::HasNoWords => {}
                     _ => panic!("Unexpected error: {:?}", error),
                 }
             }
