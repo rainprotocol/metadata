@@ -12,7 +12,6 @@ reqwest = { workspace = true }
 thiserror = { workspace = true }
 alloy-primitives = { workspace = true }
 async-trait = { workspace = true }
-getrandom = { version = "0.2", features = ["js"] }
 
 [dev-dependencies]
 httpmock = "0.7.0"

@@ -9,4 +9,3 @@ repository = "https://github.com/rainlanguage/rain.metadata"
 [dependencies]
 alloy-sol-types = { workspace = true, features = ["json"] }
 alloy-primitives = { workspace = true }
-getrandom = { version = "0.2", features = ["js"] }
