@@ -9,6 +9,9 @@ use serde::ser::{Serialize, SerializeMap, Serializer};
 use std::{collections::HashMap, convert::TryFrom, fmt::Debug, sync::Arc};
 use strum::{EnumIter, EnumString};
 use types::authoring::v1::AuthoringMeta;
+use alloy_sol_types::{SolCall, private::Address};
+use rain_metadata_bindings::{i_described_by_meta_v1_interface_id, IERC165};
+use alloy_ethers_typecast::transaction::{ReadContractParameters, ReadableClientHttp};
 
 pub mod magic;
 pub(crate) mod normalize;
@@ -405,6 +408,53 @@ pub async fn search_deployer(
     }
     let response_value = future::select_ok(promises.drain(..)).await?.0;
     Ok(response_value)
+}
+
+/// checks if the given contract implements ERC165
+/// the process is done as described per ERC165 specs:
+/// https://eips.ethereum.org/EIPS/eip-165#how-to-detect-if-a-contract-implements-erc-165
+pub async fn supports_erc165(client: &ReadableClientHttp, contract_address: Address) -> bool {
+    let parameters = ReadContractParameters {
+        address: contract_address,
+        // equates to 0x01ffc9a701ffc9a700000000000000000000000000000000000000000000000000000000
+        call: IERC165::supportsInterfaceCall {
+            interfaceID: IERC165::supportsInterfaceCall::SELECTOR.into(),
+        },
+        block_number: None,
+    };
+    let result = client.read(parameters).await.map(|v| v._0).unwrap_or(false);
+    if !result {
+        return false;
+    }
+
+    let parameters = ReadContractParameters {
+        address: contract_address,
+        // equates to 0x01ffc9a7ffffffff00000000000000000000000000000000000000000000000000000000
+        call: IERC165::supportsInterfaceCall {
+            interfaceID: [255, 255, 255, 255].into(),
+        },
+        block_number: None,
+    };
+    !client.read(parameters).await.map(|v| v._0).unwrap_or(true)
+}
+
+/// checks if the given contract implements IDescribeByMetaV1 interface
+pub async fn implements_i_described_by_meta_v1(
+    client: &ReadableClientHttp,
+    contract_address: Address,
+) -> bool {
+    if !supports_erc165(client, contract_address).await {
+        return false;
+    }
+
+    let parameters = ReadContractParameters {
+        address: contract_address,
+        call: IERC165::supportsInterfaceCall {
+            interfaceID: i_described_by_meta_v1_interface_id().into(),
+        },
+        block_number: None,
+    };
+    client.read(parameters).await.map(|v| v._0).unwrap_or(false)
 }
 
 /// All required NPE2 ExpressionDeployer data for reproducing it on a local evm
@@ -886,13 +936,13 @@ pub fn bytes32_to_str(bytes: &[u8; 32]) -> Result<&str, Error> {
 #[cfg(test)]
 mod tests {
     use super::{
-        bytes32_to_str,
+        *, bytes32_to_str,
         magic::KnownMagic,
         str_to_bytes32,
         types::{authoring::v1::AuthoringMeta, dotrain::v1::DotrainMeta},
         ContentEncoding, ContentLanguage, ContentType, Error, RainMetaDocumentV1Item,
     };
-    use alloy_primitives::hex;
+    use alloy_primitives::hex::FromHex;
     use alloy_sol_types::SolType;
 
     /// Roundtrip test for an authoring meta
@@ -1255,5 +1305,45 @@ mod tests {
             str_to_bytes32("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456").unwrap_err(),
             Error::BiggerThan32Bytes
         ));
+    }
+
+    #[tokio::test]
+    async fn test_supports_erc165() {
+        let non_erc165_contract =
+            Address::from_hex("7ceB23fD6bC0adD59E62ac25578270cFf1b9f619").unwrap();
+        let erc165_supported_contract =
+            Address::from_hex("9a8545FA798A7be7F8E1B8DaDD79c9206357C015").unwrap();
+
+        let rpc_url = std::env::var("TEST_POLYGON_RPC_URL").unwrap();
+        let client = ReadableClientHttp::new_from_url(rpc_url.to_string()).unwrap();
+
+        let result = supports_erc165(&client, non_erc165_contract).await;
+        assert!(!result);
+
+        let result = supports_erc165(&client, erc165_supported_contract).await;
+        assert!(result);
+    }
+
+    #[tokio::test]
+    async fn test_implements_i_describe_by_meta_v1() {
+        let not_implements_i_described_by_meta_v1_contract =
+            Address::from_hex("9a8545FA798A7be7F8E1B8DaDD79c9206357C015").unwrap();
+        let implements_i_described_by_meta_v1_contract =
+            Address::from_hex("017F5651eB8fa4048BBc17433149c6c035d391A6").unwrap();
+
+        let rpc_url = std::env::var("TEST_POLYGON_RPC_URL").unwrap();
+        let client = ReadableClientHttp::new_from_url(rpc_url.to_string()).unwrap();
+
+        let result = implements_i_described_by_meta_v1(
+            &client,
+            not_implements_i_described_by_meta_v1_contract,
+        )
+        .await;
+        assert!(!result);
+
+        let result =
+            implements_i_described_by_meta_v1(&client, implements_i_described_by_meta_v1_contract)
+                .await;
+        assert!(result);
     }
 }

@@ -1,15 +1,16 @@
-use alloy_sol_types::{SolCall, SolType};
+use alloy_sol_types::SolType;
 use alloy_ethers_typecast::transaction::{
-    ReadContractParameters, ReadContractParametersBuilder, ReadContractParametersBuilderError,
-    ReadableClient, ReadableClientError, ReadableClientHttp,
+    ReadContractParametersBuilder, ReadContractParametersBuilderError, ReadableClient,
+    ReadableClientError,
 };
 use alloy_primitives::hex::FromHexError;
 use alloy_sol_types::{sol, private::Address};
 use rain_metaboard_subgraph::metaboard_client::*;
 use serde::Serialize;
 use crate::meta::{KnownMagic, RainMetaDocumentV1Item};
-use rain_metadata_bindings::{i_described_by_meta_v1_interface_id, IERC165, IDescribedByMetaV1};
+use rain_metadata_bindings::IDescribedByMetaV1;
 use thiserror::Error;
+use super::super::super::implements_i_described_by_meta_v1;
 
 #[derive(Debug, Clone, Serialize)]
 pub struct AuthoringMetaV2Word {
@@ -127,9 +128,7 @@ impl AuthoringMetaV2 {
         })?;
 
         // return "has no words" error if the contract does not implement IDescribeByMetaV2 interface
-        let implements_i_describe_by_meta_v2 =
-            Self::implements_i_describe_by_meta_v2(&client, contract_address).await;
-        if !implements_i_describe_by_meta_v2 {
+        if !implements_i_described_by_meta_v1(&client, contract_address).await {
             return Err(FetchAuthoringMetaV2WordError {
                 contract_address,
                 rpc_url: rpc_url.clone(),
@@ -200,55 +199,6 @@ impl AuthoringMetaV2 {
 
         Ok(meta)
     }
-
-    /// checks if the given contract implements ERC165
-    /// the process is done as described per ERC165 specs:
-    /// https://eips.ethereum.org/EIPS/eip-165#how-to-detect-if-a-contract-implements-erc-165
-    pub async fn supports_erc165(client: &ReadableClientHttp, contract_address: Address) -> bool {
-        let parameters = ReadContractParameters {
-            address: contract_address,
-            // equates to 0x01ffc9a701ffc9a700000000000000000000000000000000000000000000000000000000
-            call: IERC165::supportsInterfaceCall {
-                interfaceID: IERC165::supportsInterfaceCall::SELECTOR.into(),
-            },
-            block_number: None,
-        };
-        let result = client.read(parameters).await.map(|v| v._0).unwrap_or(false);
-        if !result {
-            return false;
-        }
-
-        let parameters = ReadContractParameters {
-            address: contract_address,
-            // equates to 0x01ffc9a7ffffffff00000000000000000000000000000000000000000000000000000000
-            call: IERC165::supportsInterfaceCall {
-                interfaceID: [255, 255, 255, 255].into(),
-            },
-            block_number: None,
-        };
-        let result = client.read(parameters).await.map(|v| v._0).unwrap_or(true);
-        !result
-    }
-
-    /// checks if the given contract implements IDescribeByMetaV1 interface
-    pub async fn implements_i_describe_by_meta_v2(
-        client: &ReadableClientHttp,
-        contract_address: Address,
-    ) -> bool {
-        let supports_erc165 = AuthoringMetaV2::supports_erc165(client, contract_address).await;
-        if !supports_erc165 {
-            return false;
-        }
-
-        let parameters = ReadContractParameters {
-            address: contract_address,
-            call: IERC165::supportsInterfaceCall {
-                interfaceID: i_described_by_meta_v1_interface_id().into(),
-            },
-            block_number: None,
-        };
-        client.read(parameters).await.map(|v| v._0).unwrap_or(false)
-    }
 }
 
 impl TryFrom<RainMetaDocumentV1Item> for AuthoringMetaV2 {
@@ -264,7 +214,7 @@ impl TryFrom<RainMetaDocumentV1Item> for AuthoringMetaV2 {
 
 #[cfg(test)]
 mod tests {
-    use alloy_primitives::hex::{decode, encode, FromHex};
+    use alloy_primitives::hex::{decode, encode};
     use serde_bytes::ByteBuf;
     use httpmock::Method::POST;
     use httpmock::MockServer;
@@ -444,47 +394,5 @@ mod tests {
                 }
             }
         }
-    }
-
-    #[tokio::test]
-    async fn test_supports_erc165() {
-        let non_erc165_contract =
-            Address::from_hex("7ceB23fD6bC0adD59E62ac25578270cFf1b9f619").unwrap();
-        let erc165_supported_contract =
-            Address::from_hex("9a8545FA798A7be7F8E1B8DaDD79c9206357C015").unwrap();
-
-        let rpc_url = std::env::var("TEST_POLYGON_RPC_URL").unwrap();
-        let client = ReadableClient::new_from_url(rpc_url.to_string()).unwrap();
-
-        let result = AuthoringMetaV2::supports_erc165(&client, non_erc165_contract).await;
-        assert!(!result);
-
-        let result = AuthoringMetaV2::supports_erc165(&client, erc165_supported_contract).await;
-        assert!(result);
-    }
-
-    #[tokio::test]
-    async fn test_implements_i_describe_by_meta_v1() {
-        let not_implements_i_describe_by_meta_v1_contract =
-            Address::from_hex("9a8545FA798A7be7F8E1B8DaDD79c9206357C015").unwrap();
-        let implements_i_describe_by_meta_v1_contract =
-            Address::from_hex("017F5651eB8fa4048BBc17433149c6c035d391A6").unwrap();
-
-        let rpc_url = std::env::var("TEST_POLYGON_RPC_URL").unwrap();
-        let client = ReadableClient::new_from_url(rpc_url.to_string()).unwrap();
-
-        let result = AuthoringMetaV2::implements_i_describe_by_meta_v2(
-            &client,
-            not_implements_i_describe_by_meta_v1_contract,
-        )
-        .await;
-        assert!(!result);
-
-        let result = AuthoringMetaV2::implements_i_describe_by_meta_v2(
-            &client,
-            implements_i_describe_by_meta_v1_contract,
-        )
-        .await;
-        assert!(result);
     }
 }
