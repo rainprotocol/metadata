@@ -3,15 +3,16 @@ use super::subgraph::KnownSubgraphs;
 use alloy_primitives::{hex, keccak256};
 use futures::future;
 use graphql_client::GraphQLQuery;
+use rain_metadata_bindings::IDescribedByMetaV1;
 use reqwest::Client;
 use serde::de::{Deserialize, Deserializer, Visitor};
 use serde::ser::{Serialize, SerializeMap, Serializer};
 use std::{collections::HashMap, convert::TryFrom, fmt::Debug, sync::Arc};
 use strum::{EnumIter, EnumString};
 use types::authoring::v1::AuthoringMeta;
-use alloy_sol_types::{SolCall, private::Address};
-use rain_metadata_bindings::{i_described_by_meta_v1_interface_id, IERC165};
+use alloy_sol_types::private::Address;
 use alloy_ethers_typecast::transaction::{ReadContractParameters, ReadableClientHttp};
+use rain_interface::erc165::{IERC165, get_interface_id, supports_erc165};
 
 pub mod magic;
 pub(crate) mod normalize;
@@ -410,34 +411,6 @@ pub async fn search_deployer(
     Ok(response_value)
 }
 
-/// checks if the given contract implements ERC165
-/// the process is done as described per ERC165 specs:
-/// https://eips.ethereum.org/EIPS/eip-165#how-to-detect-if-a-contract-implements-erc-165
-pub async fn supports_erc165(client: &ReadableClientHttp, contract_address: Address) -> bool {
-    let parameters = ReadContractParameters {
-        address: contract_address,
-        // equates to 0x01ffc9a701ffc9a700000000000000000000000000000000000000000000000000000000
-        call: IERC165::supportsInterfaceCall {
-            interfaceID: IERC165::supportsInterfaceCall::SELECTOR.into(),
-        },
-        block_number: None,
-    };
-    let result = client.read(parameters).await.map(|v| v._0).unwrap_or(false);
-    if !result {
-        return false;
-    }
-
-    let parameters = ReadContractParameters {
-        address: contract_address,
-        // equates to 0x01ffc9a7ffffffff00000000000000000000000000000000000000000000000000000000
-        call: IERC165::supportsInterfaceCall {
-            interfaceID: [255, 255, 255, 255].into(),
-        },
-        block_number: None,
-    };
-    !client.read(parameters).await.map(|v| v._0).unwrap_or(true)
-}
-
 /// checks if the given contract implements IDescribeByMetaV1 interface
 pub async fn implements_i_described_by_meta_v1(
     client: &ReadableClientHttp,
@@ -450,7 +423,8 @@ pub async fn implements_i_described_by_meta_v1(
     let parameters = ReadContractParameters {
         address: contract_address,
         call: IERC165::supportsInterfaceCall {
-            interfaceID: i_described_by_meta_v1_interface_id().into(),
+            interfaceId: get_interface_id(IDescribedByMetaV1::IDescribedByMetaV1Calls::SELECTORS)
+                .into(),
         },
         block_number: None,
     };
@@ -1305,23 +1279,6 @@ mod tests {
             str_to_bytes32("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456").unwrap_err(),
             Error::BiggerThan32Bytes
         ));
-    }
-
-    #[tokio::test]
-    async fn test_supports_erc165() {
-        let non_erc165_contract =
-            Address::from_hex("7ceB23fD6bC0adD59E62ac25578270cFf1b9f619").unwrap();
-        let erc165_supported_contract =
-            Address::from_hex("9a8545FA798A7be7F8E1B8DaDD79c9206357C015").unwrap();
-
-        let rpc_url = std::env::var("TEST_POLYGON_RPC_URL").unwrap();
-        let client = ReadableClientHttp::new_from_url(rpc_url.to_string()).unwrap();
-
-        let result = supports_erc165(&client, non_erc165_contract).await;
-        assert!(!result);
-
-        let result = supports_erc165(&client, erc165_supported_contract).await;
-        assert!(result);
     }
 
     #[tokio::test]

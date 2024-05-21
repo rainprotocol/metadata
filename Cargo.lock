@@ -3697,6 +3697,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dc33ff2d4973d518d823d61aa239014831e521c75da58e3df4840d3f47749d09"
 
 [[package]]
+name = "rain-interface"
+version = "0.0.0"
+source = "git+https://github.com/rainlanguage/rain.interface?rev=f5abffd7b16b72a170fe1576c3f629ee5af596ee#f5abffd7b16b72a170fe1576c3f629ee5af596ee"
+dependencies = [
+ "alloy-ethers-typecast",
+ "alloy-primitives 0.6.4",
+ "alloy-sol-types",
+ "thiserror",
+]
+
+[[package]]
 name = "rain-metaboard-subgraph"
 version = "0.1.0"
 dependencies = [
@@ -3729,6 +3740,7 @@ dependencies = [
  "inflate",
  "itertools 0.10.5",
  "once_cell",
+ "rain-interface",
  "rain-metaboard-subgraph",
  "rain-metadata-bindings",
  "regex",
