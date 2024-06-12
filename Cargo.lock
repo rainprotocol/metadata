@@ -60,15 +60,37 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "250f629c0161ad8107cf89319e990051fae62832fd343083bea452d93e2205fd"
 
 [[package]]
+name = "alloy-dyn-abi"
+version = "0.6.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2919acdad13336bc5dc26b636cdd6892c2f27fb0d4a58320a00c2713cf6a4e9a"
+dependencies = [
+ "alloy-json-abi 0.6.4",
+ "alloy-primitives 0.6.4",
+ "alloy-sol-type-parser 0.6.4",
+ "alloy-sol-types",
+ "const-hex",
+ "itoa",
+ "serde",
+ "serde_json",
+ "winnow 0.6.6",
+]
+
+[[package]]
 name = "alloy-ethers-typecast"
 version = "0.2.0"
-source = "git+https://github.com/rainlanguage/alloy-ethers-typecast?rev=a6bcb86b9b61a56d2440d33313f024297ce737bb#a6bcb86b9b61a56d2440d33313f024297ce737bb"
+source = "git+https://github.com/rainlanguage/alloy-ethers-typecast?rev=05b6396271b77a4844c29bf840b7a587be388ff8#05b6396271b77a4844c29bf840b7a587be388ff8"
 dependencies = [
+ "alloy-dyn-abi",
+ "alloy-json-abi 0.6.4",
  "alloy-primitives 0.6.4",
  "alloy-sol-types",
  "async-trait",
  "derive_builder",
  "ethers",
+ "once_cell",
+ "rain-error-decoding",
+ "reqwest",
  "serde",
  "serde_json",
  "thiserror",
@@ -97,6 +119,7 @@ dependencies = [
  "alloy-primitives 0.6.4",
  "alloy-sol-type-parser 0.6.4",
  "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -3697,13 +3720,30 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dc33ff2d4973d518d823d61aa239014831e521c75da58e3df4840d3f47749d09"
 
 [[package]]
-name = "rain-interface"
+name = "rain-erc"
 version = "0.0.0"
-source = "git+https://github.com/rainlanguage/rain.interface?rev=f5abffd7b16b72a170fe1576c3f629ee5af596ee#f5abffd7b16b72a170fe1576c3f629ee5af596ee"
+source = "git+https://github.com/rainlanguage/rain.erc?rev=6855a2dcd70e3acbea2f651e6437f18e14623394#6855a2dcd70e3acbea2f651e6437f18e14623394"
 dependencies = [
  "alloy-ethers-typecast",
  "alloy-primitives 0.6.4",
  "alloy-sol-types",
+ "thiserror",
+]
+
+[[package]]
+name = "rain-error-decoding"
+version = "0.1.0"
+source = "git+https://github.com/rainlanguage/rain.error?rev=6763061d89cfc084c81e01f75f6118881fa5b77b#6763061d89cfc084c81e01f75f6118881fa5b77b"
+dependencies = [
+ "alloy-dyn-abi",
+ "alloy-json-abi 0.6.4",
+ "alloy-primitives 0.6.4",
+ "alloy-sol-types",
+ "ethers",
+ "once_cell",
+ "reqwest",
+ "serde",
+ "serde_json",
  "thiserror",
 ]
 
@@ -3740,7 +3780,7 @@ dependencies = [
  "inflate",
  "itertools 0.10.5",
  "once_cell",
- "rain-interface",
+ "rain-erc",
  "rain-metaboard-subgraph",
  "rain-metadata-bindings",
  "regex",
