@@ -1397,7 +1397,7 @@ mod tests {
         rpc_server.mock(|when, then| {
             when.method(POST).path("/").json_body_partial(
                 Request::<(TypedTransaction, BlockNumber)>::eth_call_request(
-                    4,
+                    3,
                     TypedTransaction::Eip1559(
                         AlloyTransactionRequest::new()
                             .with_to(Some(address))
@@ -1420,7 +1420,7 @@ mod tests {
             then.json_body_obj(
                 &from_str::<Value>(
                     &Response::new_success(
-                        4,
+                        3,
                         "0x0000000000000000000000000000000000000000000000000000000000000000",
                     )
                     .to_json_string()
@@ -1436,7 +1436,7 @@ mod tests {
         rpc_server.mock(|when, then| {
             when.method(POST).path("/").json_body_partial(
                 Request::<(TypedTransaction, BlockNumber)>::eth_call_request(
-                    5,
+                    3,
                     TypedTransaction::Eip1559(
                         AlloyTransactionRequest::new()
                             .with_to(Some(address))
@@ -1458,7 +1458,7 @@ mod tests {
             );
             then.json_body_obj(
                 &from_str::<Value>(
-                    &Response::new_error(5, -32003, "execution reverted", Some("0x00"))
+                    &Response::new_error(3, -32003, "execution reverted", Some("0x00"))
                         .to_json_string()
                         .unwrap(),
                 )
