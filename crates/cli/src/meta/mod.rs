@@ -916,8 +916,15 @@ mod tests {
         types::{authoring::v1::AuthoringMeta, dotrain::v1::DotrainMeta},
         ContentEncoding, ContentLanguage, ContentType, Error, RainMetaDocumentV1Item,
     };
-    use alloy_primitives::hex::FromHex;
-    use alloy_sol_types::SolType;
+    use alloy_ethers_typecast::{
+        request_shim::{AlloyTransactionRequest, TransactionRequestShim},
+        rpc::{eip2718::TypedTransaction, BlockNumber, Request, Response},
+        transaction::ReadableClient,
+    };
+    use alloy_sol_types::{SolType, SolCall};
+    use hex::decode;
+    use httpmock::{Method::POST, MockServer};
+    use serde_json::{from_str, Value};
 
     /// Roundtrip test for an authoring meta
     /// original content -> pack -> MetaMap -> cbor encode -> cbor decode -> MetaMap -> unpack -> original content,
@@ -1283,24 +1290,182 @@ mod tests {
 
     #[tokio::test]
     async fn test_implements_i_describe_by_meta_v1() {
-        let not_implements_i_described_by_meta_v1_contract =
-            Address::from_hex("9a8545FA798A7be7F8E1B8DaDD79c9206357C015").unwrap();
-        let implements_i_described_by_meta_v1_contract =
-            Address::from_hex("017F5651eB8fa4048BBc17433149c6c035d391A6").unwrap();
+        let rpc_server = MockServer::start_async().await;
+        let client = ReadableClient::new_from_url(rpc_server.url("/")).unwrap();
 
-        let rpc_url = std::env::var("TEST_POLYGON_RPC_URL").unwrap();
-        let client = ReadableClientHttp::new_from_url(rpc_url.to_string()).unwrap();
+        // Mock a successful response for supports erc165 check
+        let address = Address::random();
+        rpc_server.mock(|when, then| {
+            when.method(POST)
+                .path("/")
+                .json_body_partial(
+                    Request::<(TypedTransaction, BlockNumber)>::eth_call_request(
+                        1,
+                        TypedTransaction::Eip1559(
+                            AlloyTransactionRequest::new()
+                                .with_to(Some(address))
+                                .with_data(Some(
+                                    decode(
+                                        "0x01ffc9a701ffc9a700000000000000000000000000000000000000000000000000000000"
+                                    ).unwrap()
+                                ))
+                                .to_eip1559()
+                        ),
+                        None
+                    )
+                    .to_json_string()
+                    .unwrap(),
+                );
+            then.json_body_obj(
+                &from_str::<Value>(&Response::new_success(
+                    1,
+                    "0x0000000000000000000000000000000000000000000000000000000000000001"
+                ).to_json_string().unwrap())
+                .unwrap(),
+            );
+        });
+        rpc_server.mock(|when, then| {
+            when.method(POST)
+                .path("/")
+                .json_body_partial(
+                    Request::<(TypedTransaction, BlockNumber)>::eth_call_request(
+                        2,
+                        TypedTransaction::Eip1559(
+                            AlloyTransactionRequest::new()
+                                .with_to(Some(address))
+                                .with_data(Some(
+                                    decode(
+                                        "0x01ffc9a7ffffffff00000000000000000000000000000000000000000000000000000000"
+                                    ).unwrap()
+                                ))
+                                .to_eip1559()
+                        ),
+                        None
+                    )
+                    .to_json_string()
+                    .unwrap(),
+                );
+            then.json_body_obj(
+                &from_str::<Value>(&Response::new_success(
+                    2,
+                    "0x0000000000000000000000000000000000000000000000000000000000000000"
+                ).to_json_string().unwrap())
+                .unwrap(),
+            );
+        });
 
-        let result = implements_i_described_by_meta_v1(
-            &client,
-            not_implements_i_described_by_meta_v1_contract,
-        )
-        .await;
+        // mock a true response for implements IDescribedByMetaV1
+        rpc_server.mock(|when, then| {
+            when.method(POST).path("/").json_body_partial(
+                Request::<(TypedTransaction, BlockNumber)>::eth_call_request(
+                    3,
+                    TypedTransaction::Eip1559(
+                        AlloyTransactionRequest::new()
+                            .with_to(Some(address))
+                            .with_data(Some(
+                                (IERC165::supportsInterfaceCall {
+                                    interfaceID: get_interface_id(
+                                        IDescribedByMetaV1::IDescribedByMetaV1Calls::SELECTORS,
+                                    )
+                                    .into(),
+                                })
+                                .abi_encode(),
+                            ))
+                            .to_eip1559(),
+                    ),
+                    None,
+                )
+                .to_json_string()
+                .unwrap(),
+            );
+            then.json_body_obj(
+                &from_str::<Value>(
+                    &Response::new_success(
+                        3,
+                        "0x0000000000000000000000000000000000000000000000000000000000000001",
+                    )
+                    .to_json_string()
+                    .unwrap(),
+                )
+                .unwrap(),
+            );
+        });
+        let result = implements_i_described_by_meta_v1(&client, address).await;
+        assert!(result);
+
+        // mock a false response for implements IDescribedByMetaV1
+        rpc_server.mock(|when, then| {
+            when.method(POST).path("/").json_body_partial(
+                Request::<(TypedTransaction, BlockNumber)>::eth_call_request(
+                    4,
+                    TypedTransaction::Eip1559(
+                        AlloyTransactionRequest::new()
+                            .with_to(Some(address))
+                            .with_data(Some(
+                                (IERC165::supportsInterfaceCall {
+                                    interfaceID: get_interface_id(
+                                        IDescribedByMetaV1::IDescribedByMetaV1Calls::SELECTORS,
+                                    )
+                                    .into(),
+                                })
+                                .abi_encode(),
+                            ))
+                            .to_eip1559(),
+                    ),
+                    None,
+                )
+                .to_json_string()
+                .unwrap(),
+            );
+            then.json_body_obj(
+                &from_str::<Value>(
+                    &Response::new_success(
+                        4,
+                        "0x0000000000000000000000000000000000000000000000000000000000000000",
+                    )
+                    .to_json_string()
+                    .unwrap(),
+                )
+                .unwrap(),
+            );
+        });
+        let result = implements_i_described_by_meta_v1(&client, address).await;
         assert!(!result);
 
-        let result =
-            implements_i_described_by_meta_v1(&client, implements_i_described_by_meta_v1_contract)
-                .await;
-        assert!(result);
+        // mock a revert response for implements IDescribedByMetaV1
+        rpc_server.mock(|when, then| {
+            when.method(POST).path("/").json_body_partial(
+                Request::<(TypedTransaction, BlockNumber)>::eth_call_request(
+                    5,
+                    TypedTransaction::Eip1559(
+                        AlloyTransactionRequest::new()
+                            .with_to(Some(address))
+                            .with_data(Some(
+                                (IERC165::supportsInterfaceCall {
+                                    interfaceID: get_interface_id(
+                                        IDescribedByMetaV1::IDescribedByMetaV1Calls::SELECTORS,
+                                    )
+                                    .into(),
+                                })
+                                .abi_encode(),
+                            ))
+                            .to_eip1559(),
+                    ),
+                    None,
+                )
+                .to_json_string()
+                .unwrap(),
+            );
+            then.json_body_obj(
+                &from_str::<Value>(
+                    &Response::new_error(5, -32003, "execution reverted", Some("0x00"))
+                        .to_json_string()
+                        .unwrap(),
+                )
+                .unwrap(),
+            );
+        });
+        let result = implements_i_described_by_meta_v1(&client, address).await;
+        assert!(!result);
     }
 }
