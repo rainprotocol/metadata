@@ -12,7 +12,7 @@ use strum::{EnumIter, EnumString};
 use types::authoring::v1::AuthoringMeta;
 use alloy_sol_types::private::Address;
 use alloy_ethers_typecast::transaction::{ReadContractParameters, ReadableClientHttp};
-use rain_erc::erc165::{IERC165, get_interface_id, supports_erc165};
+use rain_erc::erc165::{IERC165, XorSelectors, supports_erc165};
 
 pub mod magic;
 pub(crate) mod normalize;
@@ -420,11 +420,15 @@ pub async fn implements_i_described_by_meta_v1(
         return false;
     }
 
+    let interface_id_res = IDescribedByMetaV1::IDescribedByMetaV1Calls::xor_selectors();
+    if interface_id_res.is_err() {
+        return false;
+    }
+
     let parameters = ReadContractParameters {
         address: contract_address,
         call: IERC165::supportsInterfaceCall {
-            interfaceID: get_interface_id(IDescribedByMetaV1::IDescribedByMetaV1Calls::SELECTORS)
-                .into(),
+            interfaceID: interface_id_res.unwrap().into(),
         },
         block_number: None,
     };
@@ -1364,10 +1368,10 @@ mod tests {
                             .with_to(Some(address))
                             .with_data(Some(
                                 (IERC165::supportsInterfaceCall {
-                                    interfaceID: get_interface_id(
-                                        IDescribedByMetaV1::IDescribedByMetaV1Calls::SELECTORS,
-                                    )
-                                    .into(),
+                                    interfaceID:
+                                        IDescribedByMetaV1::IDescribedByMetaV1Calls::xor_selectors()
+                                            .unwrap()
+                                            .into(),
                                 })
                                 .abi_encode(),
                             ))
@@ -1403,10 +1407,10 @@ mod tests {
                             .with_to(Some(address))
                             .with_data(Some(
                                 (IERC165::supportsInterfaceCall {
-                                    interfaceID: get_interface_id(
-                                        IDescribedByMetaV1::IDescribedByMetaV1Calls::SELECTORS,
-                                    )
-                                    .into(),
+                                    interfaceID:
+                                        IDescribedByMetaV1::IDescribedByMetaV1Calls::xor_selectors()
+                                            .unwrap()
+                                            .into(),
                                 })
                                 .abi_encode(),
                             ))
@@ -1442,10 +1446,10 @@ mod tests {
                             .with_to(Some(address))
                             .with_data(Some(
                                 (IERC165::supportsInterfaceCall {
-                                    interfaceID: get_interface_id(
-                                        IDescribedByMetaV1::IDescribedByMetaV1Calls::SELECTORS,
-                                    )
-                                    .into(),
+                                    interfaceID:
+                                        IDescribedByMetaV1::IDescribedByMetaV1Calls::xor_selectors()
+                                            .unwrap()
+                                            .into(),
                                 })
                                 .abi_encode(),
                             ))

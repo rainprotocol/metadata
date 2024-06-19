@@ -17,7 +17,7 @@ alloy-ethers-typecast = { git = "https://github.com/rainlanguage/alloy-ethers-ty
 url = "2.5.0"
 serde_json = "1.0.108"
 async-trait = "0.1.77"
-rain-erc = { git = "https://github.com/rainlanguage/rain.erc", rev = "6855a2dcd70e3acbea2f651e6437f18e14623394" }
+rain-erc = { git = "https://github.com/rainlanguage/rain.erc", rev = "f857ce56e27e53c0bad11b1f05851b95e904c2b5" }
 
 [workspace.dependencies.rain-metadata-bindings]
 path = "crates/bindings"
