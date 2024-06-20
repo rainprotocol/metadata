@@ -10,6 +10,7 @@ use serde::Serialize;
 use crate::meta::{KnownMagic, RainMetaDocumentV1Item};
 use rain_metadata_bindings::IDescribedByMetaV1;
 use thiserror::Error;
+use super::super::super::implements_i_described_by_meta_v1;
 
 #[derive(Debug, Clone, Serialize)]
 pub struct AuthoringMetaV2Word {
@@ -55,6 +56,8 @@ pub enum AuthoringMetaV2Error {
     Utf8Error(#[from] std::string::FromUtf8Error),
     #[error(transparent)]
     MetaError(#[from] crate::error::Error),
+    #[error("Contract has no words")]
+    HasNoWords,
 }
 
 #[derive(Error, Debug)]
@@ -123,6 +126,17 @@ impl AuthoringMetaV2 {
                 error: error.into(),
             }
         })?;
+
+        // return "has no words" error if the contract does not implement IDescribeByMetaV2 interface
+        if !implements_i_described_by_meta_v1(&client, contract_address).await {
+            return Err(FetchAuthoringMetaV2WordError {
+                contract_address,
+                rpc_url: rpc_url.clone(),
+                metaboard_url: metaboard_url.clone(),
+                error: AuthoringMetaV2Error::HasNoWords,
+            });
+        }
+
         let parameters = ReadContractParametersBuilder::default()
             .address(contract_address)
             .call(IDescribedByMetaV1::describedByMetaV1Call {})
@@ -375,7 +389,7 @@ mod tests {
                 assert_eq!(rpc_url, rpc_url.to_string());
                 assert_eq!(metaboard_url, metaboard_url.to_string());
                 match error {
-                    AuthoringMetaV2Error::MetaError(_) => {}
+                    AuthoringMetaV2Error::HasNoWords => {}
                     _ => panic!("Unexpected error: {:?}", error),
                 }
             }
