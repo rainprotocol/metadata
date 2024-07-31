@@ -1,9 +1,9 @@
 import { BigInt } from "@graphprotocol/graph-ts";
-import { MetaV1 as MetaV1Event } from "../generated/metaboard0/MetaBoard";
+import { MetaV1_2 as MetaV1Event } from "../generated/metaboard0/MetaBoard";
 import { MetaBoard as MetaBoardContract } from "../generated/metaboard0/MetaBoard";
 import { MetaBoard, MetaV1 } from "../generated/schema";
 
-export function handleMetaV1(event: MetaV1Event): void {
+export function handleMetaV1_2(event: MetaV1Event): void {
   let metaBoard = MetaBoard.load(event.address);
   if ( !metaBoard ) {
     metaBoard = new MetaBoard(event.address);
