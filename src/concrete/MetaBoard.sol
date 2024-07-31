@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: CAL
 pragma solidity =0.8.19;
 
-import {IMetaBoardV1} from "../interface/IMetaBoardV1.sol";
+import {IMetaBoardV1_2} from "../interface/unstable/IMetaBoardV1_2.sol";
 import {LibMeta} from "../lib/LibMeta.sol";
 
-contract MetaBoard is IMetaBoardV1 {
-    /// @inheritdoc IMetaBoardV1
-    function emitMeta(uint256 subject, bytes calldata meta) external {
+contract MetaBoard is IMetaBoardV1_2 {
+    /// @inheritdoc IMetaBoardV1_2
+    function emitMeta(bytes32 subject, bytes calldata meta) external {
         LibMeta.checkMetaUnhashedV1(meta);
-        emit MetaV1(msg.sender, subject, meta);
+        emit MetaV1_2(msg.sender, subject, meta);
     }
 
     /// Exposes native hashing algorithm (keccak256) to facilitate indexing data
