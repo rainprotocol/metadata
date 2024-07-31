@@ -6,6 +6,7 @@ import {UnexpectedMetaHash, NotRainMetaV1, META_MAGIC_NUMBER_V1} from "../deprec
 /// @title IMetaV1_2
 /// Identical to `IMetaV1` but with the subject as a `bytes32` instead of a
 /// `uint256`.
+//slither-disable-next-line naming-convention
 interface IMetaV1_2 {
     /// An onchain wrapper to carry arbitrary Rain metadata. Assigns the sender
     /// to the metadata so that tooling can easily drop/ignore data from unknown
@@ -17,5 +18,6 @@ interface IMetaV1_2 {
     /// hash of some data/thing that this metadata is about.
     /// @param meta Rain metadata V1 compliant metadata bytes.
     /// https://github.com/rainprotocol/specs/blob/main/metadata-v1.md
+    //slither-disable-next-line naming-convention
     event MetaV1_2(address sender, bytes32 subject, bytes meta);
 }

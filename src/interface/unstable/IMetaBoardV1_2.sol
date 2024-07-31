@@ -7,6 +7,7 @@ import {IMetaV1_2} from "./IMetaV1_2.sol";
 /// Defines a general purpose contract that anon may call to emit ANY metadata.
 /// Anons MAY send garbage and malicious metadata so it is up to tooling to
 /// discard any suspect data before use, and generally treat it all as untrusted.
+//slither-disable-next-line naming-convention
 interface IMetaBoardV1_2 is IMetaV1_2 {
     /// Emit a single `MetaV1_2` event. Typically this is sufficient for most use
     /// cases as a single `MetaV1_2` event can contain many metas as a single
