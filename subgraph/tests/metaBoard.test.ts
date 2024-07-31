@@ -12,14 +12,14 @@ import {
 } from "matchstick-as";
 import { createNewMetaV1Event, CONTRACT_ADDRESS } from "./utils";
 import { Bytes, BigInt, ethereum, Address } from "@graphprotocol/graph-ts";
-import { MetaBoard as MetaBoardContract, MetaV1 } from "../generated/metaboard0/MetaBoard";
+import { MetaBoard as MetaBoardContract, MetaV1_2 } from "../generated/metaboard0/MetaBoard";
 import { MetaBoard, MetaV1 as MetaV1Entity } from "../generated/schema";
-import { handleMetaV1 } from "../src/metaBoard";
+import { handleMetaV1_2 } from "../src/metaBoard";
 
 const ENTITY_TYPE_META_V1 = "MetaV1";
 const ENTITY_TYPE_META_BOARD = "MetaBoard";
 const sender = "0xc0D477556c25C9d67E1f57245C7453DA776B51cf";
-const subject = 1000;
+const subject = Bytes.fromHexString("0x3299321d9db6e1dc95c371c5aea791e7c45c4b1b1d4ff713664e6d2187ab7aa5");
 const metaString = "0xff0a89c674ee7874010203";
 const metaHashString = "0x6bdf81f785b54fd65ca6fc5d02b40fa361bc7d5f4f1067fc534b9433ecbc784d";
 
@@ -43,29 +43,28 @@ describe("Test meta event", () => {
     // Call mappings
     const meta = Bytes.fromHexString(metaString);
 
-    const subjectBigInt = BigInt.fromI32(subject);
-    let newMetaV1Event = createNewMetaV1Event(sender, subjectBigInt, meta);
+    let newMetaV1Event = createNewMetaV1Event(sender, subject, meta);
 
     createMockedFunction(CONTRACT_ADDRESS, "hash", "hash(bytes):(bytes32)")
       .withArgs([ethereum.Value.fromBytes(meta)])
       .returns([ethereum.Value.fromBytes(Bytes.fromHexString(metaHashString))]);
 
-    handleMetaV1(newMetaV1Event);
+    handleMetaV1_2(newMetaV1Event);
 
     assert.entityCount(ENTITY_TYPE_META_V1, 1);
     assert.addressEquals(newMetaV1Event.address, CONTRACT_ADDRESS);
-    assert.equals(ethereum.Value.fromUnsignedBigInt(newMetaV1Event.params.subject), ethereum.Value.fromUnsignedBigInt(subjectBigInt));
+    assert.equals(ethereum.Value.fromBytes(newMetaV1Event.params.subject), ethereum.Value.fromBytes(subject));
     assert.equals(ethereum.Value.fromBytes(newMetaV1Event.params.meta), ethereum.Value.fromBytes(meta));
   });
   test("Can update event metadata", () => {
-    const metaV1Event = changetype<MetaV1>(newMockEvent());
+    const metaV1Event = changetype<MetaV1_2>(newMockEvent());
     metaV1Event.parameters = new Array();
 
-    const subjectBigInt = BigInt.fromI32(2000);
+    const subject = Bytes.fromHexString("0xe61c27d16fa0dfbb69b2e8c1a1beb64051668e348f4bb52e843548759b8fabe1");
     const meta = Bytes.fromHexString(metaString);
 
     let UPDATED_SENDER = new ethereum.EventParam("sender", ethereum.Value.fromAddress(Address.fromString(sender)));
-    let UPDATED_SUBJECT = new ethereum.EventParam("subject", ethereum.Value.fromUnsignedBigInt(subjectBigInt));
+    let UPDATED_SUBJECT = new ethereum.EventParam("subject", ethereum.Value.fromBytes(subject));
     let UPDATED_META = new ethereum.EventParam("meta", ethereum.Value.fromBytes(meta));
 
     metaV1Event.parameters.push(UPDATED_SENDER);
@@ -73,7 +72,7 @@ describe("Test meta event", () => {
     metaV1Event.parameters.push(UPDATED_META);
 
     assert.addressEquals(Address.fromString(sender), metaV1Event.params.sender);
-    assert.bigIntEquals(subjectBigInt, metaV1Event.params.subject);
+    assert.bytesEquals(subject, metaV1Event.params.subject);
     assert.bytesEquals(meta, metaV1Event.params.meta);
   });
   test("Returns null when calling entity.load() if an entity doesn't exist", () => {
@@ -85,15 +84,14 @@ describe("Test meta event", () => {
 
 describe("Test MetaBoard and MetaV1 Entities", () => {
   beforeAll(() => {
-    const subjectBigInt = BigInt.fromI32(subject);
     const meta = Bytes.fromHexString(metaString);
-    let newMetaV1Event = createNewMetaV1Event(sender, subjectBigInt, meta);
+    let newMetaV1Event = createNewMetaV1Event(sender, subject, meta);
 
     createMockedFunction(CONTRACT_ADDRESS, "hash", "hash(bytes):(bytes32)")
       .withArgs([ethereum.Value.fromBytes(meta)])
       .returns([ethereum.Value.fromBytes(Bytes.fromHexString(metaHashString))]);
 
-    handleMetaV1(newMetaV1Event);
+    handleMetaV1_2(newMetaV1Event);
 
 
   });
@@ -124,7 +122,7 @@ describe("Test MetaBoard and MetaV1 Entities", () => {
     let retrievedMetaV1 = MetaV1Entity.load("0") as MetaV1Entity;
     assert.entityCount(ENTITY_TYPE_META_V1, 1);
     assert.addressEquals(Address.fromBytes(retrievedMetaV1.sender), Address.fromString(sender));//sender
-    assert.bigIntEquals(retrievedMetaV1.subject, BigInt.fromI32(subject));//subject
+    assert.bytesEquals(retrievedMetaV1.subject, subject);//subject
     assert.bytesEquals(retrievedMetaV1.metaBoard, CONTRACT_ADDRESS);//metaBoard
     assert.bytesEquals(retrievedMetaV1.meta, Bytes.fromHexString(metaString));//meta
     assert.bytesEquals(retrievedMetaV1.metaHash, Bytes.fromHexString(metaHashString));//metaHash
