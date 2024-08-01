@@ -16,7 +16,8 @@ pub enum CynicClientError {
     Request(#[from] reqwest::Error),
 }
 
-#[async_trait]
+#[cfg_attr(not(target_family = "wasm"), async_trait)]
+#[cfg_attr(target_family = "wasm", async_trait(?Send))]
 pub trait CynicClient {
     fn get_base_url(&self) -> Url;
 

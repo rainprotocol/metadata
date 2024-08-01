@@ -65,9 +65,9 @@ version = "0.6.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2919acdad13336bc5dc26b636cdd6892c2f27fb0d4a58320a00c2713cf6a4e9a"
 dependencies = [
- "alloy-json-abi 0.6.4",
- "alloy-primitives 0.6.4",
- "alloy-sol-type-parser 0.6.4",
+ "alloy-json-abi",
+ "alloy-primitives",
+ "alloy-sol-type-parser",
  "alloy-sol-types",
  "const-hex",
  "itoa",
@@ -79,15 +79,16 @@ dependencies = [
 [[package]]
 name = "alloy-ethers-typecast"
 version = "0.2.0"
-source = "git+https://github.com/rainlanguage/alloy-ethers-typecast?rev=cbdedb77fb1994a18ceb47e72786f8b32b670669#cbdedb77fb1994a18ceb47e72786f8b32b670669"
+source = "git+https://github.com/rainlanguage/alloy-ethers-typecast?rev=d9bd0fe8360d803ed3e58b34063890c8775999f2#d9bd0fe8360d803ed3e58b34063890c8775999f2"
 dependencies = [
  "alloy-dyn-abi",
- "alloy-json-abi 0.6.4",
- "alloy-primitives 0.6.4",
+ "alloy-json-abi",
+ "alloy-primitives",
  "alloy-sol-types",
  "async-trait",
  "derive_builder",
  "ethers",
+ "getrandom",
  "once_cell",
  "rain-error-decoding",
  "reqwest",
@@ -100,47 +101,14 @@ dependencies = [
 
 [[package]]
 name = "alloy-json-abi"
-version = "0.5.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "838228983f74f30e4efbd8d42d25bfe1b5bf6450ca71ee9d7628f134fbe8ae8e"
-dependencies = [
- "alloy-primitives 0.5.4",
- "alloy-sol-type-parser 0.5.4",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "alloy-json-abi"
 version = "0.6.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "24ed0f2a6c3a1c947b4508522a53a190dba8f94dcd4e3e1a5af945a498e78f2f"
 dependencies = [
- "alloy-primitives 0.6.4",
- "alloy-sol-type-parser 0.6.4",
+ "alloy-primitives",
+ "alloy-sol-type-parser",
  "serde",
  "serde_json",
-]
-
-[[package]]
-name = "alloy-primitives"
-version = "0.5.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9c234f92024707f224510ff82419b2be0e1d8e1fd911defcac5a085cd7f83898"
-dependencies = [
- "alloy-rlp",
- "bytes",
- "cfg-if",
- "const-hex",
- "derive_more",
- "hex-literal",
- "itoa",
- "keccak-asm",
- "proptest",
- "rand",
- "ruint",
- "serde",
- "tiny-keccak",
 ]
 
 [[package]]
@@ -182,7 +150,7 @@ version = "0.6.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e86ec0a47740b20bc5613b8712d0d321d031c4efc58e9645af96085d5cccfc27"
 dependencies = [
- "alloy-json-abi 0.6.4",
+ "alloy-json-abi",
  "const-hex",
  "dunce",
  "heck 0.4.1",
@@ -194,15 +162,6 @@ dependencies = [
  "syn 2.0.60",
  "syn-solidity",
  "tiny-keccak",
-]
-
-[[package]]
-name = "alloy-sol-type-parser"
-version = "0.5.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c82c1ed2d61e982cef4c4d709f4aeef5f39a6a6a7c59b6e54c9ed4f3f7e3741b"
-dependencies = [
- "winnow 0.5.40",
 ]
 
 [[package]]
@@ -220,8 +179,8 @@ version = "0.6.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ad09ec5853fa700d12d778ad224dcdec636af424d29fad84fb9a2f16a5b0ef09"
 dependencies = [
- "alloy-json-abi 0.6.4",
- "alloy-primitives 0.6.4",
+ "alloy-json-abi",
+ "alloy-primitives",
  "alloy-sol-macro",
  "const-hex",
  "serde",
@@ -3722,10 +3681,10 @@ checksum = "dc33ff2d4973d518d823d61aa239014831e521c75da58e3df4840d3f47749d09"
 [[package]]
 name = "rain-erc"
 version = "0.0.0"
-source = "git+https://github.com/rainlanguage/rain.erc?rev=cc9d7c3c74cf8e9676d72ee054af7f1b67a84974#cc9d7c3c74cf8e9676d72ee054af7f1b67a84974"
+source = "git+https://github.com/rainlanguage/rain.erc?rev=7f50b2c05eb41a77ee925ebe80fe49420a2b5b80#7f50b2c05eb41a77ee925ebe80fe49420a2b5b80"
 dependencies = [
  "alloy-ethers-typecast",
- "alloy-primitives 0.6.4",
+ "alloy-primitives",
  "alloy-sol-types",
  "thiserror",
 ]
@@ -3733,13 +3692,14 @@ dependencies = [
 [[package]]
 name = "rain-error-decoding"
 version = "0.1.0"
-source = "git+https://github.com/rainlanguage/rain.error?rev=700142c3c73d5cbaea82f1d51af5ce04de5bac6a#700142c3c73d5cbaea82f1d51af5ce04de5bac6a"
+source = "git+https://github.com/rainlanguage/rain.error?rev=72d9577fdaf7135113847027ba951f9a43b41827#72d9577fdaf7135113847027ba951f9a43b41827"
 dependencies = [
  "alloy-dyn-abi",
- "alloy-json-abi 0.6.4",
- "alloy-primitives 0.6.4",
+ "alloy-json-abi",
+ "alloy-primitives",
  "alloy-sol-types",
  "ethers",
+ "getrandom",
  "once_cell",
  "reqwest",
  "serde",
@@ -3751,7 +3711,7 @@ dependencies = [
 name = "rain-metaboard-subgraph"
 version = "0.1.0"
 dependencies = [
- "alloy-primitives 0.5.4",
+ "alloy-primitives",
  "async-trait",
  "cynic",
  "cynic-codegen",
@@ -3768,8 +3728,8 @@ name = "rain-metadata"
 version = "0.0.2-alpha.6"
 dependencies = [
  "alloy-ethers-typecast",
- "alloy-json-abi 0.5.4",
- "alloy-primitives 0.5.4",
+ "alloy-json-abi",
+ "alloy-primitives",
  "alloy-sol-types",
  "anyhow",
  "clap",
@@ -3803,7 +3763,7 @@ dependencies = [
 name = "rain-metadata-bindings"
 version = "0.1.0"
 dependencies = [
- "alloy-primitives 0.5.4",
+ "alloy-primitives",
  "alloy-sol-types",
 ]
 

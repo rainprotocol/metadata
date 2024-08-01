@@ -27,7 +27,7 @@ inflate = "0.4.5"
 serde_cbor = "0.11.2"
 validator = { version = "0.16", features = ["derive"] }
 reqwest = { version = "0.11.22", features = ["json"] }
-alloy-json-abi = { version = "0.5.0", features = ["serde_json"] }
+alloy-json-abi = { version = "0.6.3", features = ["serde_json"] }
 alloy-primitives = { workspace = true }
 alloy-sol-types = { workspace = true }
 graphql_client = "0.13.0"
