@@ -1,6 +1,6 @@
 use super::error::Error;
 use super::subgraph::KnownSubgraphs;
-use alloy_primitives::{hex, keccak256};
+use alloy::primitives::{hex, keccak256};
 use futures::future;
 use graphql_client::GraphQLQuery;
 use rain_metadata_bindings::IDescribedByMetaV1;
@@ -10,7 +10,7 @@ use serde::ser::{Serialize, SerializeMap, Serializer};
 use std::{collections::HashMap, convert::TryFrom, fmt::Debug, sync::Arc};
 use strum::{EnumIter, EnumString};
 use types::authoring::v1::AuthoringMeta;
-use alloy_sol_types::private::Address;
+use alloy::sol_types::private::Address;
 use alloy_ethers_typecast::transaction::{ReadContractParameters, ReadableClientHttp};
 use rain_erc::erc165::{IERC165, XorSelectors, supports_erc165};
 

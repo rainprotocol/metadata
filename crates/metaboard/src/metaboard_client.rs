@@ -1,6 +1,6 @@
 use crate::cynic_client::{CynicClient, CynicClientError};
 use crate::types::metas::*;
-use alloy_primitives::hex::{decode, encode, FromHexError};
+use alloy::primitives::hex::{decode, encode, FromHexError};
 use reqwest::Url;
 use thiserror::Error;
 
@@ -77,7 +77,7 @@ impl MetaboardSubgraphClient {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use alloy_primitives::hex::encode;
+    use alloy::primitives::hex::encode;
     use httpmock::Method::POST;
     use httpmock::MockServer;
     use reqwest::Url;

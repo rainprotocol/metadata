@@ -19,7 +19,7 @@ pub enum Error {
     SerdeJsonError(serde_json::Error),
     AbiCoderError(alloy_sol_types::Error),
     ValidationErrors(validator::ValidationErrors),
-    DecodeHexStringError(alloy_primitives::hex::FromHexError),
+    DecodeHexStringError(alloy::primitives::hex::FromHexError),
 }
 
 impl std::fmt::Display for Error {

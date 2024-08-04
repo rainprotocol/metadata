@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use reqwest::Client;
-use alloy_primitives::hex::decode;
+use alloy::primitives::hex::decode;
 use serde::{Deserialize, Serialize};
 use graphql_client::{GraphQLQuery, Response, QueryBody};
 use super::{
