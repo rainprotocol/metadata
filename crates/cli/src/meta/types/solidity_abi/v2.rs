@@ -1,5 +1,5 @@
 use validator::Validate;
-use alloy_json_abi::JsonAbi;
+use alloy::json_abi::JsonAbi;
 use validator::{ValidationErrors, ValidationError};
 use super::super::super::{RainMetaDocumentV1Item, Error as MetaError};
 use serde::{Serialize, Serializer, Deserialize, Deserializer, de::Error, ser::SerializeStruct};
