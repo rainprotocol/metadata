@@ -10,7 +10,7 @@ repository = "https://github.com/rainlanguage/rain.metadata"
 cynic = { version = "3" }
 reqwest = { workspace = true }
 thiserror = { workspace = true }
-alloy-primitives = { workspace = true }
+alloy = { workspace = true }
 async-trait = { workspace = true }
 
 [dev-dependencies]

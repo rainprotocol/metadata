@@ -1,4 +1,5 @@
-use alloy_sol_types::{SolType, sol};
+use alloy::sol_types::SolType;
+use alloy::sol;
 use serde::{Serialize, Deserialize};
 use validator::{Validate, ValidationErrors, ValidationError};
 use super::super::{
@@ -178,7 +179,8 @@ impl TryFrom<RainMetaDocumentV1Item> for AuthoringMeta {
 
 #[cfg(test)]
 mod tests {
-    use alloy_sol_types::{SolType, sol};
+    use alloy::sol_types::SolType;
+    use alloy::sol;
     use super::{AuthoringMeta, AuthoringMetaItem};
     use crate::{meta::str_to_bytes32, error::Error};
 

@@ -17,9 +17,9 @@ pub enum Error {
     ReqwestError(reqwest::Error),
     SerdeCborError(serde_cbor::Error),
     SerdeJsonError(serde_json::Error),
-    AbiCoderError(alloy_sol_types::Error),
+    AbiCoderError(alloy::sol_types::Error),
     ValidationErrors(validator::ValidationErrors),
-    DecodeHexStringError(alloy_primitives::hex::FromHexError),
+    DecodeHexStringError(alloy::primitives::hex::FromHexError),
 }
 
 impl std::fmt::Display for Error {
@@ -82,8 +82,8 @@ impl From<validator::ValidationErrors> for Error {
     }
 }
 
-impl From<alloy_sol_types::Error> for Error {
-    fn from(value: alloy_sol_types::Error) -> Self {
+impl From<alloy::sol_types::Error> for Error {
+    fn from(value: alloy::sol_types::Error) -> Self {
         Error::AbiCoderError(value)
     }
 }

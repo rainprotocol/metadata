@@ -1,10 +1,11 @@
-use alloy_sol_types::SolType;
+use alloy::sol_types::SolType;
 use alloy_ethers_typecast::transaction::{
     ReadContractParametersBuilder, ReadContractParametersBuilderError, ReadableClient,
     ReadableClientError,
 };
-use alloy_primitives::hex::FromHexError;
-use alloy_sol_types::{sol, private::Address};
+use alloy::primitives::hex::FromHexError;
+use alloy::sol_types::private::Address;
+use alloy::sol;
 use rain_metaboard_subgraph::metaboard_client::*;
 use serde::Serialize;
 use crate::meta::{KnownMagic, RainMetaDocumentV1Item};
@@ -51,7 +52,7 @@ pub enum AuthoringMetaV2Error {
     #[error("Meta bytes do not start with RainMetaDocumentV1 Magic")]
     MetaMagicNumberMismatch,
     #[error(transparent)]
-    AbiDecodeError(#[from] alloy_sol_types::Error),
+    AbiDecodeError(#[from] alloy::sol_types::Error),
     #[error(transparent)]
     Utf8Error(#[from] std::string::FromUtf8Error),
     #[error(transparent)]
@@ -214,7 +215,7 @@ impl TryFrom<RainMetaDocumentV1Item> for AuthoringMetaV2 {
 
 #[cfg(test)]
 mod tests {
-    use alloy_primitives::hex::{decode, encode};
+    use alloy::primitives::hex::{decode, encode};
     use serde_bytes::ByteBuf;
     use httpmock::Method::POST;
     use httpmock::MockServer;
