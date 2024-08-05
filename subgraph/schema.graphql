@@ -11,7 +11,7 @@ type MetaV1 @entity {
     metaBoard: MetaBoard!
 
     sender: Bytes!
-    subject: BigInt!
+    subject: Bytes!
 
     metaHash: Bytes!
     meta: Bytes!

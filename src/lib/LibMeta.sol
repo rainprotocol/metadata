@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: CAL
 pragma solidity ^0.8.19;
 
-import {IMetaV1, UnexpectedMetaHash, NotRainMetaV1, META_MAGIC_NUMBER_V1} from "../interface/IMetaV1.sol";
+import {IMetaV1_2, UnexpectedMetaHash, NotRainMetaV1, META_MAGIC_NUMBER_V1} from "../interface/unstable/IMetaV1_2.sol";
 
 /// @title LibMeta
 /// @notice Need a place to put data that can be handled offchain like ABIs that

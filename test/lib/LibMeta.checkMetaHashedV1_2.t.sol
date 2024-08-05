@@ -3,12 +3,12 @@ pragma solidity =0.8.19;
 
 import {Test} from "forge-std/Test.sol";
 import {LibMeta} from "src/lib/LibMeta.sol";
-import {UnexpectedMetaHash, NotRainMetaV1, META_MAGIC_NUMBER_V1} from "src/interface/IMetaV1.sol";
+import {UnexpectedMetaHash, NotRainMetaV1, META_MAGIC_NUMBER_V1} from "src/interface/unstable/IMetaV1_2.sol";
 
-contract LibMetaCheckMetaHashedV1Test is Test {
+contract LibMetaCheckMetaHashedV1_2Test is Test {
     /// When the data has a magic number, and the hash of the data matches the
     /// expected hash passed to the check, it should not revert.
-    function testCheckMetaHashedV1Happy(bytes memory data) external pure {
+    function testCheckMetaHashedV1_2Happy(bytes memory data) external pure {
         bytes memory meta = abi.encodePacked(META_MAGIC_NUMBER_V1, data);
         bytes32 metaHash = keccak256(meta);
         LibMeta.checkMetaHashedV1(metaHash, meta);
@@ -16,7 +16,7 @@ contract LibMetaCheckMetaHashedV1Test is Test {
 
     /// When the data has a magic number but the hash of the data does not
     /// match the expected hash passed to the check, it should revert.
-    function testCheckMetaHashedV1GoodMagicBadHash(bytes memory data, bytes32 expectedHash) public {
+    function testCheckMetaHashedV1_2GoodMagicBadHash(bytes memory data, bytes32 expectedHash) public {
         bytes memory meta = abi.encodePacked(META_MAGIC_NUMBER_V1, data);
         bytes32 metaHash = keccak256(meta);
         vm.assume(metaHash != expectedHash);
@@ -26,7 +26,7 @@ contract LibMetaCheckMetaHashedV1Test is Test {
 
     /// When the data does not have a magic number, it should revert even if
     /// the hash of the data matches the expected hash passed to the check.
-    function testCheckMetaHashedV1BadMagicGoodHash(bytes memory meta) public {
+    function testCheckMetaHashedV1_2BadMagicGoodHash(bytes memory meta) public {
         bytes32 metaHash = keccak256(meta);
         vm.expectRevert(abi.encodeWithSelector(NotRainMetaV1.selector, meta));
         LibMeta.checkMetaHashedV1(metaHash, meta);
@@ -34,7 +34,7 @@ contract LibMetaCheckMetaHashedV1Test is Test {
 
     /// When the data does not have a magic number, and the hash of the data
     /// does not match the expected hash passed to the check, it should revert.
-    function testCheckMetaHashedV1BadMagicBadHash(bytes memory meta, bytes32 expectedHash) public {
+    function testCheckMetaHashedV1_2BadMagicBadHash(bytes memory meta, bytes32 expectedHash) public {
         bytes32 metaHash = keccak256(meta);
         vm.assume(metaHash != expectedHash);
 
