@@ -541,7 +541,7 @@ impl<'de> Deserialize<'de> for SolidityAbiItem {
 #[cfg(test)]
 mod tests {
     use std::path::PathBuf;
-    use alloy_json_abi::JsonAbi;
+    use alloy::json_abi::JsonAbi;
     use super::SolidityAbiMeta;
     use crate::error::Error;
 

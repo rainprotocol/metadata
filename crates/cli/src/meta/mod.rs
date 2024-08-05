@@ -925,7 +925,7 @@ mod tests {
         rpc::{eip2718::TypedTransaction, BlockNumber, Request, Response},
         transaction::ReadableClient,
     };
-    use alloy_sol_types::{SolType, SolCall};
+    use alloy::sol_types::{SolType, SolCall};
     use hex::decode;
     use httpmock::{Method::POST, MockServer};
     use serde_json::{from_str, Value};
@@ -950,19 +950,18 @@ mod tests {
 
         // abi encode the authoring meta with performing validation
         let authoring_meta_abi_encoded = authoring_meta.abi_encode_validate()?;
-        let expected_abi_encoded =
-            <alloy_sol_types::sol!((bytes32, uint8, string)[])>::abi_encode(&vec![
-                (
-                    str_to_bytes32("stack")?,
-                    16u8,
-                    "Copies an existing value from the stack.".to_string(),
-                ),
-                (
-                    str_to_bytes32("constant")?,
-                    16u8,
-                    "Copies a constant value onto the stack.".to_string(),
-                ),
-            ]);
+        let expected_abi_encoded = <alloy::sol!((bytes32, uint8, string)[])>::abi_encode(&vec![
+            (
+                str_to_bytes32("stack")?,
+                16u8,
+                "Copies an existing value from the stack.".to_string(),
+            ),
+            (
+                str_to_bytes32("constant")?,
+                16u8,
+                "Copies a constant value onto the stack.".to_string(),
+            ),
+        ]);
         // check the encoded bytes agaiinst the expected
         assert_eq!(authoring_meta_abi_encoded, expected_abi_encoded);
 
