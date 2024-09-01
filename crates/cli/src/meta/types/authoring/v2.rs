@@ -15,14 +15,14 @@ use super::super::super::implements_i_described_by_meta_v1;
 use typeshare::typeshare;
 
 #[typeshare]
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct AuthoringMetaV2Word {
     pub word: String,
     pub description: String,
 }
 
 #[typeshare]
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct AuthoringMetaV2 {
     pub words: Vec<AuthoringMetaV2Word>,
 }
