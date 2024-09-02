@@ -17,6 +17,7 @@ url = "2.5.0"
 serde_json = "1.0.108"
 async-trait = "0.1.77"
 rain-erc = { git = "https://github.com/rainlanguage/rain.erc", rev = "80bb411b161c1ee992a7974d325a783214046d5b" }
+typeshare = { git = "https://github.com/tomjw64/typeshare", rev = "556b44aafd5304eedf17206800f69834e3820b7c" }
 
 [workspace.dependencies.rain-metadata-bindings]
 path = "crates/bindings"

@@ -7,19 +7,22 @@ use alloy::primitives::hex::FromHexError;
 use alloy::sol_types::private::Address;
 use alloy::sol;
 use rain_metaboard_subgraph::metaboard_client::*;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use crate::meta::{KnownMagic, RainMetaDocumentV1Item};
 use rain_metadata_bindings::IDescribedByMetaV1;
 use thiserror::Error;
 use super::super::super::implements_i_described_by_meta_v1;
+use typeshare::typeshare;
 
-#[derive(Debug, Clone, Serialize)]
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct AuthoringMetaV2Word {
     pub word: String,
     pub description: String,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct AuthoringMetaV2 {
     pub words: Vec<AuthoringMetaV2Word>,
 }

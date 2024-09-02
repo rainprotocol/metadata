@@ -35,6 +35,7 @@ thiserror = { workspace = true }
 alloy-ethers-typecast = { workspace = true }
 url = { workspace = true }
 rain-erc = { workspace = true }
+typeshare = { workspace = true }
 
 # json-schema
 schemars = { version = "0.8.12", optional = true }
