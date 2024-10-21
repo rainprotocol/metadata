@@ -550,6 +550,7 @@ mod tests {
     #[test]
     fn test_all() -> anyhow::Result<()> {
         let artifact_paths = build_artifacts()?;
+        dbg!(&artifact_paths);
         test_json_roundtrip(artifact_paths.clone())?;
         test_abi_conversion(artifact_paths.clone())?;
         test_no_abi_artifact_parse()?;
@@ -580,6 +581,12 @@ mod tests {
         for path in files_to_read {
             let original_json_value: serde_json::Value =
                 serde_json::from_slice(std::fs::read(path)?.as_slice())?;
+
+            // Build info files don't contain abi.
+            if original_json_value["abi"].is_null() {
+                continue;
+            }
+
             let original_json_abi: serde_json::Value = original_json_value["abi"].clone();
 
             let solidity_abi_meta: SolidityAbiMeta =
@@ -609,6 +616,11 @@ mod tests {
             let original_json_value: serde_json::Value =
                 serde_json::from_slice(std::fs::read(path)?.as_slice())?;
             let original_json_abi: serde_json::Value = original_json_value["abi"].clone();
+
+            // Build info files don't contain abi.
+            if original_json_abi.is_null() {
+                continue;
+            }
 
             let solidity_abi_meta: SolidityAbiMeta =
                 serde_json::from_value(original_json_abi.clone())?;
