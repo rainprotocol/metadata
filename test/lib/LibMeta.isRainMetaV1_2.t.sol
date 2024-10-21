@@ -1,4 +1,5 @@
-// SPDX-License-Identifier: CAL
+// SPDX-License-Identifier: LicenseRef-DCL-1.0
+// SPDX-FileCopyrightText: Copyright (c) 2020 thedavidmeister
 pragma solidity =0.8.19;
 
 import {Test} from "forge-std/Test.sol";
@@ -8,7 +9,7 @@ import {UnexpectedMetaHash, NotRainMetaV1, META_MAGIC_NUMBER_V1} from "src/inter
 contract LibMetaIsRainMetaV1_2Test is Test {
     /// All data with the magic number prefix will be considered to be rain meta
     /// and all without will not.
-    function testIsRainMetaV1_2Fuzz(bytes memory data) public {
+    function testIsRainMetaV1_2Fuzz(bytes memory data) public pure {
         bytes memory meta = abi.encodePacked(META_MAGIC_NUMBER_V1, data);
         // True with prefix.
         assertTrue(LibMeta.isRainMetaV1(meta));
