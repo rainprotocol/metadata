@@ -1,5 +1,6 @@
-// SPDX-License-Identifier: CAL
-pragma solidity =0.8.19;
+// SPDX-License-Identifier: LicenseRef-DCL-1.0
+// SPDX-FileCopyrightText: Copyright (c) 2020 thedavidmeister
+pragma solidity =0.8.25;
 
 import {Script} from "forge-std/Script.sol";
 import {MetaBoard} from "src/concrete/MetaBoard.sol";
