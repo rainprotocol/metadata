@@ -550,7 +550,6 @@ mod tests {
     #[test]
     fn test_all() -> anyhow::Result<()> {
         let artifact_paths = build_artifacts()?;
-        dbg!(&artifact_paths);
         test_json_roundtrip(artifact_paths.clone())?;
         test_abi_conversion(artifact_paths.clone())?;
         test_no_abi_artifact_parse()?;
