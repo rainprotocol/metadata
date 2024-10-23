@@ -44,5 +44,5 @@ jobs:
       # Check if the repo is clean before deploying.
       - run: git diff --exit-code -- . ':(exclude)subgraph/subgraph.yaml'
       - run: >
-          nix develop -c goldsky subgraph deploy "ob4-${{ inputs.network }}/$(date -Idate)-$(openssl rand -hex 2)"
+          nix develop -c goldsky subgraph deploy "metadata-${{ inputs.network }}/$(date -Idate)-$(openssl rand -hex 2)"
         working-directory: subgraph
