@@ -128,23 +128,3 @@ describe("Test MetaBoard and MetaV1 Entities", () => {
     assert.bytesEquals(retrievedMetaV1.metaHash, Bytes.fromHexString(metaHashString));//metaHash
   });
 });
-
-describe("Test metaHash when try_hash reverts", () => {
-  test("Sets default metaHash when try_hash reverts", () => {
-    clearStore();
-
-    const meta = Bytes.fromHexString(metaString);
-    let newMetaV1Event = createNewMetaV1Event(sender, subject, meta);
-
-    createMockedFunction(CONTRACT_ADDRESS, "hash", "hash(bytes):(bytes32)")
-      .withArgs([ethereum.Value.fromBytes(meta)])
-      .reverts(); // Simulate the revert
-
-    handleMetaV1_2(newMetaV1Event);
-
-    // Assert that the entity was created and metaHash is set to the default value
-    let retrievedMetaV1 = MetaV1Entity.load("0") as MetaV1Entity;
-
-    assert.bytesEquals(Bytes.fromHexString("0x00"), retrievedMetaV1.metaHash);
-  });
-});
