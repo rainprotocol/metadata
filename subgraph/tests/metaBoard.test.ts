@@ -128,4 +128,3 @@ describe("Test MetaBoard and MetaV1 Entities", () => {
     assert.bytesEquals(retrievedMetaV1.metaHash, Bytes.fromHexString(metaHashString));//metaHash
   });
 });
-
