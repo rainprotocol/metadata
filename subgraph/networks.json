@@ -10,5 +10,11 @@
       "address": "0x017F5651eB8fa4048BBc17433149c6c035d391A6",
       "startBlock": 266485075
     }
+  },
+  "ethereum": {
+    "metaboard0": {
+      "address": "0x8F61d274aaB5D8CFD82dc266529EAe33020386a9",
+      "startBlock": 21041769
+    }
   }
 }
