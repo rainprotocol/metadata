@@ -431,6 +431,7 @@ pub async fn implements_i_described_by_meta_v1(
             interfaceID: interface_id_res.unwrap().into(),
         },
         block_number: None,
+        gas: None,
     };
     client.read(parameters).await.map(|v| v._0).unwrap_or(false)
 }
