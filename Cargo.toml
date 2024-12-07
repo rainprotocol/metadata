@@ -1,8 +1,12 @@
 [workspace]
 resolver = "2"
-members = [ "crates/bindings",
-    "crates/cli"
-, "crates/metaboard"]
+members = [
+    "crates/bindings",
+    "crates/cli",
+    "crates/metaboard",
+]
+author = "Rain Open Source Software Ltd"
+license = "LicenseRef-DCL-1.0"
 
 [workspace.dependencies]
 reqwest = { version = "0.11.17", features = ["json"] }

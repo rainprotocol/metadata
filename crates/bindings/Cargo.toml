@@ -3,7 +3,8 @@ name = "rain-metadata-bindings"
 version = "0.1.0"
 edition = "2021"
 description = "Solidity bindings for rain metadata."
-license-file = "LICENSE.md"
+license.workspace = true
+author.workspace = true
 repository = "https://github.com/rainlanguage/rain.metadata"
 
 [dependencies]
