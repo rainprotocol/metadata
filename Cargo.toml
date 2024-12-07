@@ -5,6 +5,8 @@ members = [
     "crates/cli",
     "crates/metaboard",
 ]
+
+[workspace.package]
 author = "Rain Open Source Software Ltd"
 license = "LicenseRef-DCL-1.0"
 
