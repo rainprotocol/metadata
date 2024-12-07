@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {},
   "keywords": [],
-  "author": "",
+  "author": "Rain Open Source Software Ltd",
   "license": "LicenseRef-DCL-1.0",
   "dependencies": {
     "@graphprotocol/graph-cli": "^0.56.0",

@@ -3,7 +3,8 @@ name = "rain-metaboard-subgraph"
 version = "0.1.0"
 edition = "2021"
 description = "A subgraph client for the Rain Metaboard."
-license-file = "LICENSE.md"
+license.workspace = true
+author.workspace = true
 repository = "https://github.com/rainlanguage/rain.metadata"
 
 [dependencies]
