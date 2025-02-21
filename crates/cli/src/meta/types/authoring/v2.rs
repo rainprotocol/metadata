@@ -12,20 +12,25 @@ use crate::meta::{KnownMagic, RainMetaDocumentV1Item};
 use rain_metadata_bindings::IDescribedByMetaV1;
 use thiserror::Error;
 use super::super::super::implements_i_described_by_meta_v1;
-use typeshare::typeshare;
+#[cfg(target_family = "wasm")]
+use wasm_bindgen_utils::{prelude::*, impl_wasm_traits};
 
-#[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(target_family = "wasm", derive(Tsify))]
 pub struct AuthoringMetaV2Word {
     pub word: String,
     pub description: String,
 }
+#[cfg(target_family = "wasm")]
+impl_wasm_traits!(AuthoringMetaV2Word);
 
-#[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(target_family = "wasm", derive(Tsify))]
 pub struct AuthoringMetaV2 {
     pub words: Vec<AuthoringMetaV2Word>,
 }
+#[cfg(target_family = "wasm")]
+impl_wasm_traits!(AuthoringMetaV2);
 
 sol!(
     struct AuthoringMetaV2Sol {
